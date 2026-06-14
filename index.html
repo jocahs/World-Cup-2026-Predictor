@@ -727,14 +727,21 @@ async function loadAllData() {
      .sort((a, b) => b.points - a.points);
  }
  
- function createStandingsTable(standings) {
+function createStandingsTable(standings) {
    if (standings.length === 0) return '';
    
    let html = `
      <div class="group-standings">
-       </table>
+       <table border="1" cellpadding="4" cellspacing="0" style="border-collapse: collapse; width: 100%;">
          <thead>
-           <tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>
+           <tr>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: left;">Team</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">P</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">W</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">D</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">L</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">Pts</th>
+           </tr>
          </thead>
          <tbody>
    `;
@@ -742,20 +749,23 @@ async function loadAllData() {
    standings.forEach(team => {
      html += `
        <tr>
-         <td>${team.name}</td>
-         <td>${team.played}</td>
-         <td>${team.won}</td>
-         <td>${team.draw}</td>
-         <td>${team.lost}</td>
-         <td><strong>${team.points}</strong></td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: left;"><strong>${team.name}</strong></td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.played}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.won}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.draw}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.lost}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center;"><strong>${team.points}</strong></td>
        </tr>
      `;
    });
    
-   html += `</tbody></table></div>`;
+   html += `
+         </tbody>
+       </table>
+     </div>`;
    return html;
- }
- 
+}
+
 function loadMatches() {
    const container = document.getElementById("group-matches");
    container.innerHTML = "";
