@@ -812,15 +812,29 @@ async function savePicks() {
    });
  }
  
- // PWA: Register Service Worker
- if ('serviceWorker' in navigator) {
-   navigator.serviceWorker.register('/sw.js').then(function(registration) {
-     console.log('Service Worker registered successfully:', registration.scope);
-   }).catch(function(error) {
-     console.log('Service Worker registration failed:', error);
-   });
- }
- 
+// Register Service Worker with error handling and updates
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      
+      // Check for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        console.log('New service worker found!');
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('Update available! Page will refresh on next load.');
+            // Optional: Show "Update available" notification
+          }
+        });
+      });
+    }).catch(function(error) {
+      console.log('ServiceWorker registration failed: ', error);
+    });
+  });
+}
+  
  initTabs();
  loadAllData();
  </script> 
