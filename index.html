@@ -1,0 +1,829 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+ <title>World Cup 2026 Predictor - Shared</title> 
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <style> 
+ body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 20px; background: #f0f2f5; } 
+ .container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+ h1 { color: #1a1a1a; text-align: center; }
+ .stage-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+ .stage-tab { padding: 10px 20px; background: #e0e0e0; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+ .stage-tab.active { background: #4CAF50; color: white; }
+ .matches-container { display: none; }
+ .matches-container.active { display: block; }
+ .group-block { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+ .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
+ .group-title:hover { background: #0b7dda; }
+ 
+ /* Group Standings Table */
+ .group-standings {
+   background: #2c3e50;
+   margin: 10px 15px;
+   border-radius: 8px;
+   overflow: hidden;
+ }
+ .group-standings table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 0.85em;
+ }
+ .group-standings th {
+   background: #1a252f;
+   color: white;
+   padding: 8px 6px;
+   text-align: center;
+   font-weight: bold;
+ }
+ .group-standings td {
+   background: white;
+   padding: 6px;
+   text-align: center;
+   border-bottom: 1px solid #eee;
+ }
+ .group-standings td:first-child, .group-standings th:first-child {
+   text-align: left;
+   padding-left: 12px;
+ }
+ .group-standings tr:last-child td {
+   border-bottom: none;
+ }
+ 
+ .match-card { 
+   background: #f9f9f9; 
+   border-bottom: 1px solid #eee; 
+   padding: 12px 15px;
+ }
+ .match-card:nth-child(even) { background: #fff; }
+ .match-card.completed { 
+   background: #e8f5e9; 
+   border-left: 4px solid #4CAF50;
+ }
+ .match-header { 
+   display: flex; 
+   align-items: center; 
+   flex-wrap: wrap;
+   margin-bottom: 10px;
+   gap: 8px;
+ }
+ .match-name { 
+   font-weight: bold; 
+   font-size: 1.05em;
+   min-width: 280px;
+ }
+ .match-time { 
+   color: #666; 
+   font-size: 0.85em; 
+ }
+ .match-result-badge {
+   padding: 3px 10px;
+   border-radius: 15px;
+   font-size: 0.85em;
+   font-weight: bold;
+ }
+ .result-home { background: #4CAF50; color: white; }
+ .result-draw { background: #FF9800; color: white; }
+ .result-away { background: #f44336; color: white; }
+ .result-none { background: #999; color: white; }
+ 
+ .picks-row {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 15px;
+   margin-top: 8px;
+   margin-bottom: 8px;
+   padding-top: 8px;
+   border-top: 1px dashed #ddd;
+ }
+ .player-pick {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   background: #f0f0f0;
+   padding: 4px 10px;
+   border-radius: 20px;
+   font-size: 0.85em;
+ }
+ .player-name {
+   font-weight: bold;
+   color: #333;
+ }
+ .player-pick-value {
+   font-weight: bold;
+   padding: 2px 8px;
+   border-radius: 12px;
+   background: white;
+ }
+ .pick-correct {
+   background: #4CAF50;
+   color: white;
+ }
+ .pick-wrong {
+   background: #f44336;
+   color: white;
+ }
+ .pick-pending {
+   background: #ddd;
+   color: #666;
+ }
+ 
+ .radio-group {
+   margin-top: 8px;
+   display: flex;
+   gap: 15px;
+   flex-wrap: wrap;
+ }
+ .radio-group label {
+   cursor: pointer;
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+ }
+ .radio-group input[type="radio"] {
+   cursor: pointer;
+ }
+ .radio-group.disabled {
+   opacity: 0.5;
+ }
+ .radio-group.disabled label {
+   cursor: not-allowed;
+ }
+ .radio-group.disabled input {
+   cursor: not-allowed;
+ }
+ 
+ button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
+ .btn-blue { background: #2196F3; }
+ .btn-orange { background: #FF9800; }
+ .btn-red { background: #f44336; }
+ .btn-purple { background: #9C27B0; }
+ .btn-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+ .leaderboard { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+ .leaderboard ol { margin: 0; padding-left: 20px; }
+ .leaderboard li { margin: 5px 0; }
+ .progress-bar { background: #e0e0e0; border-radius: 10px; height: 20px; margin: 10px 0; overflow: hidden; }
+ .progress-fill { background: #4CAF50; height: 100%; transition: width 0.3s; color: white; text-align: center; font-size: 12px; line-height: 20px; }
+ .admin-row { margin: 10px 0; padding: 8px; background: #f5f5f5; border-radius: 5px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+ .player-select { padding: 8px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; margin-left: 10px; min-width: 150px; }
+ @media (max-width: 768px) { .match-name { display: block; margin-bottom: 5px; } .picks-row { flex-direction: column; gap: 5px; } }
+ </style> 
+</head> 
+<body> 
+ <h1>🏆 World Cup 2026 Predictor</h1>
+ 
+ <div class="container">
+   <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+     <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+       <label style="font-weight: bold;">Your Name: </label>
+       <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 200px;">
+       <select id="playerSelect" class="player-select" onchange="selectPlayer()">
+         <option value="">-- Select existing player --</option>
+       </select>
+       <div class="btn-group">
+         <button onclick="loadMyPicks()" class="btn-purple">📖 Load My Picks</button>
+         <button onclick="showAdminLogin()" style="background: #f44336; color: white;">🔐 Admin Login</button>
+       </div>
+     </div>
+   </div>
+   <div id="progress-container"></div>
+ </div>
+
+ <div id="leaderboard" class="leaderboard" style="display: none;">
+   <h2>🏅 Leaderboard</h2>
+   <ol id="leaderboard-list"></ol>
+ </div>
+
+ <div class="container" id="admin-section" style="display: none;">
+   <h3>🔧 Set Match Results (with Scores)</h3>
+   <div id="results-input"></div>
+   <button onclick="saveResults()" class="btn-orange">💾 Save Results</button>
+   <button onclick="document.getElementById('admin-section').style.display='none'" class="btn-red">Close</button>
+ </div>
+
+ <div class="container">
+   <div class="stage-tabs">
+     <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
+     <div class="stage-tab" data-stage="round32">🔴 Round of 32</div>
+     <div class="stage-tab" data-stage="round16">🟡 Round of 16</div>
+     <div class="stage-tab" data-stage="quarter">🔵 Quarter-Finals</div>
+     <div class="stage-tab" data-stage="semi">⚡ Semi-Finals</div>
+     <div class="stage-tab" data-stage="final">🏆 Final</div>
+   </div>
+   
+   <div id="group-matches" class="matches-container"></div>
+   <div id="round32-matches" class="matches-container"></div>
+   <div id="round16-matches" class="matches-container"></div>
+   <div id="quarter-matches" class="matches-container"></div>
+   <div id="semi-matches" class="matches-container"></div>
+   <div id="final-matches" class="matches-container"></div>
+   
+   <div style="margin-top: 20px; text-align: center;">
+     <button onclick="savePicks()">💾 Save My Picks</button>
+     <button onclick="loadAllData()" class="btn-blue">📊 Refresh Standings</button>
+   </div>
+ </div>
+
+ <script> 
+ // ============================================
+ // GOOGLE SHEETS SHARED VERSION
+ // ============================================
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzr0JQ5gqBwWVvyRzkir-_XR-ON-k7QS2GZFIVjNnPwM4an7Xc7xbJoBlLkuyUxvqHS/exec";
+ const ADMIN_PASSWORD = "wc2026";
+ 
+ let actualResults = {};
+ let allPicks = [];
+ let currentPlayers = [];
+ let isLoading = false;
+ 
+ // Group stage matches
+ const groupMatches = {
+   "Group A": [
+     { match: "Mexico vs South Africa", time: "11/06 - 21h" },
+     { match: "South Korea vs Czechia", time: "12/06 - 00h" },
+     { match: "Czechia vs South Africa", time: "18/06 - 18h" },
+     { match: "Mexico vs South Korea", time: "19/06 - 05h" },
+     { match: "South Africa vs South Korea", time: "25/06 - 03h" },
+     { match: "Czechia vs Mexico", time: "25/06 - 03h" }
+   ],
+   "Group B": [
+     { match: "Canada vs Bosnia and Herzegovina", time: "12/06 - 21h" },
+     { match: "Qatar vs Switzerland", time: "13/06 - 21h" },
+     { match: "Switzerland vs Bosnia and Herzegovina", time: "18/06 - 21h" },
+     { match: "Canada vs Qatar", time: "19/06 - 00h" },
+     { match: "Switzerland vs Canada", time: "24/06 - 21h" },
+     { match: "Bosnia and Herzegovina vs Qatar", time: "24/06 - 21h" }
+   ],
+   "Group C": [
+     { match: "Haiti vs Scotland", time: "14/06 - 00h" },
+     { match: "Brazil vs Morocco", time: "13/06 - 23h" },
+     { match: "Scotland vs Morocco", time: "20/06 - 02h" },
+     { match: "Brazil vs Haiti", time: "20/06 - 02h" },
+     { match: "Scotland vs Brazil", time: "25/06 - 00h" },
+     { match: "Morocco vs Haiti", time: "25/06 - 00h" }
+   ],
+   "Group D": [
+     { match: "USA vs Paraguay", time: "13/06 - 00h" },
+     { match: "Australia vs Turkey", time: "14/06 - 02h" },
+     { match: "USA vs Australia", time: "20/06 - 05h" },
+     { match: "Turkey vs Paraguay", time: "20/06 - 05h" },
+     { match: "Turkey vs USA", time: "26/06 - 04h" },
+     { match: "Paraguay vs Australia", time: "26/06 - 04h" }
+   ],
+   "Group E": [
+     { match: "Germany vs Curaçao", time: "14/06 - 18h" },
+     { match: "Côte d'Ivoire vs Ecuador", time: "15/06 - 00h" },
+     { match: "Germany vs Côte d'Ivoire", time: "21/06 - 02h" },
+     { match: "Ecuador vs Curaçao", time: "21/06 - 02h" },
+     { match: "Ecuador vs Germany", time: "25/06 - 22h" },
+     { match: "Curaçao vs Côte d'Ivoire", time: "25/06 - 22h" }
+   ],
+   "Group F": [
+     { match: "Netherlands vs Japan", time: "14/06 - 21h" },
+     { match: "Sweden vs Tunisia", time: "15/06 - 03h" },
+     { match: "Netherlands vs Sweden", time: "20/06 - 19h" },
+     { match: "Tunisia vs Japan", time: "21/06 - 05h" },
+     { match: "Japan vs Sweden", time: "26/06 - 01h" },
+     { match: "Tunisia vs Netherlands", time: "26/06 - 01h" }
+   ],
+   "Group G": [
+     { match: "Belgium vs Egypt", time: "15/06 - 23h" },
+     { match: "Iran vs New Zealand", time: "16/06 - 02h" },
+     { match: "Belgium vs Iran", time: "21/06 - 21h" },
+     { match: "New Zealand vs Egypt", time: "22/06 - 03h" },
+     { match: "Egypt vs Iran", time: "27/06 - 04h" },
+     { match: "New Zealand vs Belgium", time: "27/06 - 04h" }
+   ],
+   "Group H": [
+     { match: "Spain vs Cabo Verde", time: "15/06 - 18h" },
+     { match: "Saudi Arabia vs Uruguay", time: "15/06 - 23h" },
+     { match: "Spain vs Saudi Arabia", time: "21/06 - 18h" },
+     { match: "Uruguay vs Cabo Verde", time: "22/06 - 00h" },
+     { match: "Cabo Verde vs Saudi Arabia", time: "27/06 - 02h" },
+     { match: "Uruguay vs Spain", time: "27/06 - 02h" }
+   ],
+   "Group I": [
+     { match: "France vs Senegal", time: "16/06 - 20h" },
+     { match: "Iraq vs Norway", time: "16/06 - 23h" },
+     { match: "France vs Iraq", time: "22/06 - 23h" },
+     { match: "Norway vs Senegal", time: "23/06 - 02h" },
+     { match: "Norway vs France", time: "26/06 - 20h" },
+     { match: "Senegal vs Iraq", time: "26/06 - 20h" }
+   ],
+   "Group J": [
+     { match: "Argentina vs Algeria", time: "17/06 - 02h" },
+     { match: "Austria vs Jordan", time: "17/06 - 05h" },
+     { match: "Argentina vs Austria", time: "22/06 - 19h" },
+     { match: "Jordan vs Algeria", time: "23/06 - 05h" },
+     { match: "Algeria vs Austria", time: "28/06 - 04h" },
+     { match: "Jordan vs Argentina", time: "28/06 - 04h" }
+   ],
+   "Group K": [
+     { match: "Uzbekistan vs Colombia", time: "18/06 - 02h" },
+     { match: "Portugal vs DR Congo", time: "17/06 - 18h" },
+     { match: "Portugal vs Uzbekistan", time: "23/06 - 18h" },
+     { match: "Colombia vs DR Congo", time: "24/06 - 02h" },
+     { match: "DR Congo vs Uzbekistan", time: "28/06 - 01h30" },
+     { match: "Colombia vs Portugal", time: "28/06 - 01h30" }
+   ],
+   "Group L": [
+     { match: "England vs Croatia", time: "17/06 - 21h" },
+     { match: "Ghana vs Panama", time: "18/06 - 00h" },
+     { match: "England vs Ghana", time: "23/06 - 21h" },
+     { match: "Panama vs Croatia", time: "24/06 - 00h" },
+     { match: "Panama vs England", time: "27/06 - 23h" },
+     { match: "Croatia vs Ghana", time: "27/06 - 23h" }
+   ]
+ };
+
+ const knockoutMatches = {
+   round32: Array(16).fill().map((_, i) => ({ match: `Round of 32 Match ${i+1}`, time: "TBD" })),
+   round16: Array(8).fill().map((_, i) => ({ match: `Round of 16 Match ${i+1}`, time: "TBD" })),
+   quarter: Array(4).fill().map((_, i) => ({ match: `Quarter-Final ${i+1}`, time: "TBD" })),
+   semi: [{ match: "Semi-Final 1", time: "TBD" }, { match: "Semi-Final 2", time: "TBD" }],
+   final: [{ match: "3rd Place Match", time: "TBD" }, { match: "Final", time: "TBD" }]
+ };
+ 
+ function updatePlayerDropdown() {
+   const select = document.getElementById("playerSelect");
+   const currentValue = select.value;
+   select.innerHTML = '<option value="">-- Select existing player --</option>';
+   currentPlayers.forEach(player => {
+     const option = document.createElement("option");
+     option.value = player;
+     option.textContent = player;
+     if (player === currentValue) option.selected = true;
+     select.appendChild(option);
+   });
+ }
+ 
+ function selectPlayer() {
+   const select = document.getElementById("playerSelect");
+   const playerName = select.value;
+   if (playerName) {
+     document.getElementById("playerName").value = playerName;
+     loadMyPicks();
+   }
+ }
+ 
+ function showAdminLogin() {
+   const pwd = prompt("Enter admin password:");
+   if (pwd === ADMIN_PASSWORD) {
+     document.getElementById("admin-section").style.display = "block";
+     loadResultsInputs();
+     document.getElementById("admin-section").scrollIntoView({ behavior: "smooth" });
+   } else if (pwd) alert("Wrong password!");
+ }
+ 
+ function loadResultsInputs() {
+   const container = document.getElementById("results-input");
+   container.innerHTML = "<h4>Enter match results and scores:</h4>";
+   for (let group in groupMatches) {
+     container.innerHTML += `<h4>${group}</h4>`;
+     groupMatches[group].forEach((m, idx) => {
+       const matchId = `${group}_${idx}`;
+       const current = actualResults[m.match] || {};
+       container.innerHTML += `
+         <div class="admin-row">
+           <strong style="min-width: 250px;">${m.match}</strong>
+           <span style="color:#666;">${m.time}</span>
+           <input type="text" id="score-${matchId}" placeholder="Score (e.g., 2-0)" value="${current.score || ""}" style="width: 70px; padding: 5px; text-align: center;">
+           <select id="result-select-${matchId}" style="padding: 5px;">
+             <option value="">-- Result --</option>
+             <option value="1" ${current.result === "1" ? "selected" : ""}>🏠 1 - Home Win</option>
+             <option value="X" ${current.result === "X" ? "selected" : ""}>🤝 X - Draw</option>
+             <option value="2" ${current.result === "2" ? "selected" : ""}>✈️ 2 - Visitor Win</option>
+           </select>
+         </div>
+       `;
+     });
+   }
+ }
+ 
+ async function saveResults() {
+   const results = [];
+   for (let group in groupMatches) {
+     for (let i = 0; i < groupMatches[group].length; i++) {
+       const matchId = `${group}_${i}`;
+       const result = document.getElementById(`result-select-${matchId}`)?.value;
+       const score = document.getElementById(`score-${matchId}`)?.value;
+       if (result) {
+         results.push({ match: groupMatches[group][i].match, result: result, score: score || "" });
+       }
+     }
+   }
+   if (results.length === 0) { alert("No results selected!"); return; }
+   
+   try {
+     const params = new URLSearchParams();
+     params.append("action", "saveResults");
+     params.append("data", JSON.stringify(results));
+     const response = await fetch(`${WEBAPP_URL}?${params.toString()}`);
+     const data = await response.json();
+     if (data.success) {
+       alert(`✅ ${results.length} results saved!`);
+       await loadAllData();
+       document.getElementById("admin-section").style.display = "none";
+     } else {
+       throw new Error(data.error);
+     }
+   } catch(e) { 
+     alert("Error: " + e.message);
+   }
+ }
+ 
+async function savePicks() {
+   const player = document.getElementById("playerName").value.trim();
+   if (!player) { alert("Enter your name!"); return; }
+   
+   // Get currently selected picks from the UI
+   const currentSelections = [];
+   for (let group in groupMatches) {
+     for (let i = 0; i < groupMatches[group].length; i++) {
+       const match = groupMatches[group][i].match;
+       // Skip matches that already have results
+       if (actualResults[match] && actualResults[match].result) {
+         continue;
+       }
+       const matchId = `${group}_${i}`;
+       const selected = document.querySelector(`input[name="${matchId}"]:checked`);
+       if (selected) {
+         currentSelections.push({ match: match, pick: selected.value });
+       }
+     }
+   }
+   
+   if (currentSelections.length === 0) { 
+     alert("No picks selected for upcoming matches!"); 
+     return; 
+   }
+   
+   try {
+     // First, load all existing picks for this player
+     const loadResponse = await fetch(`${WEBAPP_URL}?action=load`);
+     const loadData = await loadResponse.json();
+     const existingPicks = loadData.picks.filter(p => p.player === player);
+     
+     // Merge: keep existing picks for matches not in currentSelections
+     const mergedPicks = [...currentSelections];
+     
+     for (let existing of existingPicks) {
+       const isUpdated = currentSelections.some(s => s.match === existing.match);
+       if (!isUpdated) {
+         mergedPicks.push(existing);
+       }
+     }
+     
+     // Delete all existing picks for this player
+     const deleteParams = new URLSearchParams();
+     deleteParams.append("action", "deletePlayerPicks");
+     deleteParams.append("player", player);
+     await fetch(`${WEBAPP_URL}?${deleteParams.toString()}`);
+     
+     // Save the merged picks
+     const params = new URLSearchParams();
+     params.append("action", "save");
+     params.append("player", player);
+     params.append("picks", JSON.stringify(mergedPicks));
+     const response = await fetch(`${WEBAPP_URL}?${params.toString()}`);
+     const data = await response.json();
+     if (data.success) {
+       alert(`✅ Saved ${mergedPicks.length} picks for ${player}!`);
+       await loadAllData();
+     } else {
+       throw new Error(data.error);
+     }
+   } catch(e) { 
+     alert("Error: " + e.message);
+   }
+}
+
+ async function loadMyPicks() {
+   if (isLoading) return;
+   isLoading = true;
+   
+   const player = document.getElementById("playerName").value.trim();
+   if (!player) { 
+     isLoading = false;
+     alert("Enter your name!"); 
+     return; 
+   }
+   
+   try {
+     const response = await fetch(`${WEBAPP_URL}?action=load`);
+     const data = await response.json();
+     if (!data.success) throw new Error(data.error);
+     
+     const userPicks = data.picks.filter(p => p.player === player);
+     
+     for (let group in groupMatches) {
+       for (let i = 0; i < groupMatches[group].length; i++) {
+         const matchId = `${group}_${i}`;
+         document.querySelectorAll(`input[name="${matchId}"]`).forEach(r => r.checked = false);
+       }
+     }
+     
+     userPicks.forEach(pick => {
+       for (let group in groupMatches) {
+         const idx = groupMatches[group].findIndex(m => m.match === pick.match);
+         if (idx !== -1) {
+           const radio = document.querySelector(`input[name="${group}_${idx}"][value="${pick.pick}"]`);
+           if (radio) radio.checked = true;
+           break;
+         }
+       }
+     });
+     updateProgress();
+     alert(`✅ Loaded ${userPicks.length} picks for ${player}`);
+   } catch(e) { 
+     alert("Error: " + e.message);
+   } finally {
+     isLoading = false;
+   }
+ }
+ 
+ async function loadAllData() {
+   if (isLoading) return;
+   isLoading = true;
+   
+   try {
+     const response = await fetch(`${WEBAPP_URL}?action=load`);
+     const data = await response.json();
+     if (!data.success) throw new Error(data.error);
+     
+     allPicks = data.picks || [];
+     actualResults = data.results || {};
+     
+     const playerSet = new Set();
+     allPicks.forEach(p => playerSet.add(p.player));
+     currentPlayers = Array.from(playerSet).sort();
+     
+     updatePlayerDropdown();
+     loadMatches();
+     
+     const playerScores = [];
+     for (let player of currentPlayers) {
+       let score = 0, total = 0;
+       const playerPicks = allPicks.filter(p => p.player === player);
+       for (let group in groupMatches) {
+         for (let m of groupMatches[group]) {
+           const actual = actualResults[m.match];
+           const pick = playerPicks.find(p => p.match === m.match);
+           if (actual && actual.result) {
+             total++;
+             if (pick && pick.pick === actual.result) score++;
+           }
+         }
+       }
+       playerScores.push({ name: player, score: score, total: total });
+     }
+     playerScores.sort((a,b) => b.score - a.score);
+     
+     const leaderboardDiv = document.getElementById("leaderboard");
+     const leaderboardList = document.getElementById("leaderboard-list");
+     if (playerScores.length > 0) {
+       leaderboardDiv.style.display = "block";
+       leaderboardList.innerHTML = "";
+       playerScores.forEach((p, i) => {
+         const percent = p.total > 0 ? Math.round(p.score/p.total*100) : 0;
+         leaderboardList.innerHTML += `<li><strong>${p.name}</strong> - ${p.score}/${p.total} correct (${percent}%) ${i === 0 ? "🏆" : ""}</li>`;
+       });
+     }
+     updateProgress();
+   } catch(e) { 
+     alert("Error loading: " + e.message);
+   } finally {
+     isLoading = false;
+   }
+ }
+ 
+ function getResultSymbol(result) {
+   if (result === "1") return "🏠 1";
+   if (result === "X") return "🤝 X";
+   if (result === "2") return "✈️ 2";
+   return "?";
+ }
+ 
+ function getResultBadgeClass(result) {
+   if (result === "1") return "result-home";
+   if (result === "X") return "result-draw";
+   if (result === "2") return "result-away";
+   return "result-none";
+ }
+ 
+ // Calculate group standings for a specific group
+ function calculateGroupStandings(groupName, matchesArray) {
+   const standings = {};
+   
+   // Initialize all teams
+   matchesArray.forEach(match => {
+     const [team1, team2] = match.match.split(" vs ");
+     if (!standings[team1]) {
+       standings[team1] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
+     }
+     if (!standings[team2]) {
+       standings[team2] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
+     }
+   });
+   
+   // Calculate stats from results
+   matchesArray.forEach(match => {
+     const [team1, team2] = match.match.split(" vs ");
+     const actual = actualResults[match.match];
+     
+     if (actual && actual.result) {
+       standings[team1].played++;
+       standings[team2].played++;
+       
+       if (actual.result === "1") { // Home win (team1 wins)
+         standings[team1].won++;
+         standings[team1].points += 3;
+         standings[team2].lost++;
+       } else if (actual.result === "2") { // Away win (team2 wins)
+         standings[team2].won++;
+         standings[team2].points += 3;
+         standings[team1].lost++;
+       } else if (actual.result === "X") { // Draw
+         standings[team1].draw++;
+         standings[team1].points += 1;
+         standings[team2].draw++;
+         standings[team2].points += 1;
+       }
+     }
+   });
+   
+   // Convert to array and sort by points
+   return Object.entries(standings)
+     .map(([name, stats]) => ({ name, ...stats }))
+     .sort((a, b) => b.points - a.points);
+ }
+ 
+ // Create standings table HTML
+ function createStandingsTable(standings) {
+   if (standings.length === 0) return '';
+   
+   let html = `
+     <div class="group-standings">
+       <table>
+         <thead>
+           <tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>
+         </thead>
+         <tbody>
+   `;
+   
+   standings.forEach(team => {
+     html += `
+       <tr>
+         <td>${team.name}</td>
+         <td>${team.played}</td>
+         <td>${team.won}</td>
+         <td>${team.draw}</td>
+         <td>${team.lost}</td>
+         <td><strong>${team.points}</strong></td>
+       </tr>
+     `;
+   });
+   
+   html += `</tbody></table></div>`;
+   return html;
+ }
+ 
+ function loadMatches() {
+   const container = document.getElementById("group-matches");
+   container.innerHTML = "";
+   
+   for (let group in groupMatches) {
+     const groupDiv = document.createElement("div");
+     groupDiv.className = "group-block";
+     groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">📋 ${group} ▼</div>`;
+     
+     const matchesDiv = document.createElement("div");
+     matchesDiv.id = `group-${group.replace(/ /g, '_')}`;
+     matchesDiv.style.display = "none";
+     
+     // Add standings table at the top of the group
+     const standings = calculateGroupStandings(group, groupMatches[group]);
+     const standingsHtml = createStandingsTable(standings);
+     if (standingsHtml) {
+       matchesDiv.innerHTML = standingsHtml;
+     }
+     
+     groupMatches[group].forEach((matchObj, idx) => {
+       const matchId = `${group}_${idx}`;
+       const actual = actualResults[matchObj.match];
+       const actualResult = actual ? actual.result : null;
+       const actualScore = actual ? actual.score : null;
+       const isCompleted = actualResult !== null && actualResult !== undefined;
+       
+       const playerPicks = [];
+       for (let player of currentPlayers) {
+         const pick = allPicks.find(p => p.player === player && p.match === matchObj.match);
+         if (pick) {
+           playerPicks.push({
+             name: player,
+             pick: pick.pick,
+             correct: actualResult && pick.pick === actualResult
+           });
+         }
+       }
+       
+       const matchDiv = document.createElement("div");
+       matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
+       
+       let resultBadge = '';
+       if (actualResult && actualScore) {
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
+       } else if (actualResult) {
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
+       } else {
+         resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
+       }
+       
+       let picksHtml = '';
+       if (playerPicks.length > 0) {
+         picksHtml = '<div class="picks-row">';
+         for (let pp of playerPicks) {
+           let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
+           picksHtml += `
+             <div class="player-pick">
+               <span class="player-name">${pp.name}</span>
+               <span class="player-pick-value ${pp.correct ? 'pick-correct' : 'pick-wrong'}">${pickSymbol}</span>
+               ${pp.correct ? '<span>✓</span>' : ''}
+             </div>
+           `;
+         }
+         picksHtml += '</div>';
+       }
+       
+       let radioHtml = '';
+       if (!isCompleted) {
+         radioHtml = `
+           <div class="radio-group">
+             <label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label>
+             <label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label>
+             <label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label>
+           </div>
+         `;
+       } else {
+         radioHtml = `<div class="radio-group disabled"></div>`;
+       }
+       
+       matchDiv.innerHTML = `
+         <div class="match-header">
+           <span class="match-name">${matchObj.match}</span>
+           <span class="match-time">📅 ${matchObj.time}</span>
+           ${resultBadge}
+         </div>
+         ${picksHtml}
+         ${radioHtml}
+       `;
+       
+       matchesDiv.appendChild(matchDiv);
+     });
+     groupDiv.appendChild(matchesDiv);
+     container.appendChild(groupDiv);
+   }
+   updateProgress();
+ }
+ 
+ function toggleGroup(id) {
+   const el = document.getElementById(`group-${id}`);
+   if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+ }
+ 
+ function markUnsaved(matchId) {
+   updateProgress();
+ }
+ 
+ function updateProgress() {
+   let total = 0, saved = 0;
+   for (let group in groupMatches) {
+     for (let i = 0; i < groupMatches[group].length; i++) {
+       const match = groupMatches[group][i].match;
+       if (!actualResults[match] || !actualResults[match].result) {
+         total++;
+         if (document.querySelector(`input[name="${group}_${i}"]:checked`)) saved++;
+       }
+     }
+   }
+   const percent = total > 0 ? Math.round(saved/total*100) : 0;
+   document.getElementById("progress-container").innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}% Complete (${saved}/${total} upcoming matches)</div></div>`;
+ }
+ 
+ function initTabs() {
+   document.querySelectorAll('.stage-tab').forEach(tab => {
+     tab.addEventListener('click', () => {
+       document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+       tab.classList.add('active');
+       document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
+       const stage = tab.dataset.stage;
+       document.getElementById(`${stage}-matches`).classList.add('active');
+     });
+   });
+ }
+ 
+ initTabs();
+ loadAllData();
+ </script> 
+</body> 
+</html>
