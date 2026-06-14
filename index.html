@@ -317,9 +317,20 @@ function showAdminLogin() {
  }
  
  // Load scores editor with current values
- function loadScoresEditor() {
+function loadScoresEditor() {
    const container = document.getElementById("scores-editor");
+   if (!container) {
+     console.error("scores-editor container not found");
+     return;
+   }
+   
    container.innerHTML = "";
+   
+   // Check if groupMatches has data
+   if (Object.keys(groupMatches).length === 0) {
+     container.innerHTML = "<p>Loading match data... Please wait and try again.</p>";
+     return;
+   }
    
    for (let group in groupMatches) {
      const groupDiv = document.createElement("div");
@@ -336,8 +347,9 @@ function showAdminLogin() {
      groupMatches[group].forEach((matchObj, idx) => {
        const matchId = `${group}_${idx}`;
        const actual = actualResults[matchObj.match] || {};
-       const homeScore = actual.score ? actual.score.split("-")[0] : "";
-       const awayScore = actual.score ? actual.score.split("-")[1] : "";
+       const scoreParts = actual.score ? actual.score.split("-") : ["", ""];
+       const homeScore = scoreParts[0];
+       const awayScore = scoreParts[1];
        
        const matchDiv = document.createElement("div");
        matchDiv.style.marginBottom = "15px";
@@ -357,9 +369,9 @@ function showAdminLogin() {
        matchesDiv.appendChild(matchDiv);
        
        // Add live preview of result
-       const homeInput = matchesDiv.querySelector(`#home-${matchId}`);
-       const awayInput = matchesDiv.querySelector(`#away-${matchId}`);
-       const resultSpan = matchesDiv.querySelector(`#result-preview-${matchId}`);
+       const homeInput = matchDiv.querySelector(`#home-${matchId}`);
+       const awayInput = matchDiv.querySelector(`#away-${matchId}`);
+       const resultSpan = matchDiv.querySelector(`#result-preview-${matchId}`);
        
        function updatePreview() {
          const home = parseInt(homeInput.value) || 0;
@@ -386,10 +398,10 @@ function showAdminLogin() {
      groupDiv.appendChild(matchesDiv);
      container.appendChild(groupDiv);
    }
- }
- 
+}
+
  // Save all scores to Google Sheet
- async function saveAllScores() {
+async function saveAllScores() {
    const scoreUpdates = [];
    
    for (let group in groupMatches) {
@@ -402,16 +414,11 @@ function showAdminLogin() {
        if (homeScore !== undefined && awayScore !== undefined) {
          const home = parseInt(homeScore) || 0;
          const away = parseInt(awayScore) || 0;
-         let result = "";
-         if (home > away) result = "1";
-         else if (home < away) result = "2";
-         else if (home === away && home !== 0) result = "X";
          
          scoreUpdates.push({
            match: matchName,
            homeScore: home,
-           awayScore: away,
-           result: result
+           awayScore: away
          });
        }
      }
@@ -437,8 +444,14 @@ function showAdminLogin() {
    } catch(e) { 
      alert("Error saving scores: " + e.message);
    }
- }
- 
+}
+
+function closeAdminMode() {
+   isAdminMode = false;
+   document.getElementById("admin-section").style.display = "none";
+   loadAllData();
+}
+
  function updatePlayerDropdown() {
    const select = document.getElementById("playerSelect");
    const currentValue = select.value;
