@@ -415,6 +415,29 @@ function loadScoresEditor() {
    }
 }
 
+//Add Flags to team names in match display
+function addFlagToTeam(teamName) {
+   const flagMap = {
+     'Mexico': '🇲🇽', 'South Africa': '🇿🇦', 'South Korea': '🇰🇷', 'Czechia': '🇨🇿',
+     'Canada': '🇨🇦', 'Bosnia': '🇧🇦', 'Qatar': '🇶🇦', 'Switzerland': '🇨🇭',
+     'USA': '🇺🇸', 'Paraguay': '🇵🇾', 'Brazil': '🇧🇷', 'Morocco': '🇲🇦',
+     'Haiti': '🇭🇹', 'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'Australia': '🇦🇺', 'Turkey': '🇹🇷',
+     'Germany': '🇩🇪', 'Curaçao': '🇨🇼', 'Netherlands': '🇳🇱', 'Japan': '🇯🇵',
+     'Belgium': '🇧🇪', 'Egypt': '🇪🇬', 'Spain': '🇪🇸', 'Cabo Verde': '🇨🇻',
+     'France': '🇫🇷', 'Senegal': '🇸🇳', 'Argentina': '🇦🇷', 'Algeria': '🇩🇿',
+     'Portugal': '🇵🇹', 'DR Congo': '🇨🇩', 'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Croatia': '🇭🇷',
+     'Uruguay': '🇺🇾', 'Saudi Arabia': '🇸🇦', 'Iran': '🇮🇷', 'New Zealand': '🇳🇿',
+     'Côte d\'Ivoire': '🇨🇮', 'Ecuador': '🇪🇨', 'Sweden': '🇸🇪', 'Tunisia': '🇹🇳'
+   };
+   
+   for (let [team, flag] of Object.entries(flagMap)) {
+     if (teamName.includes(team)) {
+       return flag + ' ' + teamName;
+     }
+   }
+   return teamName;
+}
+
 // Toggle collapsible groups in admin panel
 function toggleAdminGroup(groupId) {
    const el = document.getElementById(groupId);
@@ -863,7 +886,7 @@ function loadMatches() {
        
        matchDiv.innerHTML = `
          <div class="match-header">
-           <span class="match-name">${matchObj.match}</span>
+           <span class="match-name">${addFlagToTeam(matchObj.match)}</span>
            <span class="match-time">📅 ${matchObj.time}</span>
            ${resultBadge}
          </div>
