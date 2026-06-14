@@ -61,7 +61,7 @@
  .match-card { 
    background: #f9f9f9; 
    border-bottom: 1px solid #eee; 
-   padding: 12px 15px;
+   padding: 10px 12px;
  }
  .match-card:nth-child(even) { background: #fff; }
  .match-card.completed { 
@@ -70,24 +70,23 @@
  }
  .match-header { 
    display: flex; 
-   align-items: center; 
+   align-items: baseline;
    flex-wrap: wrap;
-   margin-bottom: 10px;
-   gap: 8px;
+   margin-bottom: 6px;
+   gap: 6px;
  }
  .match-name { 
    font-weight: bold; 
-   font-size: 1.05em;
-   min-width: 280px;
+   font-size: 1em;
  }
  .match-time { 
    color: #666; 
-   font-size: 0.85em; 
+   font-size: 0.8em; 
  }
  .match-result-badge {
-   padding: 3px 10px;
+   padding: 2px 8px;
    border-radius: 15px;
-   font-size: 0.85em;
+   font-size: 0.75em;
    font-weight: bold;
  }
  .result-home { background: #4CAF50; color: white; }
@@ -98,20 +97,21 @@
  .picks-row {
    display: flex;
    flex-wrap: wrap;
-   gap: 15px;
-   margin-top: 8px;
-   margin-bottom: 8px;
-   padding-top: 8px;
+   gap: 10px;
+   margin-top: 6px;
+   margin-bottom: 6px;
+   padding-top: 6px;
    border-top: 1px dashed #ddd;
  }
  .player-pick {
-   display: flex;
+   display: inline-flex;
    align-items: center;
-   gap: 8px;
+   gap: 5px;
    background: #f0f0f0;
-   padding: 4px 10px;
+   padding: 3px 8px;
    border-radius: 20px;
-   font-size: 0.85em;
+   font-size: 0.8em;
+   white-space: nowrap;
  }
  .player-name {
    font-weight: bold;
@@ -119,9 +119,10 @@
  }
  .player-pick-value {
    font-weight: bold;
-   padding: 2px 8px;
+   padding: 2px 6px;
    border-radius: 12px;
    background: white;
+   font-size: 0.85em;
  }
  .pick-correct {
    background: #4CAF50;
@@ -137,9 +138,9 @@
  }
  
  .radio-group {
-   margin-top: 8px;
+   margin-top: 6px;
    display: flex;
-   gap: 15px;
+   gap: 12px;
    flex-wrap: wrap;
  }
  .radio-group label {
@@ -147,6 +148,7 @@
    display: inline-flex;
    align-items: center;
    gap: 4px;
+   font-size: 0.85em;
  }
  .radio-group input[type="radio"] {
    cursor: pointer;
@@ -161,37 +163,6 @@
    cursor: not-allowed;
  }
  
- .score-edit {
-   display: inline-flex;
-   align-items: center;
-   gap: 5px;
-   margin-left: 15px;
- }
- .score-input {
-   width: 40px;
-   padding: 4px;
-   text-align: center;
-   border: 1px solid #ccc;
-   border-radius: 5px;
-   font-size: 0.85em;
- }
- .score-input:focus {
-   outline: none;
-   border-color: #4CAF50;
- }
- .save-score-btn {
-   background: #2196F3;
-   color: white;
-   border: none;
-   border-radius: 5px;
-   padding: 4px 8px;
-   font-size: 0.7em;
-   cursor: pointer;
- }
- .save-score-btn:hover {
-   background: #0b7dda;
- }
- 
  button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
  .btn-blue { background: #2196F3; }
  .btn-orange { background: #FF9800; }
@@ -204,7 +175,25 @@
  .progress-bar { background: #e0e0e0; border-radius: 10px; height: 20px; margin: 10px 0; overflow: hidden; }
  .progress-fill { background: #4CAF50; height: 100%; transition: width 0.3s; color: white; text-align: center; font-size: 12px; line-height: 20px; }
  .player-select { padding: 8px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; margin-left: 10px; min-width: 150px; }
- @media (max-width: 768px) { .match-name { display: block; margin-bottom: 5px; } .picks-row { flex-direction: column; gap: 5px; } .score-edit { margin-left: 0; margin-top: 5px; } }
+ .admin-group-title { 
+   background: #2196F3; 
+   color: white; 
+   padding: 8px 12px; 
+   font-weight: bold; 
+   cursor: pointer; 
+   font-size: 0.95em;
+   border-radius: 5px;
+   margin-bottom: 5px;
+ }
+ .admin-group-title:hover { background: #0b7dda; }
+ .admin-matches-container { margin-bottom: 15px; }
+ 
+ @media (max-width: 768px) { 
+   .match-name { display: inline; margin-right: 8px; } 
+   .match-time { display: inline; }
+   .picks-row { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+   .player-pick { white-space: nowrap; }
+ }
  </style> 
 </head> 
 <body> 
@@ -261,7 +250,7 @@
      <p>Enter the final scores for each match. The result (1, X, or 2) will be calculated automatically.</p>
      <div id="scores-editor"></div>
      <div style="margin-top: 20px; text-align: center;">
-       <button onclick="saveAllScores()" class="btn-orange">💾 Save All Scores to Google Sheet</button>
+       <button onclick="saveAllScores()" class="btn-orange">💾 Save Scores</button>
        <button onclick="closeAdminMode()" class="btn-red">Exit Edit Mode</button>
      </div>
    </div>
@@ -296,7 +285,6 @@ function showAdminLogin() {
    const password = prompt("Enter admin password to edit scores:");
    if (password === ADMIN_PASSWORD) {
      isAdminMode = true;
-     // Show the admin section
      const adminSection = document.getElementById("admin-section");
      if (adminSection) {
        adminSection.style.display = "block";
@@ -310,13 +298,14 @@ function showAdminLogin() {
      alert("Wrong password!");
    }
 }
+ 
  function closeAdminMode() {
    isAdminMode = false;
    document.getElementById("admin-section").style.display = "none";
    loadAllData();
  }
  
- // Load scores editor with current values
+ // Load scores editor with collapsible groups
 function loadScoresEditor() {
    const container = document.getElementById("scores-editor");
    if (!container) {
@@ -332,19 +321,23 @@ function loadScoresEditor() {
    }
    
    for (let group in groupMatches) {
+     const groupId = `admin-group-${group.replace(/ /g, '_')}`;
+     const matchesId = `admin-matches-${group.replace(/ /g, '_')}`;
+     
      const groupDiv = document.createElement("div");
-     groupDiv.style.marginBottom = "20px";
+     groupDiv.style.marginBottom = "15px";
      groupDiv.style.border = "1px solid #ddd";
      groupDiv.style.borderRadius = "8px";
      groupDiv.style.overflow = "hidden";
      
-     groupDiv.innerHTML = `<div style="background: #2196F3; color: white; padding: 10px 15px; font-weight: bold;">📋 ${group}</div>`;
+     groupDiv.innerHTML = `
+       <div class="admin-group-title" onclick="toggleAdminGroup('${matchesId}')">📋 ${group} ▼</div>
+       <div id="${matchesId}" class="admin-matches-container" style="padding: 10px 15px; display: none;"></div>
+     `;
      
-     const matchesDiv = document.createElement("div");
-     matchesDiv.style.padding = "10px 15px";
+     const matchesDiv = groupDiv.querySelector(`#${matchesId}`);
      
      groupMatches[group].forEach((matchObj, idx) => {
-       // Create a clean ID without special characters
        const cleanId = `${group.replace(/ /g, '_')}_${idx}`;
        const actual = actualResults[matchObj.match] || {};
        const scoreParts = actual.score ? actual.score.split("-") : ["", ""];
@@ -352,23 +345,22 @@ function loadScoresEditor() {
        const awayScore = scoreParts[1];
        
        const matchDiv = document.createElement("div");
-       matchDiv.style.marginBottom = "15px";
-       matchDiv.style.padding = "10px";
+       matchDiv.style.marginBottom = "12px";
+       matchDiv.style.padding = "8px";
        matchDiv.style.background = "#f9f9f9";
        matchDiv.style.borderRadius = "5px";
        matchDiv.innerHTML = `
-         <strong>${matchObj.match}</strong>
-         <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-           <span>🏠 Home Score:</span>
-           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
-           <span>✈️ Visitor Score:</span>
-           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
-           <span id="result-preview-${cleanId}" style="font-weight: bold; margin-left: 10px;"></span>
+         <strong style="font-size: 0.9em;">${matchObj.match}</strong>
+         <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+           <span style="font-size: 0.85em;">🏠 Home:</span>
+           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 50px; padding: 4px; text-align: center;" min="0">
+           <span style="font-size: 0.85em;">✈️ Visitor:</span>
+           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 50px; padding: 4px; text-align: center;" min="0">
+           <span id="result-preview-${cleanId}" style="font-weight: bold; font-size: 0.8em; margin-left: 5px;"></span>
          </div>
        `;
        matchesDiv.appendChild(matchDiv);
        
-       // Add live preview of result
        const homeInput = document.getElementById(`home-${cleanId}`);
        const awayInput = document.getElementById(`away-${cleanId}`);
        const resultSpan = document.getElementById(`result-preview-${cleanId}`);
@@ -378,13 +370,13 @@ function loadScoresEditor() {
            const home = parseInt(homeInput.value) || 0;
            const away = parseInt(awayInput.value) || 0;
            if (home > away) {
-             resultSpan.innerHTML = "→ Result: 🏠 Home Win (1)";
+             resultSpan.innerHTML = "→ 🏠 Home Win (1)";
              resultSpan.style.color = "#4CAF50";
            } else if (home < away) {
-             resultSpan.innerHTML = "→ Result: ✈️ Visitor Win (2)";
+             resultSpan.innerHTML = "→ ✈️ Visitor Win (2)";
              resultSpan.style.color = "#f44336";
            } else if (home === away && home !== 0) {
-             resultSpan.innerHTML = "→ Result: 🤝 Draw (X)";
+             resultSpan.innerHTML = "→ 🤝 Draw (X)";
              resultSpan.style.color = "#FF9800";
            } else {
              resultSpan.innerHTML = "";
@@ -397,8 +389,19 @@ function loadScoresEditor() {
        }
      });
      
-     groupDiv.appendChild(matchesDiv);
      container.appendChild(groupDiv);
+   }
+}
+
+// Toggle collapsible groups in admin panel
+function toggleAdminGroup(groupId) {
+   const el = document.getElementById(groupId);
+   if (el) {
+     if (el.style.display === "none") {
+       el.style.display = "block";
+     } else {
+       el.style.display = "none";
+     }
    }
 }
 
@@ -446,12 +449,6 @@ async function saveAllScores() {
    } catch(e) { 
      alert("Error saving scores: " + e.message);
    }
-}
-
-function closeAdminMode() {
-   isAdminMode = false;
-   document.getElementById("admin-section").style.display = "none";
-   loadAllData();
 }
 
  function updatePlayerDropdown() {
@@ -668,9 +665,9 @@ async function loadAllData() {
 }
 
  function getResultSymbol(result) {
-   if (result === "1") return "🏠 1";
-   if (result === "X") return "🤝 X";
-   if (result === "2") return "✈️ 2";
+   if (result === "1") return "🏠1";
+   if (result === "X") return "🤝X";
+   if (result === "2") return "✈️2";
    return "?";
  }
  
@@ -729,7 +726,7 @@ async function loadAllData() {
    
    let html = `
      <div class="group-standings">
-       <table>
+       </table>
          <thead>
            <tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>
          </thead>
@@ -796,11 +793,9 @@ function loadMatches() {
        
        let resultBadge = '';
        if (actualResult && actualScore) {
-         const resultText = actualResult === "1" ? "🏠 Home Win" : (actualResult === "X" ? "🤝 Draw" : "✈️ Visitor Win");
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${resultText} (${actualScore})</span>`;
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
        } else if (actualResult) {
-         const resultText = actualResult === "1" ? "🏠 Home Win" : (actualResult === "X" ? "🤝 Draw" : "✈️ Visitor Win");
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${resultText}</span>`;
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
        } else {
          resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
        }
