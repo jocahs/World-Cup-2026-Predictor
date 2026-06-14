@@ -89,12 +89,12 @@
    color: #666; 
    font-size: 0.8em; 
  }
- .match-result-badge {
-   padding: 2px 8px;
-   border-radius: 15px;
-   font-size: 0.75em;
+.match-result-badge {
+   padding: 4px 12px;
+   border-radius: 20px;
+   font-size: 0.9em;
    font-weight: bold;
- }
+}
  .result-home { background: #4CAF50; color: white; }
  .result-draw { background: #FF9800; color: white; }
  .result-away { background: #f44336; color: white; }
@@ -143,31 +143,35 @@
    color: #666;
  }
  
- .radio-group {
+.radio-group {
    margin-top: 6px;
    display: flex;
-   gap: 12px;
+   gap: 20px;
    flex-wrap: wrap;
- }
- .radio-group label {
+}
+.radio-group label {
    cursor: pointer;
    display: inline-flex;
    align-items: center;
-   gap: 4px;
-   font-size: 0.85em;
- }
- .radio-group input[type="radio"] {
+   gap: 6px;
+   font-size: 1.2em;
+}
+.radio-group input[type="radio"] {
    cursor: pointer;
- }
- .radio-group.disabled {
+   width: 18px;
+   height: 18px;
+   transform: scale(1.2);
+   margin-right: 5px;
+}
+.radio-group.disabled {
    opacity: 0.5;
- }
- .radio-group.disabled label {
+}
+.radio-group.disabled label {
    cursor: not-allowed;
- }
- .radio-group.disabled input {
+}
+.radio-group.disabled input {
    cursor: not-allowed;
- }
+}
  
  button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
  .btn-blue { background: #2196F3; }
@@ -253,7 +257,7 @@
  <div id="admin-section" style="display: none;">
    <div class="container">
      <h3>🔧 Edit Match Scores</h3>
-     <p>Enter the final scores for each match. The result (1, X, or 2) will be calculated automatically.</p>
+     <p>Enter the final scores for each match.</p>
      <div id="scores-editor"></div>
      <div style="margin-top: 20px; text-align: center;">
        <button onclick="saveAllScores()" class="btn-orange">💾 Save Scores</button>
@@ -359,9 +363,9 @@ function loadScoresEditor() {
          <strong style="font-size: 0.9em;">${matchObj.match}</strong>
          <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
            <span style="font-size: 0.85em;">🏠 Home:</span>
-           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 50px; padding: 4px; text-align: center;" min="0">
+           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 50px; padding: 4px; text-align: center;;" min="0" max="20" maxlength="2">
            <span style="font-size: 0.85em;">✈️ Visitor:</span>
-           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 50px; padding: 4px; text-align: center;" min="0">
+           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 50px; padding: 4px; text-align: center;" min="0" max="20" maxlength="2">
            <span id="result-preview-${cleanId}" style="font-weight: bold; font-size: 0.8em; margin-left: 5px;"></span>
          </div>
        `;
