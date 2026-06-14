@@ -5,7 +5,6 @@
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
  
- <!-- PWA Meta Tags -->
  <link rel="manifest" href="manifest.json">
  <meta name="theme-color" content="#4CAF50">
  <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,44 +24,43 @@
  .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
  .group-title:hover { background: #0b7dda; }
  
- /* Group Standings Table */
-.group-standings {
+ .group-standings {
    background: #2c3e50;
    margin: 10px 15px;
    border-radius: 8px;
    overflow-x: auto;
-}
-.group-standings table {
+ }
+ .group-standings table {
    width: 100%;
    border-collapse: collapse;
    font-size: 0.8em;
-}
-.group-standings th {
+ }
+ .group-standings th {
    background: #1a252f;
    color: white;
    padding: 8px 6px;
    text-align: center;
    font-weight: bold;
    border: 1px solid #3a4a5a;
-}
-.group-standings td {
+ }
+ .group-standings td {
    background: white;
    padding: 6px;
    text-align: center;
    border-bottom: 1px solid #ddd;
    border-left: 1px solid #eee;
    border-right: 1px solid #eee;
-}
-.group-standings td:first-child, .group-standings th:first-child {
+ }
+ .group-standings td:first-child, .group-standings th:first-child {
    text-align: left;
    padding-left: 12px;
-}
-.group-standings tr:last-child td {
+ }
+ .group-standings tr:last-child td {
    border-bottom: none;
-}
-.group-standings tr:hover td {
+ }
+ .group-standings tr:hover td {
    background: #f5f5f5;
-}
+ }
  
 .match-card { 
    background: #f9f9f9; 
@@ -97,6 +95,24 @@
  .match-time { 
    color: #666; 
    font-size: 0.8em; 
+ }
+
+ .transmission-link {
+   color: #ff9800;
+   font-size: 0.75em;
+   margin-left: 5px;
+   text-decoration: none;
+   cursor: pointer;
+}
+.transmission-link:hover {
+   text-decoration: underline;
+   color: #ff5722;
+}
+
+ .transmission-info {
+   color: #ff9800;
+   font-size: 0.75em;
+   margin-left: 5px;
  }
 .match-result-badge {
    padding: 4px 12px;
@@ -188,7 +204,6 @@
    cursor: not-allowed;
 }
  
-/* Flag image styles */
 .team-flag {
    width: 20px;
    height: 15px;
@@ -259,7 +274,7 @@
 
  <div class="container">
    <div class="stage-tabs">
-     <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
+     <div class="stage-tab active" data-stage="group">🏆 Group Stage</div>
      <div class="stage-tab" data-stage="round32">🔴 Round of 32</div>
      <div class="stage-tab" data-stage="round16">🟡 Round of 16</div>
      <div class="stage-tab" data-stage="quarter">🔵 Quarter-Finals</div>
@@ -267,7 +282,7 @@
      <div class="stage-tab" data-stage="final">🏆 Final</div>
    </div>
    
-   <div id="group-matches" class="matches-container"></div>
+   <div id="group-matches" class="matches-container active"></div>
    <div id="round32-matches" class="matches-container"></div>
    <div id="round16-matches" class="matches-container"></div>
    <div id="quarter-matches" class="matches-container"></div>
@@ -293,10 +308,7 @@
  </div>
 
  <script> 
- // ============================================
- // GOOGLE SHEETS SHARED VERSION
- // ============================================
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxzLtLM6G94GWePLHjxWkRjeiKLwU1h9kBxjcpwiNFM96NeVFOitScBp8M_NF-S-yXb/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxWV5W9b4w3JsHHQIwKHO7qbcoGQBcLhBxBFNVppuYhAhIgMtRHjX3S1pvF3ML4y7Iz/exec";
  const ADMIN_PASSWORD = "wc2026";
  
  let actualResults = {};
@@ -304,20 +316,9 @@
  let currentPlayers = [];
  let isLoading = false;
  let isAdminMode = false;
- 
- // Group stage matches - will be loaded from Google Sheets
-let groupMatches = {};
+ let groupMatches = {};
 
- const knockoutMatches = {
-   round32: Array(16).fill().map((_, i) => ({ match: `Round of 32 Match ${i+1}`, time: "TBD" })),
-   round16: Array(8).fill().map((_, i) => ({ match: `Round of 16 Match ${i+1}`, time: "TBD" })),
-   quarter: Array(4).fill().map((_, i) => ({ match: `Quarter-Final ${i+1}`, time: "TBD" })),
-   semi: [{ match: "Semi-Final 1", time: "TBD" }, { match: "Semi-Final 2", time: "TBD" }],
-   final: [{ match: "3rd Place Match", time: "TBD" }, { match: "Final", time: "TBD" }]
- };
- 
- // Show admin login and enter edit mode
-function showAdminLogin() {
+ function showAdminLogin() {
    const password = prompt("Enter admin password to edit scores:");
    if (password === ADMIN_PASSWORD) {
      isAdminMode = true;
@@ -326,14 +327,11 @@ function showAdminLogin() {
        adminSection.style.display = "block";
        loadScoresEditor();
        adminSection.scrollIntoView({ behavior: "smooth" });
-     } else {
-       console.error("admin-section not found");
-       alert("Error: Admin section not found in the page");
      }
    } else if (password) {
      alert("Wrong password!");
    }
-}
+ }
  
  function closeAdminMode() {
    isAdminMode = false;
@@ -341,36 +339,58 @@ function showAdminLogin() {
    loadAllData();
  }
  
- // Load scores editor with collapsible groups
+ function getFlagCode(teamName) {
+   const flagMap = {
+     'Mexico': 'mx', 'South Africa': 'za', 'South Korea': 'kr', 'Czechia': 'cz',
+     'Canada': 'ca', 'Bosnia and Herzegovina': 'ba', 'Bosnia': 'ba', 'Qatar': 'qa', 'Switzerland': 'ch',
+     'Brazil': 'br', 'Morocco': 'ma', 'Haiti': 'ht', 'Scotland': 'gb-sct',
+     'USA': 'us', 'Paraguay': 'py', 'Australia': 'au', 'Turkey': 'tr',
+     'Germany': 'de', 'Curaçao': 'cw', "Côte d'Ivoire": 'ci', 'Ivory Coast': 'ci', 'Ecuador': 'ec',
+     'Netherlands': 'nl', 'Japan': 'jp', 'Sweden': 'se', 'Tunisia': 'tn',
+     'Belgium': 'be', 'Egypt': 'eg', 'Iran': 'ir', 'New Zealand': 'nz',
+     'Spain': 'es', 'Cabo Verde': 'cv', 'Saudi Arabia': 'sa', 'Uruguay': 'uy',
+     'France': 'fr', 'Senegal': 'sn', 'Iraq': 'iq', 'Norway': 'no',
+     'Argentina': 'ar', 'Algeria': 'dz', 'Austria': 'at', 'Jordan': 'jo',
+     'Portugal': 'pt', 'DR Congo': 'cd', 'Uzbekistan': 'uz', 'Colombia': 'co',
+     'England': 'gb-eng', 'Croatia': 'hr', 'Ghana': 'gh', 'Panama': 'pa'
+   };
+   
+   for (let [team, code] of Object.entries(flagMap)) {
+     if (teamName.includes(team)) {
+       return code;
+     }
+   }
+   return null;
+ }
+
+function createMatchNameWithFlags(homeTeam, visitorTeam) {
+   const flag1 = getFlagCode(homeTeam);
+   const flag2 = getFlagCode(visitorTeam);
+   const homeWithFlag = flag1 ? `<img src="https://flagcdn.com/20x15/${flag1}.png" class="team-flag" alt="${homeTeam} flag"> ${homeTeam}` : homeTeam;
+   const visitorWithFlag = flag2 ? `<img src="https://flagcdn.com/20x15/${flag2}.png" class="team-flag" alt="${visitorTeam} flag"> ${visitorTeam}` : visitorTeam;
+   return `${homeWithFlag} vs ${visitorWithFlag}`;
+}
+
 function loadScoresEditor() {
    const container = document.getElementById("scores-editor");
-   if (!container) {
-     console.error("scores-editor container not found");
-     return;
-   }
-   
+   if (!container) return;
    container.innerHTML = "";
-   
    if (Object.keys(groupMatches).length === 0) {
-     container.innerHTML = "<p>Loading match data... Please wait and try again.</p>";
+     container.innerHTML = "<p>Loading match data...</p>";
      return;
    }
    
    for (let group in groupMatches) {
-     const groupId = `admin-group-${group.replace(/ /g, '_')}`;
      const matchesId = `admin-matches-${group.replace(/ /g, '_')}`;
-     
      const groupDiv = document.createElement("div");
      groupDiv.style.marginBottom = "15px";
      groupDiv.style.border = "1px solid #ddd";
      groupDiv.style.borderRadius = "8px";
      groupDiv.style.overflow = "hidden";
-     
      groupDiv.innerHTML = `
        <div class="admin-group-title" onclick="toggleAdminGroup('${matchesId}')">📋 ${group} ▼</div>
        <div id="${matchesId}" class="admin-matches-container" style="padding: 10px 15px; display: none;"></div>
      `;
-     
      const matchesDiv = groupDiv.querySelector(`#${matchesId}`);
      
      groupMatches[group].forEach((matchObj, idx) => {
@@ -389,9 +409,9 @@ function loadScoresEditor() {
          <strong style="font-size: 0.9em;">${matchObj.match}</strong>
          <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
            <span style="font-size: 0.85em;">🏠 Home:</span>
-           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 50px; padding: 4px; text-align: center;;" min="0" max="20" maxlength="2">
+           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 50px; padding: 4px; text-align: center;" min="0" max="20">
            <span style="font-size: 0.85em;">✈️ Visitor:</span>
-           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 50px; padding: 4px; text-align: center;" min="0" max="20" maxlength="2">
+           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 50px; padding: 4px; text-align: center;" min="0" max="20">
            <span id="result-preview-${cleanId}" style="font-weight: bold; font-size: 0.8em; margin-left: 5px;"></span>
          </div>
        `;
@@ -418,110 +438,51 @@ function loadScoresEditor() {
              resultSpan.innerHTML = "";
            }
          }
-         
          homeInput.addEventListener('input', updatePreview);
          awayInput.addEventListener('input', updatePreview);
          updatePreview();
        }
      });
-     
      container.appendChild(groupDiv);
    }
 }
 
-// Get flag code for a team name
-function getFlagCode(teamName) {
-   const flagMap = {
-     'Mexico': 'mx', 'South Africa': 'za', 'South Korea': 'kr', 'Czechia': 'cz',
-     'Canada': 'ca', 'Bosnia and Herzegovina': 'ba', 'Bosnia': 'ba', 'Qatar': 'qa', 'Switzerland': 'ch',
-     'Brazil': 'br', 'Morocco': 'ma', 'Haiti': 'ht', 'Scotland': 'gb-sct',
-     'USA': 'us', 'Paraguay': 'py', 'Australia': 'au', 'Turkey': 'tr',
-     'Germany': 'de', 'Curaçao': 'cw', "Côte d'Ivoire": 'ci', 'Ecuador': 'ec',
-     'Netherlands': 'nl', 'Japan': 'jp', 'Sweden': 'se', 'Tunisia': 'tn',
-     'Belgium': 'be', 'Egypt': 'eg', 'Iran': 'ir', 'New Zealand': 'nz',
-     'Spain': 'es', 'Cabo Verde': 'cv', 'Saudi Arabia': 'sa', 'Uruguay': 'uy',
-     'France': 'fr', 'Senegal': 'sn', 'Iraq': 'iq', 'Norway': 'no',
-     'Argentina': 'ar', 'Algeria': 'dz', 'Austria': 'at', 'Jordan': 'jo',
-     'Portugal': 'pt', 'DR Congo': 'cd', 'Uzbekistan': 'uz', 'Colombia': 'co',
-     'England': 'gb-eng', 'Croatia': 'hr', 'Ghana': 'gh', 'Panama': 'pa'
-   };
-   
-   for (let [team, code] of Object.entries(flagMap)) {
-     if (teamName.includes(team)) {
-       return code;
-     }
-   }
-   return null;
-}
-
-// Add Flags to team names using image URLs
-function addFlagToTeam(teamName) {
-   const flagCode = getFlagCode(teamName);
-   if (flagCode) {
-     return `<img src="https://flagcdn.com/20x15/${flagCode}.png" class="team-flag" alt="${teamName} flag"> ${teamName}`;
-   }
-   return teamName;
-}
-
-// Toggle collapsible groups in admin panel
 function toggleAdminGroup(groupId) {
    const el = document.getElementById(groupId);
-   if (el) {
-     if (el.style.display === "none") {
-       el.style.display = "block";
-     } else {
-       el.style.display = "none";
-     }
-   }
+   if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 }
 
-// Save all scores to Google Sheet
 async function saveAllScores() {
    const scoreUpdates = [];
-   
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
        const cleanId = `${group.replace(/ /g, '_')}_${i}`;
        const matchName = groupMatches[group][i].match;
        const homeScore = document.getElementById(`home-${cleanId}`)?.value;
        const awayScore = document.getElementById(`away-${cleanId}`)?.value;
-       
        if (homeScore !== undefined && awayScore !== undefined && (homeScore !== "" || awayScore !== "")) {
          const home = parseInt(homeScore) || 0;
          const away = parseInt(awayScore) || 0;
-         
-         scoreUpdates.push({
-           match: matchName,
-           homeScore: home,
-           awayScore: away
-         });
+         let result = "";
+         if (home > away) result = "1";
+         else if (home < away) result = "2";
+         else if (home === away && home !== 0) result = "X";
+         scoreUpdates.push({ match: matchName, homeScore: home, awayScore: away, result: result });
        }
      }
    }
-   
-   if (scoreUpdates.length === 0) {
-     alert("No scores to save!");
-     return;
-   }
-   
+   if (scoreUpdates.length === 0) { alert("No scores to save!"); return; }
    try {
      const params = new URLSearchParams();
      params.append("action", "saveScores");
      params.append("data", JSON.stringify(scoreUpdates));
-     const response = await fetch(`${WEBAPP_URL}?${params.toString()}`);
-     const data = await response.json();
-     if (data.success) {
-       alert(`✅ ${scoreUpdates.length} match scores saved!`);
-       closeAdminMode();
-     } else {
-       throw new Error(data.error);
-     }
-   } catch(e) { 
-     alert("Error saving scores: " + e.message);
-   }
+     await fetch(`${WEBAPP_URL}?${params.toString()}`);
+     alert(`✅ ${scoreUpdates.length} match scores saved!`);
+     closeAdminMode();
+   } catch(e) { alert("Error saving scores: " + e.message); }
 }
 
- function updatePlayerDropdown() {
+function updatePlayerDropdown() {
    const select = document.getElementById("playerSelect");
    const currentValue = select.value;
    select.innerHTML = '<option value="">-- Select existing player --</option>';
@@ -532,86 +493,61 @@ async function saveAllScores() {
      if (player === currentValue) option.selected = true;
      select.appendChild(option);
    });
- }
- 
- function selectPlayer() {
-   const select = document.getElementById("playerSelect");
-   const playerName = select.value;
+}
+
+function selectPlayer() {
+   const playerName = document.getElementById("playerSelect").value;
    if (playerName) {
      document.getElementById("playerName").value = playerName;
      loadMyPicks();
    }
- }
- 
+}
+
 async function savePicks() {
    const player = document.getElementById("playerName").value.trim();
    if (!player) { alert("Enter your name!"); return; }
-   
    const newPicks = [];
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
        const match = groupMatches[group][i].match;
-       if (actualResults[match] && actualResults[match].result) {
-         continue;
-       }
+       if (actualResults[match] && actualResults[match].result) continue;
        const matchId = `${group}_${i}`;
        const selected = document.querySelector(`input[name="${matchId}"]:checked`);
-       if (selected) {
-         newPicks.push({ match: match, pick: selected.value });
-       }
+       if (selected) newPicks.push({ match: match, pick: selected.value });
      }
    }
-   
-   if (newPicks.length === 0) { alert("No picks selected for upcoming matches!"); return; }
-   
+   if (newPicks.length === 0) { alert("No picks selected!"); return; }
    try {
      const deleteParams = new URLSearchParams();
      deleteParams.append("action", "deletePlayerPicks");
      deleteParams.append("player", player);
      await fetch(`${WEBAPP_URL}?${deleteParams.toString()}`);
-     
      const params = new URLSearchParams();
      params.append("action", "save");
      params.append("player", player);
      params.append("picks", JSON.stringify(newPicks));
-     const response = await fetch(`${WEBAPP_URL}?${params.toString()}`);
-     const data = await response.json();
-     if (data.success) {
-       alert(`✅ Saved ${newPicks.length} picks for ${player}!`);
-       await loadAllData();
-     } else {
-       throw new Error(data.error);
-     }
-   } catch(e) { 
-     alert("Error: " + e.message);
-   }
+     await fetch(`${WEBAPP_URL}?${params.toString()}`);
+     alert(`✅ Saved ${newPicks.length} picks for ${player}!`);
+     await loadAllData();
+   } catch(e) { alert("Error: " + e.message); }
 }
 
- async function loadMyPicks() {
+async function loadMyPicks() {
    if (isLoading) return;
    isLoading = true;
-   
    const player = document.getElementById("playerName").value.trim();
-   if (!player) { 
-     isLoading = false;
-     alert("Enter your name!"); 
-     return; 
-   }
-   
+   if (!player) { isLoading = false; alert("Enter your name!"); return; }
    try {
      const response = await fetch(`${WEBAPP_URL}?action=load`);
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
-     
      const userPicks = data.picks.filter(p => p.player === player);
-     
      for (let group in groupMatches) {
        for (let i = 0; i < groupMatches[group].length; i++) {
          const matchId = `${group}_${i}`;
          document.querySelectorAll(`input[name="${matchId}"]`).forEach(r => r.checked = false);
        }
      }
-     
      userPicks.forEach(pick => {
        for (let group in groupMatches) {
          const idx = groupMatches[group].findIndex(m => m.match === pick.match);
@@ -624,77 +560,38 @@ async function savePicks() {
      });
      updateProgress();
      alert(`✅ Loaded ${userPicks.length} picks for ${player}`);
-   } catch(e) { 
-     alert("Error: " + e.message);
-   } finally {
-     isLoading = false;
-   }
- }
- 
+   } catch(e) { alert("Error: " + e.message); } finally { isLoading = false; }
+}
+
 async function loadAllData() {
    if (isLoading) return;
    isLoading = true;
-   
    try {
      const response = await fetch(`${WEBAPP_URL}?action=load`);
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
-     
      allPicks = data.picks || [];
      actualResults = data.results || {};
      
      if (data.matches && data.matches.length > 0) {
-       for (let group in groupMatches) {
-         delete groupMatches[group];
-       }
-       
+       for (let group in groupMatches) delete groupMatches[group];
        data.matches.forEach(match => {
-         const matchName = match.name;
-         const matchTime = match.time ? `${match.date} - ${match.time}` : match.date;
-         const stage = match.stage;
-         
-         let group = stage;
-         if (group === "group" || !group) {
-           const matchLower = matchName.toLowerCase();
-           if (matchLower.includes("mexico") || matchLower.includes("south africa") || matchLower.includes("korea") || matchLower.includes("czechia")) {
-             group = "Group A";
-           } else if (matchLower.includes("canada") || matchLower.includes("bosnia") || matchLower.includes("qatar") || matchLower.includes("switzerland")) {
-             group = "Group B";
-           } else if (matchLower.includes("brazil") || matchLower.includes("morocco") || matchLower.includes("haiti") || matchLower.includes("scotland")) {
-             group = "Group C";
-           } else if (matchLower.includes("usa") || matchLower.includes("paraguay") || matchLower.includes("australia") || matchLower.includes("turkey")) {
-             group = "Group D";
-           } else if (matchLower.includes("germany") || matchLower.includes("curaçao") || matchLower.includes("côte") || matchLower.includes("ecuador")) {
-             group = "Group E";
-           } else if (matchLower.includes("netherlands") || matchLower.includes("japan") || matchLower.includes("sweden") || matchLower.includes("tunisia")) {
-             group = "Group F";
-           } else if (matchLower.includes("belgium") || matchLower.includes("egypt") || matchLower.includes("iran") || matchLower.includes("new zealand")) {
-             group = "Group G";
-           } else if (matchLower.includes("spain") || matchLower.includes("cabo verde") || matchLower.includes("saudi arabia") || matchLower.includes("uruguay")) {
-             group = "Group H";
-           } else if (matchLower.includes("france") || matchLower.includes("senegal") || matchLower.includes("iraq") || matchLower.includes("norway")) {
-             group = "Group I";
-           } else if (matchLower.includes("argentina") || matchLower.includes("algeria") || matchLower.includes("austria") || matchLower.includes("jordan")) {
-             group = "Group J";
-           } else if (matchLower.includes("portugal") || matchLower.includes("congo") || matchLower.includes("uzbekistan") || matchLower.includes("colombia")) {
-             group = "Group K";
-           } else {
-             group = "Group L";
-           }
-         }
-         
-         if (!groupMatches[group]) {
-           groupMatches[group] = [];
-         }
-         
-         groupMatches[group].push({ match: matchName, time: matchTime });
+         const groupName = match.group || "Other";
+         if (!groupMatches[groupName]) groupMatches[groupName] = [];
+         const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
+         groupMatches[groupName].push({ 
+           match: match.name, 
+           time: `${match.date} ${match.time}`,
+           displayMatch: matchDisplayName,
+           transmission: match.transmission,
+           isCompleted: actualResults[match.name] && actualResults[match.name].result
+         });
        });
      }
      
      const playerSet = new Set();
      allPicks.forEach(p => playerSet.add(p.player));
      currentPlayers = Array.from(playerSet).sort();
-     
      updatePlayerDropdown();
      loadMatches();
      
@@ -715,7 +612,6 @@ async function loadAllData() {
        playerScores.push({ name: player, score: score, total: total });
      }
      playerScores.sort((a,b) => b.score - a.score);
-     
      const leaderboardDiv = document.getElementById("leaderboard");
      const leaderboardList = document.getElementById("leaderboard-list");
      if (playerScores.length > 0) {
@@ -727,70 +623,71 @@ async function loadAllData() {
        });
      }
      updateProgress();
-   } catch(e) { 
-     alert("Error loading: " + e.message);
-   } finally {
-     isLoading = false;
-   }
+   } catch(e) { alert("Error loading: " + e.message); } finally { isLoading = false; }
 }
 
- function getResultSymbol(result) {
+function getResultSymbol(result) {
    if (result === "1") return "🏠1";
    if (result === "X") return "🤝X";
    if (result === "2") return "✈️2";
    return "?";
- }
- 
- function getResultBadgeClass(result) {
+}
+
+function getResultBadgeClass(result) {
    if (result === "1") return "result-home";
    if (result === "X") return "result-draw";
    if (result === "2") return "result-away";
    return "result-none";
- }
- 
- function calculateGroupStandings(groupName, matchesArray) {
+}
+
+function calculateGroupStandings(groupName, matchesArray) {
    const standings = {};
-   
    matchesArray.forEach(match => {
-     const [team1, team2] = match.match.split(" vs ");
-     if (!standings[team1]) {
-       standings[team1] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
-     }
-     if (!standings[team2]) {
-       standings[team2] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
+     if (!match.displayMatch) return;
+     const teams = match.displayMatch.split(" vs ");
+     if (teams.length === 2) {
+       const tempDiv = document.createElement('div');
+       tempDiv.innerHTML = teams[0];
+       const team1 = tempDiv.textContent || tempDiv.innerText || teams[0];
+       tempDiv.innerHTML = teams[1];
+       const team2 = tempDiv.textContent || tempDiv.innerText || teams[1];
+       if (!standings[team1]) standings[team1] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
+       if (!standings[team2]) standings[team2] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
      }
    });
-   
    matchesArray.forEach(match => {
-     const [team1, team2] = match.match.split(" vs ");
-     const actual = actualResults[match.match];
-     
-     if (actual && actual.result) {
-       standings[team1].played++;
-       standings[team2].played++;
-       
-       if (actual.result === "1") {
-         standings[team1].won++;
-         standings[team1].points += 3;
-         standings[team2].lost++;
-       } else if (actual.result === "2") {
-         standings[team2].won++;
-         standings[team2].points += 3;
-         standings[team1].lost++;
-       } else if (actual.result === "X") {
-         standings[team1].draw++;
-         standings[team1].points += 1;
-         standings[team2].draw++;
-         standings[team2].points += 1;
+     if (!match.displayMatch) return;
+     const teams = match.displayMatch.split(" vs ");
+     if (teams.length === 2) {
+       const tempDiv = document.createElement('div');
+       tempDiv.innerHTML = teams[0];
+       const team1 = tempDiv.textContent || tempDiv.innerText || teams[0];
+       tempDiv.innerHTML = teams[1];
+       const team2 = tempDiv.textContent || tempDiv.innerText || teams[1];
+       const actual = actualResults[match.match];
+       if (actual && actual.result) {
+         standings[team1].played++;
+         standings[team2].played++;
+         if (actual.result === "1") {
+           standings[team1].won++;
+           standings[team1].points += 3;
+           standings[team2].lost++;
+         } else if (actual.result === "2") {
+           standings[team2].won++;
+           standings[team2].points += 3;
+           standings[team1].lost++;
+         } else if (actual.result === "X") {
+           standings[team1].draw++;
+           standings[team1].points += 1;
+           standings[team2].draw++;
+           standings[team2].points += 1;
+         }
        }
      }
    });
-   
-   return Object.entries(standings)
-     .map(([name, stats]) => ({ name, ...stats }))
-     .sort((a, b) => b.points - a.points);
- }
- 
+   return Object.entries(standings).map(([name, stats]) => ({ name, ...stats })).sort((a, b) => b.points - a.points);
+}
+
 function createStandingsTable(standings) {
    if (standings.length === 0) return '';
    
@@ -812,7 +709,9 @@ function createStandingsTable(standings) {
    
    standings.forEach(team => {
      // Add flag to team name
-     const teamWithFlag = addFlagToTeam(team.name);
+     const flagCode = getFlagCode(team.name);
+     const teamWithFlag = flagCode ? `<img src="https://flagcdn.com/20x15/${flagCode}.png" class="team-flag" alt="${team.name} flag"> ${team.name}` : team.name;
+     
      html += `
        <tr>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: left;"><strong>${teamWithFlag}</strong></td>
@@ -835,51 +734,45 @@ function createStandingsTable(standings) {
 function loadMatches() {
    const container = document.getElementById("group-matches");
    container.innerHTML = "";
-   
    for (let group in groupMatches) {
      const groupDiv = document.createElement("div");
      groupDiv.className = "group-block";
      groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">📋 ${group} ▼</div>`;
-     
      const matchesDiv = document.createElement("div");
      matchesDiv.id = `group-${group.replace(/ /g, '_')}`;
      matchesDiv.style.display = "none";
-     
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
-     if (standingsHtml) {
-       matchesDiv.innerHTML = standingsHtml;
-     }
+     if (standingsHtml) matchesDiv.innerHTML = standingsHtml;
      
      groupMatches[group].forEach((matchObj, idx) => {
        const matchId = `${group}_${idx}`;
        const actual = actualResults[matchObj.match];
        const actualResult = actual ? actual.result : null;
        const actualScore = actual ? actual.score : null;
-       const isCompleted = actualResult !== null && actualResult !== undefined;
+       const isCompleted = actualResult !== null;
        
        const playerPicks = [];
        for (let player of currentPlayers) {
          const pick = allPicks.find(p => p.player === player && p.match === matchObj.match);
-         if (pick) {
-           playerPicks.push({
-             name: player,
-             pick: pick.pick,
-             correct: actualResult && pick.pick === actualResult
-           });
-         }
+         if (pick) playerPicks.push({ name: player, pick: pick.pick, correct: actualResult && pick.pick === actualResult });
        }
        
        const matchDiv = document.createElement("div");
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
        
        let resultBadge = '';
-       if (actualResult && actualScore) {
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
-       } else if (actualResult) {
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
-       } else {
-         resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
+       if (actualResult && actualScore) resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
+       else if (actualResult) resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
+       else resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
+       
+       let timeDisplay = `<span class="match-time">📅 ${matchObj.time}</span>`;
+       if (!isCompleted && matchObj.transmission) {
+         if (matchObj.transmission.includes('LiveModeTV')) {
+           timeDisplay += `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" class="transmission-link" onclick="event.stopPropagation()">📺 ${matchObj.transmission}</a>`;
+         } else {
+           timeDisplay += `<span class="transmission-info">📺 ${matchObj.transmission}</span>`;
+         }
        }
        
        let picksHtml = '';
@@ -887,58 +780,32 @@ function loadMatches() {
          picksHtml = '<div class="picks-row">';
          for (let pp of playerPicks) {
            let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
-           picksHtml += `
-             <div class="player-pick">
-               <span class="player-name">${pp.name}</span>
-               <span class="player-pick-value ${pp.correct ? 'pick-correct' : 'pick-wrong'}">${pickSymbol}</span>
-               ${pp.correct ? '<span>✓</span>' : ''}
-             </div>
-           `;
+           picksHtml += `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${pp.correct ? 'pick-correct' : 'pick-wrong'}">${pickSymbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
          }
          picksHtml += '</div>';
        }
        
        let radioHtml = '';
-       if (!isCompleted) {
-         radioHtml = `
-           <div class="radio-group">
-             <label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label>
-             <label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label>
-             <label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label>
-           </div>
-         `;
-       } else {
-         radioHtml = `<div class="radio-group disabled"></div>`;
-       }
+       if (!isCompleted) radioHtml = `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label></div>`;
+       else radioHtml = `<div class="radio-group disabled"></div>`;
        
-       matchDiv.innerHTML = `
-         <div class="match-header">
-           <span class="match-name">${addFlagToTeam(matchObj.match)}</span>
-           <span class="match-time">📅 ${matchObj.time}</span>
-           ${resultBadge}
-         </div>
-         ${picksHtml}
-         ${radioHtml}
-       `;
-       
+       matchDiv.innerHTML = `<div class="match-header"><span class="match-name">${matchObj.displayMatch}</span>${timeDisplay}${resultBadge}</div>${picksHtml}${radioHtml}`;
        matchesDiv.appendChild(matchDiv);
      });
      groupDiv.appendChild(matchesDiv);
      container.appendChild(groupDiv);
    }
    updateProgress();
- }
+}
 
- function toggleGroup(id) {
+function toggleGroup(id) {
    const el = document.getElementById(`group-${id}`);
    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
- }
- 
- function markUnsaved(matchId) {
-   updateProgress();
- }
- 
- function updateProgress() {
+}
+
+function markUnsaved(matchId) { updateProgress(); }
+
+function updateProgress() {
    let total = 0, saved = 0;
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
@@ -951,35 +818,25 @@ function loadMatches() {
    }
    const percent = total > 0 ? Math.round(saved/total*100) : 0;
    document.getElementById("progress-container").innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}% Complete (${saved}/${total} upcoming matches)</div></div>`;
- }
- 
- function initTabs() {
+}
+
+function initTabs() {
    document.querySelectorAll('.stage-tab').forEach(tab => {
      tab.addEventListener('click', () => {
        document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
        tab.classList.add('active');
        document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
-       const stage = tab.dataset.stage;
-       document.getElementById(`${stage}-matches`).classList.add('active');
+       document.getElementById(`${tab.dataset.stage}-matches`).classList.add('active');
      });
    });
- }
- 
-// Register Service Worker for offline capabilities
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js')
-      .then(function(registration) {
-        console.log('Service Worker registered successfully:', registration.scope);
-      })
-      .catch(function(error) {
-        console.log('Service Worker registration failed:', error);
-      });
-  });
 }
-  
- initTabs();
- loadAllData();
+
+if ('serviceWorker' in navigator) {
+   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.log('SW failed:', e)));
+}
+
+initTabs();
+loadAllData();
  </script> 
 </body> 
 </html>
