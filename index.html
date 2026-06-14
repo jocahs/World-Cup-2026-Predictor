@@ -161,6 +161,37 @@
    cursor: not-allowed;
  }
  
+ .score-edit {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   margin-left: 15px;
+ }
+ .score-input {
+   width: 40px;
+   padding: 4px;
+   text-align: center;
+   border: 1px solid #ccc;
+   border-radius: 5px;
+   font-size: 0.85em;
+ }
+ .score-input:focus {
+   outline: none;
+   border-color: #4CAF50;
+ }
+ .save-score-btn {
+   background: #2196F3;
+   color: white;
+   border: none;
+   border-radius: 5px;
+   padding: 4px 8px;
+   font-size: 0.7em;
+   cursor: pointer;
+ }
+ .save-score-btn:hover {
+   background: #0b7dda;
+ }
+ 
  button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
  .btn-blue { background: #2196F3; }
  .btn-orange { background: #FF9800; }
@@ -172,9 +203,8 @@
  .leaderboard li { margin: 5px 0; }
  .progress-bar { background: #e0e0e0; border-radius: 10px; height: 20px; margin: 10px 0; overflow: hidden; }
  .progress-fill { background: #4CAF50; height: 100%; transition: width 0.3s; color: white; text-align: center; font-size: 12px; line-height: 20px; }
- .admin-row { margin: 10px 0; padding: 8px; background: #f5f5f5; border-radius: 5px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
  .player-select { padding: 8px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; margin-left: 10px; min-width: 150px; }
- @media (max-width: 768px) { .match-name { display: block; margin-bottom: 5px; } .picks-row { flex-direction: column; gap: 5px; } }
+ @media (max-width: 768px) { .match-name { display: block; margin-bottom: 5px; } .picks-row { flex-direction: column; gap: 5px; } .score-edit { margin-left: 0; margin-top: 5px; } }
  </style> 
 </head> 
 <body> 
@@ -190,7 +220,7 @@
        </select>
        <div class="btn-group">
          <button onclick="loadMyPicks()" class="btn-purple">📖 Load My Picks</button>
-         <button onclick="showAdminLogin()" style="background: #f44336; color: white;">🔐 Admin Login</button>
+         <button onclick="showAdminLogin()" style="background: #f44336; color: white;">🔐 Edit Scores (Admin)</button>
        </div>
      </div>
    </div>
@@ -200,13 +230,6 @@
  <div id="leaderboard" class="leaderboard" style="display: none;">
    <h2>🏅 Leaderboard</h2>
    <ol id="leaderboard-list"></ol>
- </div>
-
- <div class="container" id="admin-section" style="display: none;">
-   <h3>🔧 Set Match Results (with Scores)</h3>
-   <div id="results-input"></div>
-   <button onclick="saveResults()" class="btn-orange">💾 Save Results</button>
-   <button onclick="document.getElementById('admin-section').style.display='none'" class="btn-red">Close</button>
  </div>
 
  <div class="container">
@@ -232,17 +255,30 @@
    </div>
  </div>
 
+ <div id="admin-section" style="display: none;">
+   <div class="container">
+     <h3>🔧 Edit Match Scores</h3>
+     <p>Enter the final scores for each match. The result (1, X, or 2) will be calculated automatically.</p>
+     <div id="scores-editor"></div>
+     <div style="margin-top: 20px; text-align: center;">
+       <button onclick="saveAllScores()" class="btn-orange">💾 Save All Scores to Google Sheet</button>
+       <button onclick="closeAdminMode()" class="btn-red">Exit Edit Mode</button>
+     </div>
+   </div>
+ </div>
+
  <script> 
  // ============================================
  // GOOGLE SHEETS SHARED VERSION
  // ============================================
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyvuxDK4u3vIJnhPB7Q36HJnqH-54fSg7Hl3ujvw3ZZfXzNmb9yPqLfXTIQ5Vm1uugl/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzp5D6NnfqD4162RqjNKac9TUPTJCswrYyyfQjZxQFYTblp5oPXutRs85Qyh8HREyBQ/exec";
  const ADMIN_PASSWORD = "wc2026";
  
  let actualResults = {};
  let allPicks = [];
  let currentPlayers = [];
  let isLoading = false;
+ let isAdminMode = false;
  
  // Group stage matches - will be loaded from Google Sheets
 let groupMatches = {};
@@ -254,6 +290,148 @@ let groupMatches = {};
    semi: [{ match: "Semi-Final 1", time: "TBD" }, { match: "Semi-Final 2", time: "TBD" }],
    final: [{ match: "3rd Place Match", time: "TBD" }, { match: "Final", time: "TBD" }]
  };
+ 
+ // Show admin login and enter edit mode
+ function showAdminLogin() {
+   const password = prompt("Enter admin password to edit scores:");
+   if (password === ADMIN_PASSWORD) {
+     isAdminMode = true;
+     document.getElementById("admin-section").style.display = "block";
+     loadScoresEditor();
+     document.getElementById("admin-section").scrollIntoView({ behavior: "smooth" });
+   } else if (password) {
+     alert("Wrong password!");
+   }
+ }
+ 
+ function closeAdminMode() {
+   isAdminMode = false;
+   document.getElementById("admin-section").style.display = "none";
+   loadAllData();
+ }
+ 
+ // Load scores editor with current values
+ function loadScoresEditor() {
+   const container = document.getElementById("scores-editor");
+   container.innerHTML = "";
+   
+   for (let group in groupMatches) {
+     const groupDiv = document.createElement("div");
+     groupDiv.style.marginBottom = "20px";
+     groupDiv.style.border = "1px solid #ddd";
+     groupDiv.style.borderRadius = "8px";
+     groupDiv.style.overflow = "hidden";
+     
+     groupDiv.innerHTML = `<div style="background: #2196F3; color: white; padding: 10px 15px; font-weight: bold;">📋 ${group}</div>`;
+     
+     const matchesDiv = document.createElement("div");
+     matchesDiv.style.padding = "10px 15px";
+     
+     groupMatches[group].forEach((matchObj, idx) => {
+       const matchId = `${group}_${idx}`;
+       const actual = actualResults[matchObj.match] || {};
+       const homeScore = actual.score ? actual.score.split("-")[0] : "";
+       const awayScore = actual.score ? actual.score.split("-")[1] : "";
+       
+       const matchDiv = document.createElement("div");
+       matchDiv.style.marginBottom = "15px";
+       matchDiv.style.padding = "10px";
+       matchDiv.style.background = "#f9f9f9";
+       matchDiv.style.borderRadius = "5px";
+       matchDiv.innerHTML = `
+         <strong>${matchObj.match}</strong>
+         <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+           <span>🏠 Home Score:</span>
+           <input type="number" id="home-${matchId}" value="${homeScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
+           <span>✈️ Away Score:</span>
+           <input type="number" id="away-${matchId}" value="${awayScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
+           <span id="result-preview-${matchId}" style="font-weight: bold; margin-left: 10px;"></span>
+         </div>
+       `;
+       matchesDiv.appendChild(matchDiv);
+       
+       // Add live preview of result
+       const homeInput = matchesDiv.querySelector(`#home-${matchId}`);
+       const awayInput = matchesDiv.querySelector(`#away-${matchId}`);
+       const resultSpan = matchesDiv.querySelector(`#result-preview-${matchId}`);
+       
+       function updatePreview() {
+         const home = parseInt(homeInput.value) || 0;
+         const away = parseInt(awayInput.value) || 0;
+         if (home > away) {
+           resultSpan.innerHTML = "→ Result: 🏠 Home Win (1)";
+           resultSpan.style.color = "#4CAF50";
+         } else if (home < away) {
+           resultSpan.innerHTML = "→ Result: ✈️ Visitor Win (2)";
+           resultSpan.style.color = "#f44336";
+         } else if (home === away && home !== 0) {
+           resultSpan.innerHTML = "→ Result: 🤝 Draw (X)";
+           resultSpan.style.color = "#FF9800";
+         } else {
+           resultSpan.innerHTML = "";
+         }
+       }
+       
+       homeInput.addEventListener('input', updatePreview);
+       awayInput.addEventListener('input', updatePreview);
+       updatePreview();
+     });
+     
+     groupDiv.appendChild(matchesDiv);
+     container.appendChild(groupDiv);
+   }
+ }
+ 
+ // Save all scores to Google Sheet
+ async function saveAllScores() {
+   const scoreUpdates = [];
+   
+   for (let group in groupMatches) {
+     for (let i = 0; i < groupMatches[group].length; i++) {
+       const matchId = `${group}_${i}`;
+       const matchName = groupMatches[group][i].match;
+       const homeScore = document.getElementById(`home-${matchId}`)?.value;
+       const awayScore = document.getElementById(`away-${matchId}`)?.value;
+       
+       if (homeScore !== undefined && awayScore !== undefined) {
+         const home = parseInt(homeScore) || 0;
+         const away = parseInt(awayScore) || 0;
+         let result = "";
+         if (home > away) result = "1";
+         else if (home < away) result = "2";
+         else if (home === away && home !== 0) result = "X";
+         
+         scoreUpdates.push({
+           match: matchName,
+           homeScore: home,
+           awayScore: away,
+           result: result
+         });
+       }
+     }
+   }
+   
+   if (scoreUpdates.length === 0) {
+     alert("No scores to save!");
+     return;
+   }
+   
+   try {
+     const params = new URLSearchParams();
+     params.append("action", "saveScores");
+     params.append("data", JSON.stringify(scoreUpdates));
+     const response = await fetch(`${WEBAPP_URL}?${params.toString()}`);
+     const data = await response.json();
+     if (data.success) {
+       alert(`✅ ${scoreUpdates.length} match scores saved!`);
+       closeAdminMode();
+     } else {
+       throw new Error(data.error);
+     }
+   } catch(e) { 
+     alert("Error saving scores: " + e.message);
+   }
+ }
  
  function updatePlayerDropdown() {
    const select = document.getElementById("playerSelect");
@@ -277,82 +455,14 @@ let groupMatches = {};
    }
  }
  
- function showAdminLogin() {
-   const pwd = prompt("Enter admin password:");
-   if (pwd === ADMIN_PASSWORD) {
-     document.getElementById("admin-section").style.display = "block";
-     loadResultsInputs();
-     document.getElementById("admin-section").scrollIntoView({ behavior: "smooth" });
-   } else if (pwd) alert("Wrong password!");
- }
- 
- function loadResultsInputs() {
-   const container = document.getElementById("results-input");
-   container.innerHTML = "<h4>Enter match results and scores:</h4>";
-   for (let group in groupMatches) {
-     container.innerHTML += `<h4>${group}</h4>`;
-     groupMatches[group].forEach((m, idx) => {
-       const matchId = `${group}_${idx}`;
-       const current = actualResults[m.match] || {};
-       container.innerHTML += `
-         <div class="admin-row">
-           <strong style="min-width: 250px;">${m.match}</strong>
-           <span style="color:#666;">${m.time}</span>
-           <input type="text" id="score-${matchId}" placeholder="Score (e.g., 2-0)" value="${current.score || ""}" style="width: 70px; padding: 5px; text-align: center;">
-           <select id="result-select-${matchId}" style="padding: 5px;">
-             <option value="">-- Result --</option>
-             <option value="1" ${current.result === "1" ? "selected" : ""}>🏠 1 - Home Win</option>
-             <option value="X" ${current.result === "X" ? "selected" : ""}>🤝 X - Draw</option>
-             <option value="2" ${current.result === "2" ? "selected" : ""}>✈️ 2 - Visitor Win</option>
-           </select>
-         </div>
-       `;
-     });
-   }
- }
- 
- async function saveResults() {
-   const results = [];
-   for (let group in groupMatches) {
-     for (let i = 0; i < groupMatches[group].length; i++) {
-       const matchId = `${group}_${i}`;
-       const result = document.getElementById(`result-select-${matchId}`)?.value;
-       const score = document.getElementById(`score-${matchId}`)?.value;
-       if (result) {
-         results.push({ match: groupMatches[group][i].match, result: result, score: score || "" });
-       }
-     }
-   }
-   if (results.length === 0) { alert("No results selected!"); return; }
-   
-   try {
-     const params = new URLSearchParams();
-     params.append("action", "saveResults");
-     params.append("data", JSON.stringify(results));
-     const response = await fetch(`${WEBAPP_URL}?${params.toString()}`);
-     const data = await response.json();
-     if (data.success) {
-       alert(`✅ ${results.length} results saved!`);
-       await loadAllData();
-       document.getElementById("admin-section").style.display = "none";
-     } else {
-       throw new Error(data.error);
-     }
-   } catch(e) { 
-     alert("Error: " + e.message);
-   }
- }
- 
 async function savePicks() {
    const player = document.getElementById("playerName").value.trim();
    if (!player) { alert("Enter your name!"); return; }
    
-   // First, collect the new picks
    const newPicks = [];
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
        const match = groupMatches[group][i].match;
-       // Skip matches that already have results
        if (actualResults[match] && actualResults[match].result) {
          continue;
        }
@@ -367,13 +477,11 @@ async function savePicks() {
    if (newPicks.length === 0) { alert("No picks selected for upcoming matches!"); return; }
    
    try {
-     // First, delete all existing picks for this player
      const deleteParams = new URLSearchParams();
      deleteParams.append("action", "deletePlayerPicks");
      deleteParams.append("player", player);
      await fetch(`${WEBAPP_URL}?${deleteParams.toString()}`);
      
-     // Then save the new picks
      const params = new URLSearchParams();
      params.append("action", "save");
      params.append("player", player);
@@ -447,23 +555,18 @@ async function loadAllData() {
      allPicks = data.picks || [];
      actualResults = data.results || {};
      
-     // Build groupMatches from the data
      if (data.matches && data.matches.length > 0) {
-       // Clear existing groupMatches
        for (let group in groupMatches) {
          delete groupMatches[group];
        }
        
-       // Rebuild from sheet data
        data.matches.forEach(match => {
          const matchName = match.name;
          const matchTime = match.time ? `${match.date} - ${match.time}` : match.date;
          const stage = match.stage;
          
-         // Extract group from stage or match name
          let group = stage;
          if (group === "group" || !group) {
-           // Try to determine group from match name (you may need to adjust this logic)
            const matchLower = matchName.toLowerCase();
            if (matchLower.includes("mexico") || matchLower.includes("south africa") || matchLower.includes("korea") || matchLower.includes("czechia")) {
              group = "Group A";
@@ -557,11 +660,9 @@ async function loadAllData() {
    return "result-none";
  }
  
- // Calculate group standings for a specific group
  function calculateGroupStandings(groupName, matchesArray) {
    const standings = {};
    
-   // Initialize all teams
    matchesArray.forEach(match => {
      const [team1, team2] = match.match.split(" vs ");
      if (!standings[team1]) {
@@ -572,7 +673,6 @@ async function loadAllData() {
      }
    });
    
-   // Calculate stats from results
    matchesArray.forEach(match => {
      const [team1, team2] = match.match.split(" vs ");
      const actual = actualResults[match.match];
@@ -581,15 +681,15 @@ async function loadAllData() {
        standings[team1].played++;
        standings[team2].played++;
        
-       if (actual.result === "1") { // Home win (team1 wins)
+       if (actual.result === "1") {
          standings[team1].won++;
          standings[team1].points += 3;
          standings[team2].lost++;
-       } else if (actual.result === "2") { // Away win (team2 wins)
+       } else if (actual.result === "2") {
          standings[team2].won++;
          standings[team2].points += 3;
          standings[team1].lost++;
-       } else if (actual.result === "X") { // Draw
+       } else if (actual.result === "X") {
          standings[team1].draw++;
          standings[team1].points += 1;
          standings[team2].draw++;
@@ -598,13 +698,11 @@ async function loadAllData() {
      }
    });
    
-   // Convert to array and sort by points
    return Object.entries(standings)
      .map(([name, stats]) => ({ name, ...stats }))
      .sort((a, b) => b.points - a.points);
  }
  
- // Create standings table HTML
  function createStandingsTable(standings) {
    if (standings.length === 0) return '';
    
@@ -638,14 +736,6 @@ function loadMatches() {
    const container = document.getElementById("group-matches");
    container.innerHTML = "";
    
-   // Group matches by stage
-   const matchesByGroup = {};
-   
-   for (let group in groupMatches) {
-     matchesByGroup[group] = [];
-   }
-   
-   // Populate from actualResults or default matches
    for (let group in groupMatches) {
      const groupDiv = document.createElement("div");
      groupDiv.className = "group-block";
@@ -655,7 +745,6 @@ function loadMatches() {
      matchesDiv.id = `group-${group.replace(/ /g, '_')}`;
      matchesDiv.style.display = "none";
      
-     // Add standings table
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
      if (standingsHtml) {
@@ -784,18 +873,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js')
       .then(function(registration) {
         console.log('Service Worker registered successfully:', registration.scope);
-        
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          console.log('New service worker found!');
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('Update available! Refresh to get latest version.');
-              // You can show a notification to the user here
-            }
-          });
-        });
       })
       .catch(function(error) {
         console.log('Service Worker registration failed:', error);
