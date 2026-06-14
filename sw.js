@@ -7,7 +7,13 @@ const urlsToCache = [
   'index.html',
   'manifest.json',
   'icon-192.png',
-  'icon-512.png'
+  'icon-512.png',
+  'screenshots/screenshot1-phone.jpg',
+  'screenshots/screenshot1-tablet.jpg',
+  'screenshots/screenshot2-phone.jpg',
+  'screenshots/screenshot2-tablet.jpg',
+  'screenshots/screenshot3-phone.jpg',
+  'screenshots/screenshot3-tablet.jpg'
 ];
 
 // Install event - cache essential files
