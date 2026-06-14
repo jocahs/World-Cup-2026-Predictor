@@ -326,7 +326,6 @@ function loadScoresEditor() {
    
    container.innerHTML = "";
    
-   // Check if groupMatches has data
    if (Object.keys(groupMatches).length === 0) {
      container.innerHTML = "<p>Loading match data... Please wait and try again.</p>";
      return;
@@ -345,7 +344,8 @@ function loadScoresEditor() {
      matchesDiv.style.padding = "10px 15px";
      
      groupMatches[group].forEach((matchObj, idx) => {
-       const matchId = `${group}_${idx}`;
+       // Create a clean ID without special characters
+       const cleanId = `${group.replace(/ /g, '_')}_${idx}`;
        const actual = actualResults[matchObj.match] || {};
        const scoreParts = actual.score ? actual.score.split("-") : ["", ""];
        const homeScore = scoreParts[0];
@@ -360,39 +360,41 @@ function loadScoresEditor() {
          <strong>${matchObj.match}</strong>
          <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
            <span>🏠 Home Score:</span>
-           <input type="number" id="home-${matchId}" value="${homeScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
+           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
            <span>✈️ Away Score:</span>
-           <input type="number" id="away-${matchId}" value="${awayScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
-           <span id="result-preview-${matchId}" style="font-weight: bold; margin-left: 10px;"></span>
+           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
+           <span id="result-preview-${cleanId}" style="font-weight: bold; margin-left: 10px;"></span>
          </div>
        `;
        matchesDiv.appendChild(matchDiv);
        
        // Add live preview of result
-       const homeInput = matchDiv.querySelector(`#home-${matchId}`);
-       const awayInput = matchDiv.querySelector(`#away-${matchId}`);
-       const resultSpan = matchDiv.querySelector(`#result-preview-${matchId}`);
+       const homeInput = document.getElementById(`home-${cleanId}`);
+       const awayInput = document.getElementById(`away-${cleanId}`);
+       const resultSpan = document.getElementById(`result-preview-${cleanId}`);
        
-       function updatePreview() {
-         const home = parseInt(homeInput.value) || 0;
-         const away = parseInt(awayInput.value) || 0;
-         if (home > away) {
-           resultSpan.innerHTML = "→ Result: 🏠 Home Win (1)";
-           resultSpan.style.color = "#4CAF50";
-         } else if (home < away) {
-           resultSpan.innerHTML = "→ Result: ✈️ Visitor Win (2)";
-           resultSpan.style.color = "#f44336";
-         } else if (home === away && home !== 0) {
-           resultSpan.innerHTML = "→ Result: 🤝 Draw (X)";
-           resultSpan.style.color = "#FF9800";
-         } else {
-           resultSpan.innerHTML = "";
+       if (homeInput && awayInput && resultSpan) {
+         function updatePreview() {
+           const home = parseInt(homeInput.value) || 0;
+           const away = parseInt(awayInput.value) || 0;
+           if (home > away) {
+             resultSpan.innerHTML = "→ Result: 🏠 Home Win (1)";
+             resultSpan.style.color = "#4CAF50";
+           } else if (home < away) {
+             resultSpan.innerHTML = "→ Result: ✈️ Visitor Win (2)";
+             resultSpan.style.color = "#f44336";
+           } else if (home === away && home !== 0) {
+             resultSpan.innerHTML = "→ Result: 🤝 Draw (X)";
+             resultSpan.style.color = "#FF9800";
+           } else {
+             resultSpan.innerHTML = "";
+           }
          }
+         
+         homeInput.addEventListener('input', updatePreview);
+         awayInput.addEventListener('input', updatePreview);
+         updatePreview();
        }
-       
-       homeInput.addEventListener('input', updatePreview);
-       awayInput.addEventListener('input', updatePreview);
-       updatePreview();
      });
      
      groupDiv.appendChild(matchesDiv);
@@ -400,18 +402,18 @@ function loadScoresEditor() {
    }
 }
 
- // Save all scores to Google Sheet
+// Save all scores to Google Sheet
 async function saveAllScores() {
    const scoreUpdates = [];
    
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
-       const matchId = `${group}_${i}`;
+       const cleanId = `${group.replace(/ /g, '_')}_${i}`;
        const matchName = groupMatches[group][i].match;
-       const homeScore = document.getElementById(`home-${matchId}`)?.value;
-       const awayScore = document.getElementById(`away-${matchId}`)?.value;
+       const homeScore = document.getElementById(`home-${cleanId}`)?.value;
+       const awayScore = document.getElementById(`away-${cleanId}`)?.value;
        
-       if (homeScore !== undefined && awayScore !== undefined) {
+       if (homeScore !== undefined && awayScore !== undefined && (homeScore !== "" || awayScore !== "")) {
          const home = parseInt(homeScore) || 0;
          const away = parseInt(awayScore) || 0;
          
