@@ -5,15 +5,14 @@
   "description": "Predict World Cup match winners with friends",
   "lang": "en",
   "dir": "ltr",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/World-Cup-2026-Predictor/",
+  "scope": "/World-Cup-2026-Predictor/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
+  "display_override": ["standalone"],
   "theme_color": "#4CAF50",
   "background_color": "#ffffff",
   "orientation": "portrait",
-  "categories": ["sports", "games", "entertainment"],
-  "iarc_rating_id": "",
+  "categories": ["sports", "games"],
   "icons": [
     {
       "src": "icon-192.png",
@@ -32,26 +31,19 @@
     {
       "src": "screenshots/screenshot1-phone.jpg",
       "sizes": "1080x1920",
-      "type": "image/jpeg",
-      "form_factor": "wide",
-      "label": "Group Stage View - View all matches and standings"
+      "type": "image/jpeg"
     },
     {
       "src": "screenshots/screenshot2-phone.jpg",
       "sizes": "1080x1920",
-      "type": "image/jpeg",
-      "form_factor": "wide",
-      "label": "Making Picks - Select Home Win, Draw, or Visitor Win"
+      "type": "image/jpeg"
     },
     {
       "src": "screenshots/screenshot3-phone.jpg",
       "sizes": "1080x1920",
-      "type": "image/jpeg",
-      "form_factor": "wide",
-      "label": "Leaderboard - Track scores and rankings"
+      "type": "image/jpeg"
     }
   ],
   "related_applications": [],
-  "prefer_related_applications": false,
-  "scope_extensions": []
+  "prefer_related_applications": false
 }
