@@ -830,6 +830,14 @@ async function savePicks() {
  
  initTabs();
  loadAllData();
- </script> 
+ 
+ </script>
+
+ <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
+ 
 </body> 
 </html>
