@@ -336,22 +336,21 @@
  // Helper function to parse match date and time (handles DD/MM or DD/MM/YYYY)
 function parseMatchDateTime(dateStr, timeStr) {
    if (!dateStr || !timeStr) return null;
-   // Handle format: "11/06/2026" or "11/06" or "2026-06-18"
    let day, month, year = 2026;
    
-   // Format "2026-06-18"
-   if (dateStr.includes('-')) {
+   // Format "DD/MM/YYYY" (from your sheet)
+   if (dateStr.includes('/')) {
+     const parts = dateStr.split('/');
+     day = parseInt(parts[0]);     // Day is first
+     month = parseInt(parts[1]) - 1; // Month is second
+     if (parts[2]) year = parseInt(parts[2]);
+   }
+   // Format "YYYY-MM-DD" (fallback)
+   else if (dateStr.includes('-')) {
      const parts = dateStr.split('-');
      year = parseInt(parts[0]);
      month = parseInt(parts[1]) - 1;
      day = parseInt(parts[2]);
-   }
-   // Format "11/06/2026" or "11/06"
-   else if (dateStr.includes('/')) {
-     const parts = dateStr.split('/');
-     day = parseInt(parts[0]);
-     month = parseInt(parts[1]) - 1;
-     if (parts[2]) year = parseInt(parts[2]);
    }
    else {
      return null;
@@ -362,22 +361,23 @@ function parseMatchDateTime(dateStr, timeStr) {
    const hour = parseInt(timeParts[1]);
    const minute = parseInt(timeParts[2]);
    
-   return new Date(year, month, day, hour, minute);
+   const matchDate = new Date(year, month, day, hour, minute);
+   return matchDate;
 }
 
-  function formatDisplayDate(dateStr, timeStr) {
+function formatDisplayDate(dateStr, timeStr) {
    if (!dateStr) return timeStr || '';
    
    let year, month, day;
    
-   // Handle format "DD/MM/YYYY"
+   // Format "DD/MM/YYYY" (from your sheet)
    if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
-     day = parseInt(parts[0]);
-     month = parseInt(parts[1]) - 1;
+     day = parseInt(parts[0]);      // Day is first
+     month = parseInt(parts[1]) - 1; // Month is second
      year = parseInt(parts[2]) || 2026;
    } 
-   // Handle format "YYYY-MM-DD"
+   // Format "YYYY-MM-DD" (fallback)
    else if (dateStr.includes('-')) {
      const parts = dateStr.split('-');
      year = parseInt(parts[0]);
@@ -399,55 +399,49 @@ function parseMatchDateTime(dateStr, timeStr) {
    return now <= threeHoursAfter;
  }
 
+
+ 
 // Google Calendar URL generator
 function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
-   // Parse date - handle both "DD/MM/YYYY" and "YYYY-MM-DD" formats
    let day, month, year;
    
-   // Format "YYYY-MM-DD"
-   if (dateStr.includes('-')) {
-     const parts = dateStr.split('-');
-     year = parseInt(parts[0]);
-     month = parseInt(parts[1]);
-     day = parseInt(parts[2]);
-   }
-   // Format "DD/MM/YYYY" or "DD/MM"
-   else if (dateStr.includes('/')) {
+   // Format "DD/MM/YYYY" (from your sheet)
+   if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
      day = parseInt(parts[0]);
      month = parseInt(parts[1]);
      year = parts[2] ? parseInt(parts[2]) : 2026;
    }
+   // Format "YYYY-MM-DD" (fallback)
+   else if (dateStr.includes('-')) {
+     const parts = dateStr.split('-');
+     year = parseInt(parts[0]);
+     month = parseInt(parts[1]);
+     day = parseInt(parts[2]);
+   }
    else {
-     console.error('Invalid date format:', dateStr);
      return null;
    }
    
    const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
-   if (!timeParts) {
-     console.error('Invalid time format:', timeStr);
-     return null;
-   }
+   if (!timeParts) return null;
    const hour = parseInt(timeParts[1]);
    const minute = parseInt(timeParts[2]);
    
    const startDate = new Date(year, month - 1, day, hour, minute);
    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
    
-   // Format for Google Calendar: YYYYMMDDTHHMMSSZ
    const formatForCalendar = (date) => {
-     const year = date.getFullYear();
-     const month = String(date.getMonth() + 1).padStart(2, '0');
-     const day = String(date.getDate()).padStart(2, '0');
-     const hours = String(date.getHours()).padStart(2, '0');
-     const minutes = String(date.getMinutes()).padStart(2, '0');
-     const seconds = '00';
-     return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
+     const y = date.getFullYear();
+     const m = String(date.getMonth() + 1).padStart(2, '0');
+     const d = String(date.getDate()).padStart(2, '0');
+     const h = String(date.getHours()).padStart(2, '0');
+     const min = String(date.getMinutes()).padStart(2, '0');
+     return `${y}${m}${d}T${h}${min}00Z`;
    };
    
    const title = `${homeTeam} vs ${visitorTeam}`;
    
-   // Build description with transmission info and LiveModeTV link
    let watchLink = '';
    if (transmission && transmission.includes('LiveModeTV')) {
      watchLink = '\n\n📺 Watch Live: https://www.youtube.com/@LiveModeTV_PT';
@@ -455,10 +449,7 @@ function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr
    
    const details = `World Cup 2026 match: ${homeTeam} vs ${visitorTeam}\nTransmission: ${transmission || 'TBD'}${watchLink}\n\nMake your prediction at: ${window.location.href}`;
    
-   const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${encodeURIComponent(details)}&sprop=name:World%20Cup%20Predictor`;
-   
-   console.log('Generated calendar URL:', url);
-   return url;
+   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${encodeURIComponent(details)}`;
 }
 
 function showAdminLogin() {
