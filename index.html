@@ -812,26 +812,28 @@ async function savePicks() {
    });
  }
  
-// Register Service Worker with error handling and updates
+// Register Service Worker for offline capabilities
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(registration) {
-      console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      
-      // Check for updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        console.log('New service worker found!');
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('Update available! Page will refresh on next load.');
-            // Optional: Show "Update available" notification
-          }
+    navigator.serviceWorker.register('/World-Cup-2026-Predictor/sw.js')
+      .then(function(registration) {
+        console.log('Service Worker registered successfully:', registration.scope);
+        
+        // Check for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('New service worker found!');
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('Update available! Refresh to get latest version.');
+              // You can show a notification to the user here
+            }
+          });
         });
+      })
+      .catch(function(error) {
+        console.log('Service Worker registration failed:', error);
       });
-    }).catch(function(error) {
-      console.log('ServiceWorker registration failed: ', error);
-    });
   });
 }
   
