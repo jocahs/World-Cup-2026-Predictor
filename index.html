@@ -416,20 +416,41 @@ function loadScoresEditor() {
 }
 
 //Add Flags to team names in match display
+// Add Flags to team names in match display
 function addFlagToTeam(teamName) {
    const flagMap = {
+     // Group A
      'Mexico': '🇲🇽', 'South Africa': '🇿🇦', 'South Korea': '🇰🇷', 'Czechia': '🇨🇿',
-     'Canada': '🇨🇦', 'Bosnia': '🇧🇦', 'Qatar': '🇶🇦', 'Switzerland': '🇨🇭',
-     'USA': '🇺🇸', 'Paraguay': '🇵🇾', 'Brazil': '🇧🇷', 'Morocco': '🇲🇦',
-     'Haiti': '🇭🇹', 'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'Australia': '🇦🇺', 'Turkey': '🇹🇷',
-     'Germany': '🇩🇪', 'Curaçao': '🇨🇼', 'Netherlands': '🇳🇱', 'Japan': '🇯🇵',
-     'Belgium': '🇧🇪', 'Egypt': '🇪🇬', 'Spain': '🇪🇸', 'Cabo Verde': '🇨🇻',
-     'France': '🇫🇷', 'Senegal': '🇸🇳', 'Argentina': '🇦🇷', 'Algeria': '🇩🇿',
-     'Portugal': '🇵🇹', 'DR Congo': '🇨🇩', 'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Croatia': '🇭🇷',
-     'Uruguay': '🇺🇾', 'Saudi Arabia': '🇸🇦', 'Iran': '🇮🇷', 'New Zealand': '🇳🇿',
-     'Côte d\'Ivoire': '🇨🇮', 'Ecuador': '🇪🇨', 'Sweden': '🇸🇪', 'Tunisia': '🇹🇳'
+     // Group B
+     'Canada': '🇨🇦', 'Bosnia and Herzegovina': '🇧🇦', 'Bosnia': '🇧🇦', 'Qatar': '🇶🇦', 'Switzerland': '🇨🇭',
+     // Group C
+     'Brazil': '🇧🇷', 'Morocco': '🇲🇦', 'Haiti': '🇭🇹', 'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+     // Group D
+     'USA': '🇺🇸', 'Paraguay': '🇵🇾', 'Australia': '🇦🇺', 'Turkey': '🇹🇷',
+     // Group E
+     'Germany': '🇩🇪', 'Curaçao': '🇨🇼', 'Côte d\'Ivoire': '🇨🇮', 'Ecuador': '🇪🇨',
+     // Group F
+     'Netherlands': '🇳🇱', 'Japan': '🇯🇵', 'Sweden': '🇸🇪', 'Tunisia': '🇹🇳',
+     // Group G
+     'Belgium': '🇧🇪', 'Egypt': '🇪🇬', 'Iran': '🇮🇷', 'New Zealand': '🇳🇿',
+     // Group H
+     'Spain': '🇪🇸', 'Cabo Verde': '🇨🇻', 'Saudi Arabia': '🇸🇦', 'Uruguay': '🇺🇾',
+     // Group I
+     'France': '🇫🇷', 'Senegal': '🇸🇳', 'Iraq': '🇮🇶', 'Norway': '🇳🇴',
+     // Group J
+     'Argentina': '🇦🇷', 'Algeria': '🇩🇿', 'Austria': '🇦🇹', 'Jordan': '🇯🇴',
+     // Group K
+     'Portugal': '🇵🇹', 'DR Congo': '🇨🇩', 'Uzbekistan': '🇺🇿', 'Colombia': '🇨🇴',
+     // Group L
+     'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Croatia': '🇭🇷', 'Ghana': '🇬🇭', 'Panama': '🇵🇦'
    };
    
+   // Check for exact match first
+   if (flagMap[teamName]) {
+     return flagMap[teamName] + ' ' + teamName;
+   }
+   
+   // Then check for partial matches
    for (let [team, flag] of Object.entries(flagMap)) {
      if (teamName.includes(team)) {
        return flag + ' ' + teamName;
@@ -786,9 +807,11 @@ function createStandingsTable(standings) {
    `;
    
    standings.forEach(team => {
+     // Add flag to team name
+     const teamWithFlag = addFlagToTeam(team.name);
      html += `
        <tr>
-         <td style="border: 1px solid #ddd; padding: 6px; text-align: left;"><strong>${team.name}</strong></td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: left;"><strong>${teamWithFlag}</strong></td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.played}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.won}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.draw}</td>
@@ -800,7 +823,7 @@ function createStandingsTable(standings) {
    
    html += `
          </tbody>
-       </table>
+        </table>
      </div>`;
    return html;
 }
