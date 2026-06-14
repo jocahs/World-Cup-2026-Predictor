@@ -236,7 +236,7 @@
  // ============================================
  // GOOGLE SHEETS SHARED VERSION
  // ============================================
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzr0JQ5gqBwWVvyRzkir-_XR-ON-k7QS2GZFIVjNnPwM4an7Xc7xbJoBlLkuyUxvqHS/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyvuxDK4u3vIJnhPB7Q36HJnqH-54fSg7Hl3ujvw3ZZfXzNmb9yPqLfXTIQ5Vm1uugl/exec";
  const ADMIN_PASSWORD = "wc2026";
  
  let actualResults = {};
@@ -244,105 +244,8 @@
  let currentPlayers = [];
  let isLoading = false;
  
- // Group stage matches
- const groupMatches = {
-   "Group A": [
-     { match: "Mexico vs South Africa", time: "11/06 - 21h" },
-     { match: "South Korea vs Czechia", time: "12/06 - 00h" },
-     { match: "Czechia vs South Africa", time: "18/06 - 18h" },
-     { match: "Mexico vs South Korea", time: "19/06 - 05h" },
-     { match: "South Africa vs South Korea", time: "25/06 - 03h" },
-     { match: "Czechia vs Mexico", time: "25/06 - 03h" }
-   ],
-   "Group B": [
-     { match: "Canada vs Bosnia and Herzegovina", time: "12/06 - 21h" },
-     { match: "Qatar vs Switzerland", time: "13/06 - 21h" },
-     { match: "Switzerland vs Bosnia and Herzegovina", time: "18/06 - 21h" },
-     { match: "Canada vs Qatar", time: "19/06 - 00h" },
-     { match: "Switzerland vs Canada", time: "24/06 - 21h" },
-     { match: "Bosnia and Herzegovina vs Qatar", time: "24/06 - 21h" }
-   ],
-   "Group C": [
-     { match: "Haiti vs Scotland", time: "14/06 - 00h" },
-     { match: "Brazil vs Morocco", time: "13/06 - 23h" },
-     { match: "Scotland vs Morocco", time: "20/06 - 02h" },
-     { match: "Brazil vs Haiti", time: "20/06 - 02h" },
-     { match: "Scotland vs Brazil", time: "25/06 - 00h" },
-     { match: "Morocco vs Haiti", time: "25/06 - 00h" }
-   ],
-   "Group D": [
-     { match: "USA vs Paraguay", time: "13/06 - 00h" },
-     { match: "Australia vs Turkey", time: "14/06 - 02h" },
-     { match: "USA vs Australia", time: "20/06 - 05h" },
-     { match: "Turkey vs Paraguay", time: "20/06 - 05h" },
-     { match: "Turkey vs USA", time: "26/06 - 04h" },
-     { match: "Paraguay vs Australia", time: "26/06 - 04h" }
-   ],
-   "Group E": [
-     { match: "Germany vs Curaçao", time: "14/06 - 18h" },
-     { match: "Côte d'Ivoire vs Ecuador", time: "15/06 - 00h" },
-     { match: "Germany vs Côte d'Ivoire", time: "21/06 - 02h" },
-     { match: "Ecuador vs Curaçao", time: "21/06 - 02h" },
-     { match: "Ecuador vs Germany", time: "25/06 - 22h" },
-     { match: "Curaçao vs Côte d'Ivoire", time: "25/06 - 22h" }
-   ],
-   "Group F": [
-     { match: "Netherlands vs Japan", time: "14/06 - 21h" },
-     { match: "Sweden vs Tunisia", time: "15/06 - 03h" },
-     { match: "Netherlands vs Sweden", time: "20/06 - 19h" },
-     { match: "Tunisia vs Japan", time: "21/06 - 05h" },
-     { match: "Japan vs Sweden", time: "26/06 - 01h" },
-     { match: "Tunisia vs Netherlands", time: "26/06 - 01h" }
-   ],
-   "Group G": [
-     { match: "Belgium vs Egypt", time: "15/06 - 23h" },
-     { match: "Iran vs New Zealand", time: "16/06 - 02h" },
-     { match: "Belgium vs Iran", time: "21/06 - 21h" },
-     { match: "New Zealand vs Egypt", time: "22/06 - 03h" },
-     { match: "Egypt vs Iran", time: "27/06 - 04h" },
-     { match: "New Zealand vs Belgium", time: "27/06 - 04h" }
-   ],
-   "Group H": [
-     { match: "Spain vs Cabo Verde", time: "15/06 - 18h" },
-     { match: "Saudi Arabia vs Uruguay", time: "15/06 - 23h" },
-     { match: "Spain vs Saudi Arabia", time: "21/06 - 18h" },
-     { match: "Uruguay vs Cabo Verde", time: "22/06 - 00h" },
-     { match: "Cabo Verde vs Saudi Arabia", time: "27/06 - 02h" },
-     { match: "Uruguay vs Spain", time: "27/06 - 02h" }
-   ],
-   "Group I": [
-     { match: "France vs Senegal", time: "16/06 - 20h" },
-     { match: "Iraq vs Norway", time: "16/06 - 23h" },
-     { match: "France vs Iraq", time: "22/06 - 23h" },
-     { match: "Norway vs Senegal", time: "23/06 - 02h" },
-     { match: "Norway vs France", time: "26/06 - 20h" },
-     { match: "Senegal vs Iraq", time: "26/06 - 20h" }
-   ],
-   "Group J": [
-     { match: "Argentina vs Algeria", time: "17/06 - 02h" },
-     { match: "Austria vs Jordan", time: "17/06 - 05h" },
-     { match: "Argentina vs Austria", time: "22/06 - 19h" },
-     { match: "Jordan vs Algeria", time: "23/06 - 05h" },
-     { match: "Algeria vs Austria", time: "28/06 - 04h" },
-     { match: "Jordan vs Argentina", time: "28/06 - 04h" }
-   ],
-   "Group K": [
-     { match: "Uzbekistan vs Colombia", time: "18/06 - 02h" },
-     { match: "Portugal vs DR Congo", time: "17/06 - 18h" },
-     { match: "Portugal vs Uzbekistan", time: "23/06 - 18h" },
-     { match: "Colombia vs DR Congo", time: "24/06 - 02h" },
-     { match: "DR Congo vs Uzbekistan", time: "28/06 - 01h30" },
-     { match: "Colombia vs Portugal", time: "28/06 - 01h30" }
-   ],
-   "Group L": [
-     { match: "England vs Croatia", time: "17/06 - 21h" },
-     { match: "Ghana vs Panama", time: "18/06 - 00h" },
-     { match: "England vs Ghana", time: "23/06 - 21h" },
-     { match: "Panama vs Croatia", time: "24/06 - 00h" },
-     { match: "Panama vs England", time: "27/06 - 23h" },
-     { match: "Croatia vs Ghana", time: "27/06 - 23h" }
-   ]
- };
+ // Group stage matches - will be loaded from Google Sheets
+let groupMatches = {};
 
  const knockoutMatches = {
    round32: Array(16).fill().map((_, i) => ({ match: `Round of 32 Match ${i+1}`, time: "TBD" })),
@@ -532,7 +435,7 @@ async function savePicks() {
    }
  }
  
- async function loadAllData() {
+async function loadAllData() {
    if (isLoading) return;
    isLoading = true;
    
@@ -543,6 +446,59 @@ async function savePicks() {
      
      allPicks = data.picks || [];
      actualResults = data.results || {};
+     
+     // Build groupMatches from the data
+     if (data.matches && data.matches.length > 0) {
+       // Clear existing groupMatches
+       for (let group in groupMatches) {
+         delete groupMatches[group];
+       }
+       
+       // Rebuild from sheet data
+       data.matches.forEach(match => {
+         const matchName = match.name;
+         const matchTime = match.time ? `${match.date} - ${match.time}` : match.date;
+         const stage = match.stage;
+         
+         // Extract group from stage or match name
+         let group = stage;
+         if (group === "group" || !group) {
+           // Try to determine group from match name (you may need to adjust this logic)
+           const matchLower = matchName.toLowerCase();
+           if (matchLower.includes("mexico") || matchLower.includes("south africa") || matchLower.includes("korea") || matchLower.includes("czechia")) {
+             group = "Group A";
+           } else if (matchLower.includes("canada") || matchLower.includes("bosnia") || matchLower.includes("qatar") || matchLower.includes("switzerland")) {
+             group = "Group B";
+           } else if (matchLower.includes("brazil") || matchLower.includes("morocco") || matchLower.includes("haiti") || matchLower.includes("scotland")) {
+             group = "Group C";
+           } else if (matchLower.includes("usa") || matchLower.includes("paraguay") || matchLower.includes("australia") || matchLower.includes("turkey")) {
+             group = "Group D";
+           } else if (matchLower.includes("germany") || matchLower.includes("curaçao") || matchLower.includes("côte") || matchLower.includes("ecuador")) {
+             group = "Group E";
+           } else if (matchLower.includes("netherlands") || matchLower.includes("japan") || matchLower.includes("sweden") || matchLower.includes("tunisia")) {
+             group = "Group F";
+           } else if (matchLower.includes("belgium") || matchLower.includes("egypt") || matchLower.includes("iran") || matchLower.includes("new zealand")) {
+             group = "Group G";
+           } else if (matchLower.includes("spain") || matchLower.includes("cabo verde") || matchLower.includes("saudi arabia") || matchLower.includes("uruguay")) {
+             group = "Group H";
+           } else if (matchLower.includes("france") || matchLower.includes("senegal") || matchLower.includes("iraq") || matchLower.includes("norway")) {
+             group = "Group I";
+           } else if (matchLower.includes("argentina") || matchLower.includes("algeria") || matchLower.includes("austria") || matchLower.includes("jordan")) {
+             group = "Group J";
+           } else if (matchLower.includes("portugal") || matchLower.includes("congo") || matchLower.includes("uzbekistan") || matchLower.includes("colombia")) {
+             group = "Group K";
+           } else {
+             group = "Group L";
+           }
+         }
+         
+         if (!groupMatches[group]) {
+           groupMatches[group] = [];
+         }
+         
+         groupMatches[group].push({ match: matchName, time: matchTime });
+       });
+     }
      
      const playerSet = new Set();
      allPicks.forEach(p => playerSet.add(p.player));
@@ -585,8 +541,8 @@ async function savePicks() {
    } finally {
      isLoading = false;
    }
- }
- 
+}
+
  function getResultSymbol(result) {
    if (result === "1") return "🏠 1";
    if (result === "X") return "🤝 X";
@@ -678,10 +634,18 @@ async function savePicks() {
    return html;
  }
  
- function loadMatches() {
+function loadMatches() {
    const container = document.getElementById("group-matches");
    container.innerHTML = "";
    
+   // Group matches by stage
+   const matchesByGroup = {};
+   
+   for (let group in groupMatches) {
+     matchesByGroup[group] = [];
+   }
+   
+   // Populate from actualResults or default matches
    for (let group in groupMatches) {
      const groupDiv = document.createElement("div");
      groupDiv.className = "group-block";
@@ -691,7 +655,7 @@ async function savePicks() {
      matchesDiv.id = `group-${group.replace(/ /g, '_')}`;
      matchesDiv.style.display = "none";
      
-     // Add standings table at the top of the group
+     // Add standings table
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
      if (standingsHtml) {
@@ -722,9 +686,11 @@ async function savePicks() {
        
        let resultBadge = '';
        if (actualResult && actualScore) {
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
+         const resultText = actualResult === "1" ? "🏠 Home Win" : (actualResult === "X" ? "🤝 Draw" : "✈️ Visitor Win");
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${resultText} (${actualScore})</span>`;
        } else if (actualResult) {
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
+         const resultText = actualResult === "1" ? "🏠 Home Win" : (actualResult === "X" ? "🤝 Draw" : "✈️ Visitor Win");
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${resultText}</span>`;
        } else {
          resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
        }
@@ -775,7 +741,7 @@ async function savePicks() {
    }
    updateProgress();
  }
- 
+
  function toggleGroup(id) {
    const el = document.getElementById(`group-${id}`);
    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
