@@ -271,7 +271,7 @@
  // ============================================
  // GOOGLE SHEETS SHARED VERSION
  // ============================================
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzp5D6NnfqD4162RqjNKac9TUPTJCswrYyyfQjZxQFYTblp5oPXutRs85Qyh8HREyBQ/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwa-7fsW_jrO3NvTxC1oZ5ZYEWmUW_uTVflX9a7EaaeZAISQllx8BExKKG4FgIUQjiK/exec";
  const ADMIN_PASSWORD = "wc2026";
  
  let actualResults = {};
@@ -361,7 +361,7 @@ function loadScoresEditor() {
          <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
            <span>🏠 Home Score:</span>
            <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
-           <span>✈️ Away Score:</span>
+           <span>✈️ Visitor Score:</span>
            <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 60px; padding: 5px; text-align: center;" min="0">
            <span id="result-preview-${cleanId}" style="font-weight: bold; margin-left: 10px;"></span>
          </div>
