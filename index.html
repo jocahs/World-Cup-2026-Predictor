@@ -90,6 +90,9 @@
  .match-name { 
    font-weight: bold; 
    font-size: 1em;
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
  }
  .match-time { 
    color: #666; 
@@ -185,11 +188,14 @@
    cursor: not-allowed;
 }
  
-/* Ensure flags display properly */
-.match-name, 
-.player-name, 
-.group-standings td {
-   font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+/* Flag image styles */
+.team-flag {
+   width: 20px;
+   height: 15px;
+   vertical-align: middle;
+   margin-right: 5px;
+   border-radius: 2px;
+   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
  button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
@@ -218,10 +224,11 @@
  .admin-matches-container { margin-bottom: 15px; }
  
  @media (max-width: 768px) { 
-   .match-name { display: inline; margin-right: 8px; } 
+   .match-name { display: inline-flex; margin-right: 8px; } 
    .match-time { display: inline; }
    .picks-row { flex-direction: row; flex-wrap: wrap; gap: 8px; }
    .player-pick { white-space: nowrap; }
+   .team-flag { width: 18px; height: 12px; }
  }
  </style> 
 </head> 
@@ -422,45 +429,36 @@ function loadScoresEditor() {
    }
 }
 
-// Add Flags to team names in match display
-function addFlagToTeam(teamName) {
+// Get flag code for a team name
+function getFlagCode(teamName) {
    const flagMap = {
-     // Group A
-     'Mexico': '🇲🇽', 'South Africa': '🇿🇦', 'South Korea': '🇰🇷', 'Czechia': '🇨🇿',
-     // Group B
-     'Canada': '🇨🇦', 'Bosnia and Herzegovina': '🇧🇦', 'Bosnia': '🇧🇦', 'Qatar': '🇶🇦', 'Switzerland': '🇨🇭',
-     // Group C
-     'Brazil': '🇧🇷', 'Morocco': '🇲🇦', 'Haiti': '🇭🇹', 'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-     // Group D
-     'USA': '🇺🇸', 'Paraguay': '🇵🇾', 'Australia': '🇦🇺', 'Turkey': '🇹🇷',
-     // Group E
-     'Germany': '🇩🇪', 'Curaçao': '🇨🇼', "Côte d'Ivoire": '🇨🇮', 'Ecuador': '🇪🇨',
-     // Group F
-     'Netherlands': '🇳🇱', 'Japan': '🇯🇵', 'Sweden': '🇸🇪', 'Tunisia': '🇹🇳',
-     // Group G
-     'Belgium': '🇧🇪', 'Egypt': '🇪🇬', 'Iran': '🇮🇷', 'New Zealand': '🇳🇿',
-     // Group H
-     'Spain': '🇪🇸', 'Cabo Verde': '🇨🇻', 'Saudi Arabia': '🇸🇦', 'Uruguay': '🇺🇾',
-     // Group I
-     'France': '🇫🇷', 'Senegal': '🇸🇳', 'Iraq': '🇮🇶', 'Norway': '🇳🇴',
-     // Group J
-     'Argentina': '🇦🇷', 'Algeria': '🇩🇿', 'Austria': '🇦🇹', 'Jordan': '🇯🇴',
-     // Group K
-     'Portugal': '🇵🇹', 'DR Congo': '🇨🇩', 'Uzbekistan': '🇺🇿', 'Colombia': '🇨🇴',
-     // Group L
-     'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Croatia': '🇭🇷', 'Ghana': '🇬🇭', 'Panama': '🇵🇦'
+     'Mexico': 'mx', 'South Africa': 'za', 'South Korea': 'kr', 'Czechia': 'cz',
+     'Canada': 'ca', 'Bosnia and Herzegovina': 'ba', 'Bosnia': 'ba', 'Qatar': 'qa', 'Switzerland': 'ch',
+     'Brazil': 'br', 'Morocco': 'ma', 'Haiti': 'ht', 'Scotland': 'gb-sct',
+     'USA': 'us', 'Paraguay': 'py', 'Australia': 'au', 'Turkey': 'tr',
+     'Germany': 'de', 'Curaçao': 'cw', "Côte d'Ivoire": 'ci', 'Ecuador': 'ec',
+     'Netherlands': 'nl', 'Japan': 'jp', 'Sweden': 'se', 'Tunisia': 'tn',
+     'Belgium': 'be', 'Egypt': 'eg', 'Iran': 'ir', 'New Zealand': 'nz',
+     'Spain': 'es', 'Cabo Verde': 'cv', 'Saudi Arabia': 'sa', 'Uruguay': 'uy',
+     'France': 'fr', 'Senegal': 'sn', 'Iraq': 'iq', 'Norway': 'no',
+     'Argentina': 'ar', 'Algeria': 'dz', 'Austria': 'at', 'Jordan': 'jo',
+     'Portugal': 'pt', 'DR Congo': 'cd', 'Uzbekistan': 'uz', 'Colombia': 'co',
+     'England': 'gb-eng', 'Croatia': 'hr', 'Ghana': 'gh', 'Panama': 'pa'
    };
    
-   // Check for exact match first
-   if (flagMap[teamName]) {
-     return flagMap[teamName] + ' ' + teamName;
-   }
-   
-   // Then check for partial matches
-   for (let [team, flag] of Object.entries(flagMap)) {
+   for (let [team, code] of Object.entries(flagMap)) {
      if (teamName.includes(team)) {
-       return flag + ' ' + teamName;
+       return code;
      }
+   }
+   return null;
+}
+
+// Add Flags to team names using image URLs
+function addFlagToTeam(teamName) {
+   const flagCode = getFlagCode(teamName);
+   if (flagCode) {
+     return `<img src="https://flagcdn.com/20x15/${flagCode}.png" class="team-flag" alt="${teamName} flag"> ${teamName}`;
    }
    return teamName;
 }
