@@ -1,4 +1,4 @@
-const CACHE_NAME = 'worldcup-predictor-v1';
+const CACHE_NAME = 'worldcup-predictor-v2';
 const OFFLINE_URL = 'index.html';
 
 // Files to cache for offline access
