@@ -1,11 +1,19 @@
 <!DOCTYPE html> 
 <html> 
 <head> 
- <title>World Cup 2026 Predictor - Shared</title> 
+ <title>World Cup 2026 Predictor</title> 
  <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+ 
+ <!-- PWA Meta Tags -->
+ <link rel="manifest" href="manifest.json">
+ <meta name="theme-color" content="#4CAF50">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jocahs/worldcup-predictor/main/icon-192.png">
+ 
  <style> 
- body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 20px; background: #f0f2f5; } 
+ body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 20px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; } 
  .container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
  h1 { color: #1a1a1a; text-align: center; }
  .stage-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
@@ -17,12 +25,6 @@
  .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
  .group-title:hover { background: #0b7dda; }
  
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4CAF50">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="https://via.placeholder.com/192x192?text=WC">
-
  /* Group Standings Table */
  .group-standings {
    background: #2c3e50;
@@ -442,8 +444,8 @@ async function savePicks() {
    const player = document.getElementById("playerName").value.trim();
    if (!player) { alert("Enter your name!"); return; }
    
-   // Get currently selected picks from the UI
-   const currentSelections = [];
+   // First, collect the new picks
+   const newPicks = [];
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
        const match = groupMatches[group][i].match;
@@ -454,47 +456,29 @@ async function savePicks() {
        const matchId = `${group}_${i}`;
        const selected = document.querySelector(`input[name="${matchId}"]:checked`);
        if (selected) {
-         currentSelections.push({ match: match, pick: selected.value });
+         newPicks.push({ match: match, pick: selected.value });
        }
      }
    }
    
-   if (currentSelections.length === 0) { 
-     alert("No picks selected for upcoming matches!"); 
-     return; 
-   }
+   if (newPicks.length === 0) { alert("No picks selected for upcoming matches!"); return; }
    
    try {
-     // First, load all existing picks for this player
-     const loadResponse = await fetch(`${WEBAPP_URL}?action=load`);
-     const loadData = await loadResponse.json();
-     const existingPicks = loadData.picks.filter(p => p.player === player);
-     
-     // Merge: keep existing picks for matches not in currentSelections
-     const mergedPicks = [...currentSelections];
-     
-     for (let existing of existingPicks) {
-       const isUpdated = currentSelections.some(s => s.match === existing.match);
-       if (!isUpdated) {
-         mergedPicks.push(existing);
-       }
-     }
-     
-     // Delete all existing picks for this player
+     // First, delete all existing picks for this player
      const deleteParams = new URLSearchParams();
      deleteParams.append("action", "deletePlayerPicks");
      deleteParams.append("player", player);
      await fetch(`${WEBAPP_URL}?${deleteParams.toString()}`);
      
-     // Save the merged picks
+     // Then save the new picks
      const params = new URLSearchParams();
      params.append("action", "save");
      params.append("player", player);
-     params.append("picks", JSON.stringify(mergedPicks));
+     params.append("picks", JSON.stringify(newPicks));
      const response = await fetch(`${WEBAPP_URL}?${params.toString()}`);
      const data = await response.json();
      if (data.success) {
-       alert(`✅ Saved ${mergedPicks.length} picks for ${player}!`);
+       alert(`✅ Saved ${newPicks.length} picks for ${player}!`);
        await loadAllData();
      } else {
        throw new Error(data.error);
@@ -828,16 +812,17 @@ async function savePicks() {
    });
  }
  
+ // PWA: Register Service Worker
+ if ('serviceWorker' in navigator) {
+   navigator.serviceWorker.register('/sw.js').then(function(registration) {
+     console.log('Service Worker registered successfully:', registration.scope);
+   }).catch(function(error) {
+     console.log('Service Worker registration failed:', error);
+   });
+ }
+ 
  initTabs();
  loadAllData();
- 
- </script>
-
- <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-</script>
- 
+ </script> 
 </body> 
 </html>
