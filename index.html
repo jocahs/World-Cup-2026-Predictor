@@ -114,6 +114,21 @@
    font-size: 0.75em;
    margin-left: 5px;
  }
+
+ .calendar-link-time {
+   color: #4285f4;
+   font-size: 0.8em;
+   text-decoration: none;
+   cursor: pointer;
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+}
+.calendar-link-time:hover {
+   text-decoration: underline;
+   color: #0d47a1;
+}
+
 .match-result-badge {
    padding: 4px 12px;
    border-radius: 20px;
@@ -317,6 +332,115 @@
  let isLoading = false;
  let isAdminMode = false;
  let groupMatches = {};
+
+ // Helper function to parse match date and time (handles DD/MM or DD/MM/YYYY)
+function parseMatchDateTime(dateStr, timeStr) {
+   if (!dateStr || !timeStr) return null;
+   // Handle format: "11/06/2026" or "11/06" or "2026-06-18"
+   let day, month, year = 2026;
+   
+   // Format "2026-06-18"
+   if (dateStr.includes('-')) {
+     const parts = dateStr.split('-');
+     year = parseInt(parts[0]);
+     month = parseInt(parts[1]) - 1;
+     day = parseInt(parts[2]);
+   }
+   // Format "11/06/2026" or "11/06"
+   else if (dateStr.includes('/')) {
+     const parts = dateStr.split('/');
+     day = parseInt(parts[0]);
+     month = parseInt(parts[1]) - 1;
+     if (parts[2]) year = parseInt(parts[2]);
+   }
+   else {
+     return null;
+   }
+   
+   const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
+   if (!timeParts) return null;
+   const hour = parseInt(timeParts[1]);
+   const minute = parseInt(timeParts[2]);
+   
+   return new Date(year, month, day, hour, minute);
+}
+
+  function formatDisplayDate(dateStr, timeStr) {
+   if (!dateStr) return timeStr || '';
+   
+   let year, month, day;
+   
+   // Handle format "DD/MM/YYYY"
+   if (dateStr.includes('/')) {
+     const parts = dateStr.split('/');
+     day = parseInt(parts[0]);
+     month = parseInt(parts[1]) - 1;
+     year = parseInt(parts[2]) || 2026;
+   } 
+   // Handle format "YYYY-MM-DD"
+   else if (dateStr.includes('-')) {
+     const parts = dateStr.split('-');
+     year = parseInt(parts[0]);
+     month = parseInt(parts[1]) - 1;
+     day = parseInt(parts[2]);
+   }
+   else {
+     return timeStr;
+   }
+   
+   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+   return `${monthNames[month]} ${day} ${timeStr}`;
+}
+
+ function isWithinThreeHoursAfter(matchDateTime) {
+   if (!matchDateTime) return false;
+   const now = new Date();
+   const threeHoursAfter = new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000);
+   return now <= threeHoursAfter;
+ }
+
+ // Google Calendar URL generator
+ // Google Calendar URL generator
+function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
+   // Parse date - handle both "DD/MM/YYYY" and "YYYY-MM-DD" formats
+   let day, month, year;
+   
+   // Format "YYYY-MM-DD"
+   if (dateStr.includes('-')) {
+     const parts = dateStr.split('-');
+     year = parseInt(parts[0]);
+     month = parseInt(parts[1]);
+     day = parseInt(parts[2]);
+   }
+   // Format "DD/MM/YYYY" or "DD/MM"
+   else if (dateStr.includes('/')) {
+     const parts = dateStr.split('/');
+     day = parseInt(parts[0]);
+     month = parseInt(parts[1]);
+     year = parts[2] ? parseInt(parts[2]) : 2026;
+   }
+   else {
+     return null;
+   }
+   
+   const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
+   if (!timeParts) return null;
+   const hour = parseInt(timeParts[1]);
+   const minute = parseInt(timeParts[2]);
+   
+   const startDate = new Date(year, month - 1, day, hour, minute);
+   const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+   
+   const formatForCalendar = (date) => {
+     return date.toISOString().replace(/-|:|\.\d+/g, '');
+   };
+   
+   const title = `${homeTeam} vs ${visitorTeam}`;
+   const details = `World Cup 2026 match: ${homeTeam} vs ${visitorTeam}\nTransmission: ${transmission || 'TBD'}\n\nMake your prediction at: ${window.location.href}`;
+   const location = "World Cup 2026 Stadium";
+   
+   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+}
 
  function showAdminLogin() {
    const password = prompt("Enter admin password to edit scores:");
@@ -581,9 +705,12 @@ async function loadAllData() {
          const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
          groupMatches[groupName].push({ 
            match: match.name, 
-           time: `${match.date} ${match.time}`,
+           date: match.date,
+           time: match.time,
            displayMatch: matchDisplayName,
            transmission: match.transmission,
+           homeTeam: match.homeTeam,
+           visitorTeam: match.visitorTeam,
            isCompleted: actualResults[match.name] && actualResults[match.name].result
          });
        });
@@ -708,7 +835,6 @@ function createStandingsTable(standings) {
    `;
    
    standings.forEach(team => {
-     // Add flag to team name
      const flagCode = getFlagCode(team.name);
      const teamWithFlag = flagCode ? `<img src="https://flagcdn.com/20x15/${flagCode}.png" class="team-flag" alt="${team.name} flag"> ${team.name}` : team.name;
      
@@ -752,6 +878,12 @@ function loadMatches() {
        const actualScore = actual ? actual.score : null;
        const isCompleted = actualResult !== null;
        
+       // Parse match date/time
+       const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
+       const isPast = matchDateTime ? new Date() > matchDateTime : false;
+       const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
+       const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
+       
        const playerPicks = [];
        for (let player of currentPlayers) {
          const pick = allPicks.find(p => p.player === player && p.match === matchObj.match);
@@ -766,8 +898,31 @@ function loadMatches() {
        else if (actualResult) resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
        else resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
        
-       let timeDisplay = `<span class="match-time">📅 ${matchObj.time}</span>`;
-       if (!isCompleted && matchObj.transmission) {
+       // Format display date nicely
+       const formattedDateTime = formatDisplayDate(matchObj.date, matchObj.time);
+       
+       let timeDisplay = '';
+       
+       // Add Google Calendar link only for future matches (not started yet)
+       if (!isPast && matchObj.date && matchObj.time) {
+         const homeTeamClean = matchObj.homeTeam || '';
+         const visitorTeamClean = matchObj.visitorTeam || '';
+         if (homeTeamClean && visitorTeamClean) {
+           const calUrl = getGoogleCalendarUrl(matchObj.match, homeTeamClean, visitorTeamClean, matchObj.date, matchObj.time, matchObj.transmission);
+           if (calUrl) {
+             timeDisplay = `<a href="${calUrl}" target="_blank" class="calendar-link-time" onclick="event.stopPropagation()" title="Click to add to Google Calendar">📅 ${formattedDateTime}</a>`;
+           } else {
+             timeDisplay = `<span class="match-time">📅 ${formattedDateTime}</span>`;
+           }
+         } else {
+           timeDisplay = `<span class="match-time">📅 ${formattedDateTime}</span>`;
+         }
+       } else {
+         timeDisplay = `<span class="match-time">📅 ${formattedDateTime}</span>`;
+       }
+       
+       // Add transmission info/link (only if within 3 hours after match or not started)
+       if (showTransmission) {
          if (matchObj.transmission.includes('LiveModeTV')) {
            timeDisplay += `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" class="transmission-link" onclick="event.stopPropagation()">📺 ${matchObj.transmission}</a>`;
          } else {
