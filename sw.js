@@ -1,68 +1,45 @@
-const CACHE_NAME = 'worldcup-predictor-v2';
-const OFFLINE_URL = 'index.html';
+const CACHE_NAME = 'worldcup-predictor-v3';
 
-// Files to cache for offline access
-const urlsToCache = [
-  './',
-  'index.html',
-  'manifest.json',
-  'icon-192.png',
-  'icon-512.png',
-  'screenshots/screenshot1-phone.jpg',
-  'screenshots/screenshot1-tablet.jpg',
-  'screenshots/screenshot2-phone.jpg',
-  'screenshots/screenshot2-tablet.jpg',
-  'screenshots/screenshot3-phone.jpg',
-  'screenshots/screenshot3-tablet.jpg'
-];
-
-// Install event - cache essential files
+// Install event - cache core assets
 self.addEventListener('install', event => {
-  console.log('[Service Worker] Installing...');
+  console.log('[SW] Installing...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Caching essential files');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(err => console.log('[Service Worker] Cache failed:', err))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll([
+        '/World-Cup-2026-Predictor/',
+        '/World-Cup-2026-Predictor/index.html',
+        '/World-Cup-2026-Predictor/manifest.json',
+        '/World-Cup-2026-Predictor/icon-192.png',
+        '/World-Cup-2026-Predictor/icon-512.png'
+      ]);
+    })
   );
-  // Activate immediately
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event - clean old caches
 self.addEventListener('activate', event => {
-  console.log('[Service Worker] Activating...');
+  console.log('[SW] Activating...');
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then(keys => {
       return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cache);
-            return caches.delete(cache);
-          }
-        })
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       );
     })
   );
-  // Take control of all clients
   self.clients.claim();
 });
 
-// Fetch event - serve from cache first, then network
+// Fetch event - NETWORK FIRST for HTML, CACHE FIRST for assets
 self.addEventListener('fetch', event => {
-  // Skip cross-origin requests (Google Sheets API)
-  if (!event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
+  const url = event.request.url;
   
-  // For HTML requests - network first, fallback to cache
-  if (event.request.headers.get('accept').includes('text/html')) {
+  // For HTML pages - go to network first, fallback to cache
+  if (url.includes('/World-Cup-2026-Predictor/') && !url.match(/\.(png|jpg|jpeg|svg|json)$/)) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Cache the fresh version
+          // Cache the fresh HTML
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseClone);
@@ -70,42 +47,16 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(() => {
-          // Offline fallback - serve cached index.html
-          console.log('[Service Worker] Offline - serving cached page');
-          return caches.match(OFFLINE_URL);
+          // If offline, try cache
+          return caches.match(event.request);
         })
     );
     return;
   }
   
-  // For other assets - cache first, then network
+  // For assets (images, manifest) - cache first
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(response => {
-          // Cache new assets for offline use
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return response;
-        });
-      })
-      .catch(() => {
-        // Offline fallback for images
-        if (event.request.url.match(/\.(png|jpg|jpeg|svg)$/)) {
-          return caches.match('/World-Cup-2026-Predictor/icon-192.png');
-        }
-        // For API calls, return a simple error response
-        return new Response('You are offline. Please check your connection.', {
-          status: 503,
-          statusText: 'Service Unavailable'
-        });
-      })
+      .then(response => response || fetch(event.request))
   );
 });
