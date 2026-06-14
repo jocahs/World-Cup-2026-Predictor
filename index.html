@@ -21,7 +21,7 @@
  .stage-tab.active { background: #4CAF50; color: white; }
  .matches-container { display: none; }
  .matches-container.active { display: block; }
- .group-block { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+ .group-block { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: white; }
  .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
  .group-title:hover { background: #0b7dda; }
  
@@ -64,16 +64,22 @@
    background: #f5f5f5;
 }
  
- .match-card { 
+.match-card { 
    background: #f9f9f9; 
-   border-bottom: 1px solid #eee; 
-   padding: 10px 12px;
- }
- .match-card:nth-child(even) { background: #fff; }
- .match-card.completed { 
+   border-bottom: 1px solid #e0e0e0; 
+   padding: 12px 15px;
+   margin-bottom: 8px;
+   border-radius: 8px;
+   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.match-card:last-child {
+   border-bottom: none;
+}
+.match-card.completed { 
    background: #e8f5e9; 
    border-left: 4px solid #4CAF50;
- }
+}
+
  .match-header { 
    display: flex; 
    align-items: baseline;
@@ -94,6 +100,8 @@
    border-radius: 20px;
    font-size: 0.9em;
    font-weight: bold;
+   min-width: 65px;
+   text-align: center;
 }
  .result-home { background: #4CAF50; color: white; }
  .result-draw { background: #FF9800; color: white; }
@@ -109,39 +117,43 @@
    padding-top: 6px;
    border-top: 1px dashed #ddd;
  }
+
  .player-pick {
    display: inline-flex;
    align-items: center;
-   gap: 5px;
+   gap: 8px;
    background: #f0f0f0;
-   padding: 3px 8px;
-   border-radius: 20px;
-   font-size: 0.8em;
+   padding: 6px 12px;
+   border-radius: 25px;
+   font-size: 0.95em;
    white-space: nowrap;
- }
- .player-name {
+}
+.player-name {
    font-weight: bold;
    color: #333;
- }
- .player-pick-value {
+   font-size: 0.95em;
+}
+.player-pick-value {
    font-weight: bold;
-   padding: 2px 6px;
-   border-radius: 12px;
+   padding: 4px 10px;
+   border-radius: 16px;
    background: white;
-   font-size: 0.85em;
- }
- .pick-correct {
+   font-size: 1.1em;
+   min-width: 45px;
+   text-align: center;
+}
+.pick-correct {
    background: #4CAF50;
    color: white;
- }
- .pick-wrong {
+}
+.pick-wrong {
    background: #f44336;
    color: white;
- }
- .pick-pending {
+}
+.pick-pending {
    background: #ddd;
    color: #666;
- }
+}
  
 .radio-group {
    margin-top: 6px;
