@@ -19,5 +19,28 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot1-phone.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Group Stage View"
+    },
+    {
+      "src": "screenshots/screenshot2-phone.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Making Picks"
+    },
+    {
+      "src": "screenshots/screenshot3-phone.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Leaderboard"
+    }
   ]
 }
