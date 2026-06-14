@@ -3,21 +3,29 @@
   "name": "World Cup 2026 Predictor",
   "short_name": "WC2026",
   "description": "Predict World Cup match winners with friends",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "theme_color": "#4CAF50",
   "background_color": "#ffffff",
   "orientation": "portrait",
+  "categories": ["sports", "games", "entertainment"],
+  "iarc_rating_id": "",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "screenshots": [
@@ -26,21 +34,24 @@
       "sizes": "1080x1920",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Group Stage View"
+      "label": "Group Stage View - View all matches and standings"
     },
     {
       "src": "screenshots/screenshot2-phone.jpg",
       "sizes": "1080x1920",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Making Picks"
+      "label": "Making Picks - Select Home Win, Draw, or Visitor Win"
     },
     {
       "src": "screenshots/screenshot3-phone.jpg",
       "sizes": "1080x1920",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Leaderboard"
+      "label": "Leaderboard - Track scores and rankings"
     }
-  ]
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "scope_extensions": []
 }
