@@ -292,18 +292,24 @@ let groupMatches = {};
  };
  
  // Show admin login and enter edit mode
- function showAdminLogin() {
+function showAdminLogin() {
    const password = prompt("Enter admin password to edit scores:");
    if (password === ADMIN_PASSWORD) {
      isAdminMode = true;
-     document.getElementById("admin-section").style.display = "block";
-     loadScoresEditor();
-     document.getElementById("admin-section").scrollIntoView({ behavior: "smooth" });
+     // Show the admin section
+     const adminSection = document.getElementById("admin-section");
+     if (adminSection) {
+       adminSection.style.display = "block";
+       loadScoresEditor();
+       adminSection.scrollIntoView({ behavior: "smooth" });
+     } else {
+       console.error("admin-section not found");
+       alert("Error: Admin section not found in the page");
+     }
    } else if (password) {
      alert("Wrong password!");
    }
- }
- 
+}
  function closeAdminMode() {
    isAdminMode = false;
    document.getElementById("admin-section").style.display = "none";
