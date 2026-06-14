@@ -1,7 +1,11 @@
+// World Cup Predictor Service Worker
 const CACHE_NAME = 'worldcup-predictor-v1';
+const OFFLINE_URL = '/World-Cup-2026-Predictor/index.html';
+
+// Files to cache for offline access
 const urlsToCache = [
   '/World-Cup-2026-Predictor/',
-  '/World-Cup-2026-Predictor/index.html',
+  OFFLINE_URL,
   '/World-Cup-2026-Predictor/manifest.json',
   '/World-Cup-2026-Predictor/icon-192.png',
   '/World-Cup-2026-Predictor/icon-512.png'
@@ -9,14 +13,14 @@ const urlsToCache = [
 
 // Install event - cache essential files
 self.addEventListener('install', event => {
-  console.log('Service Worker installing...');
+  console.log('[Service Worker] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Caching essential files');
+        console.log('[Service Worker] Caching essential files');
         return cache.addAll(urlsToCache);
       })
-      .catch(err => console.log('Cache failed:', err))
+      .catch(err => console.log('[Service Worker] Cache failed:', err))
   );
   // Activate immediately
   self.skipWaiting();
@@ -24,13 +28,13 @@ self.addEventListener('install', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('Service Worker activating...');
+  console.log('[Service Worker] Activating...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
-            console.log('Deleting old cache:', cache);
+            console.log('[Service Worker] Deleting old cache:', cache);
             return caches.delete(cache);
           }
         })
@@ -43,7 +47,7 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache first, then network
 self.addEventListener('fetch', event => {
-  // Skip cross-origin requests
+  // Skip cross-origin requests (Google Sheets API)
   if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
@@ -62,7 +66,8 @@ self.addEventListener('fetch', event => {
         })
         .catch(() => {
           // Offline fallback - serve cached index.html
-          return caches.match('/index.html');
+          console.log('[Service Worker] Offline - serving cached page');
+          return caches.match(OFFLINE_URL);
         })
     );
     return;
@@ -89,8 +94,13 @@ self.addEventListener('fetch', event => {
       .catch(() => {
         // Offline fallback for images
         if (event.request.url.match(/\.(png|jpg|jpeg|svg)$/)) {
-          return caches.match('/icon-192.png');
+          return caches.match('/World-Cup-2026-Predictor/icon-192.png');
         }
+        // For API calls, return a simple error response
+        return new Response('You are offline. Please check your connection.', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
       })
   );
 });
