@@ -1,14 +1,13 @@
-// World Cup Predictor Service Worker
 const CACHE_NAME = 'worldcup-predictor-v1';
-const OFFLINE_URL = '/World-Cup-2026-Predictor/index.html';
+const OFFLINE_URL = 'index.html';
 
 // Files to cache for offline access
 const urlsToCache = [
-  '/World-Cup-2026-Predictor/',
-  OFFLINE_URL,
-  '/World-Cup-2026-Predictor/manifest.json',
-  '/World-Cup-2026-Predictor/icon-192.png',
-  '/World-Cup-2026-Predictor/icon-512.png'
+  './',
+  'index.html',
+  'manifest.json',
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 // Install event - cache essential files
