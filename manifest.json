@@ -9,12 +9,12 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/jocahs/worldcup-predictor/main/icon-192.png",
+      "src": "https://github.com/jocahs/World-Cup-2026-Predictor/blob/main/icon-512.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://raw.githubusercontent.com/jocahs/worldcup-predictor/main/icon-512.png",
+      "src": "https://github.com/jocahs/World-Cup-2026-Predictor/blob/main/icon-192.png",
       "sizes": "512x512",
       "type": "image/png"
     }
