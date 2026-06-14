@@ -1,10 +1,10 @@
 const CACHE_NAME = 'worldcup-predictor-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/World-Cup-2026-Predictor/',
+  '/World-Cup-2026-Predictor/index.html',
+  '/World-Cup-2026-Predictor/manifest.json',
+  '/World-Cup-2026-Predictor/icon-192.png',
+  '/World-Cup-2026-Predictor/icon-512.png'
 ];
 
 // Install event - cache essential files
