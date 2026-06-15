@@ -4,12 +4,11 @@ A progressive web app for friends to predict World Cup match winners, track scor
 
 ## Features
 
-- ✅ Predict match winners (Home Win, Draw, Visitor Win)
+- ✅ Pick prediction on match winners (Home Win, Draw, Visitor Win)
 - ✅ Real-time leaderboard
 - ✅ Group stage standings
 - ✅ Admin panel to enter match results
 - ✅ Picks lock automatically after match starts
-- ✅ Works offline as PWA
 
 ## Screenshots
 
