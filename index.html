@@ -266,33 +266,26 @@
 <body> 
  <h1>🏆 World Cup 2026 Predictor</h1>
  
-<div class="container">
-   <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
-     <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; min-width: 200px; updateLeaderboardVisibility();">
-         <option value="">-- Select existing player --</option>
+  <div id="today-matches-container" class="container" style="display: none; padding: 0;"></div>
+  
+  <div id="welcome-message" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: #4CAF50;">
+      <p>Select an existing player or Enter your name.</p>
+       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; updateLeaderboardVisibility();">
+         <option value="">-- Select player --</option>
        </select>
-       <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center;">
-         <label style="font-weight: bold;">Or enter your name and start picking:</label>
          <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px;">
-       </div>
-     </div>
-   </div>
+       <p>Then select a stage to view the matches</p>
+       <p>and pick your predictions!</p>
+  </div>
+  </div>
    <div id="progress-container"></div>
  </div>
 
-  <div id="today-matches-container" class="container" style="display: none; padding: 0;"></div>
 
   <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
     <h2 style="margin-top: 0; margin-bottom: 0;">🏅 Leaderboard</h2>
     <ol id="leaderboard-list"></ol>
   </div>
-  
-  
-    <div id="welcome-message" class="container" style="text-align: center; padding: 5px; background: #58ec5d;">
-      <h3>🏆 Welcome to World Cup 2026 Predictor</h3>
-      <p>Select a stage to view matches and pick your predictions!</p>
-    </div>
 
     <div class="stage-tabs">
       <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
@@ -644,7 +637,7 @@ async function saveAllScores() {
 function updatePlayerDropdown() {
    const select = document.getElementById("playerSelect");
    const currentValue = select.value;
-   select.innerHTML = '<option value="">-- Select existing player --</option>';
+   select.innerHTML = '<option value="">-- Select player --</option>';
    currentPlayers.forEach(player => {
      const option = document.createElement("option");
      option.value = player;
@@ -661,7 +654,7 @@ function selectPlayer() {
      loadMyPicks(playerName);
      updateLeaderboardVisibility();
    } else {
-     // "-- Select existing player --" selected - clear everything
+     // "-- Select player --" selected - clear everything
      clearAllPicks();
      document.getElementById("playerName").value = ""; // Clear the text input
      updateLeaderboardVisibility();
@@ -1105,8 +1098,9 @@ function createTodaysMatchesSection() {
    if (todaysMatches.length === 0) return '';
    
    let html = `
-     <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-       <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's Matches</h3>
+     <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+       <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's UpcomingMatches</h3>
+       <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
    `;
    
    todaysMatches.forEach((tm, idx) => {
@@ -1116,30 +1110,29 @@ function createTodaysMatchesSection() {
      let transmissionHtml = '';
      if (tm.match.transmission) {
        if (tm.match.transmission.includes('LiveModeTV')) {
-         // This link is valid and independent
-         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none; border-radius: 8px;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
+         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
        } else {
          transmissionHtml = `<span>📺 ${tm.match.transmission}</span>`;
        }
      }
      
      const formattedTime = formatDisplayDate(tm.match.date, tm.match.time);
-     const marginBottom = idx === todaysMatches.length - 1 ? '0' : '6px';
      
-     // Use a div instead of an anchor – no nested links
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
-          style="cursor: pointer; display: block; background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: ${marginBottom};">
-           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-           <span style="font-weight: bold; white-space: nowrap;">${tm.displayName}</span>
-           <span style="white-space: nowrap;">📅 ${formattedTime}</span>
-           ${transmissionHtml}
+          style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 8px; min-width: 220px;">
+         <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+           <span style="font-weight: bold; font-size: 1em;">${tm.displayName}</span>
+           <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; font-size: 0.9em;">
+             <span>📅 ${formattedTime}</span>
+             ${transmissionHtml ? transmissionHtml : ''}
+           </div>
          </div>
        </div>
      `;
    });
    
-   html += `</div>`;
+   html += `</div></div>`;
    return html;
 }
 
@@ -1179,13 +1172,8 @@ function updateProgress() {
 }
 
 function initTabs() {
-   const welcomeMsg = document.getElementById("welcome-message");
-   
-   // Hide welcome message when a tab is clicked
    document.querySelectorAll('.stage-tab').forEach(tab => {
      tab.addEventListener('click', () => {
-       if (welcomeMsg) welcomeMsg.style.display = "none";
-       
        document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
        tab.classList.add('active');
        document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
