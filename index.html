@@ -260,6 +260,7 @@
    .player-pick { white-space: nowrap; }
    .team-flag { width: 18px; height: 12px; }
  }
+
  </style> 
 </head> 
 <body> 
@@ -267,14 +268,13 @@
  
  <div class="container">
    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
-     <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-       <label style="font-weight: bold;">Your Name: </label>
-       <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 200px;">
-       <select id="playerSelect" class="player-select" onchange="selectPlayer()">
+     <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px;">
+             <select id="playerSelect" class="player-select" onchange="selectPlayer()">
          <option value="">-- Select existing player --</option>
        </select>
+       <label style="font-weight: bold;">Or enter your name and start picking: </label>
+       <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 200px;">
        <div class="btn-group">
-         <button onclick="loadMyPicks()" class="btn-purple">📖 Load My Picks</button>
          <button onclick="showAdminLogin()" style="background: #f44336; color: white;">🔐 Edit Scores (Admin)</button>
        </div>
      </div>
@@ -282,10 +282,12 @@
    <div id="progress-container"></div>
  </div>
 
- <div id="leaderboard" class="leaderboard" style="display: none;">
-   <h2>🏅 Leaderboard</h2>
-   <ol id="leaderboard-list"></ol>
- </div>
+  <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
+    <h2 style="margin-top: 0; margin-bottom: 0;">🏅 Leaderboard</h2>
+    <ol id="leaderboard-list"></ol>
+  </div>
+  
+  <div id="today-matches-container" class="container" style="display: none; padding: 0;"></div>
 
  <div class="container">
    <div class="stage-tabs">
@@ -306,10 +308,28 @@
    
    <div style="margin-top: 20px; text-align: center;">
      <button onclick="savePicks()">💾 Save My Picks</button>
-     <button onclick="loadAllData()" class="btn-blue">📊 Refresh Standings</button>
    </div>
  </div>
 
+<div class="container" style="text-align: center; margin-top: 20px;">
+  <p style="margin-top: 10px; color: #666; font-size: 0.9em;">Scan to open World Cup 2026 Predictor</p>
+  <div onclick="shareApp()" style="cursor: pointer; display: inline-block; position: relative;">
+    <img src="WC2026_QR.jpg" alt="WC2026 QR Code" style="max-width: 200px; width: 100%; height: auto; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s;">
+    <div style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; margin-bottom: 10px;">
+      Click to share 📤
+      <div style="position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #333;"></div>
+    </div>
+  </div>
+  <style>
+    div[onclick="shareApp()"]:hover > div {
+      opacity: 1;
+    }
+    div[onclick="shareApp()"]:hover img {
+      transform: scale(1.02);
+    }
+  </style>
+</div>
+ 
  <div id="admin-section" style="display: none;">
    <div class="container">
      <h3>🔧 Edit Match Scores</h3>
@@ -722,23 +742,25 @@ async function loadAllData() {
      currentPlayers = Array.from(playerSet).sort();
      updatePlayerDropdown();
      loadMatches();
+     updateTodayMatches();
      
-     const playerScores = [];
-     for (let player of currentPlayers) {
-       let score = 0, total = 0;
-       const playerPicks = allPicks.filter(p => p.player === player);
-       for (let group in groupMatches) {
-         for (let m of groupMatches[group]) {
-           const actual = actualResults[m.match];
-           const pick = playerPicks.find(p => p.match === m.match);
-           if (actual && actual.result) {
-             total++;
-             if (pick && pick.pick === actual.result) score++;
-           }
-         }
-       }
-       playerScores.push({ name: player, score: score, total: total });
-     }
+      const playerScores = [];
+      for (let player of currentPlayers) {
+        let score = 0, total = 0;
+        const playerPicks = allPicks.filter(p => p.player === player);
+        for (let group in groupMatches) {
+          for (let m of groupMatches[group]) {
+            const actual = actualResults[m.match];
+            const pick = playerPicks.find(p => p.match === m.match);
+            // Only count if the player actually made a pick for this match AND the match has a result
+            if (actual && actual.result && pick) {
+              total++;
+              if (pick.pick === actual.result) score++;
+            }
+          }
+        }
+        playerScores.push({ name: player, score: score, total: total });
+      }
      playerScores.sort((a,b) => b.score - a.score);
      const leaderboardDiv = document.getElementById("leaderboard");
      const leaderboardList = document.getElementById("leaderboard-list");
@@ -747,7 +769,7 @@ async function loadAllData() {
        leaderboardList.innerHTML = "";
        playerScores.forEach((p, i) => {
          const percent = p.total > 0 ? Math.round(p.score/p.total*100) : 0;
-         leaderboardList.innerHTML += `<li><strong>${p.name}</strong> - ${p.score}/${p.total} correct (${percent}%) ${i === 0 ? "🏆" : ""}</li>`;
+         leaderboardList.innerHTML += `<li><strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%) ${i === 0 ? "🏆" : ""}</li>`;
        });
      }
      updateProgress();
@@ -884,7 +906,7 @@ function loadMatches() {
        
       const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
       const now = new Date();
-      const isPast = matchDateTime ? now > matchDateTime : false;
+      const isPast = matchDateTime ? now >= matchDateTime : false;
 
       // Debug log - remove after testing
       if (matchObj.match === "Ivory Coast vs Ecuador") {
@@ -904,6 +926,7 @@ function loadMatches() {
        
        const matchDiv = document.createElement("div");
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
+       matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
        
        let resultBadge = '';
        if (actualResult && actualScore) resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
@@ -953,6 +976,8 @@ function loadMatches() {
         // Lock picks if match has a result OR match start time has passed
         if (!isCompleted && !isPast) {
           radioHtml = `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label></div>`;
+        } else if (!isCompleted && isPast) {
+          radioHtml = `<div class="radio-group disabled"><span class="deadline-note" style="color:#f44336; font-size:0.8em;">⏰ Deadline passed · picks locked</span></div>`;
         } else {
           radioHtml = `<div class="radio-group disabled"></div>`;
         }
@@ -964,6 +989,120 @@ function loadMatches() {
      container.appendChild(groupDiv);
    }
    updateProgress();
+}
+
+function getTodaysMatches() {
+   const today = new Date();
+   today.setHours(0, 0, 0, 0);
+   const tomorrow = new Date(today);
+   tomorrow.setDate(tomorrow.getDate() + 1);
+   
+   const todaysMatches = [];
+   
+   for (let group in groupMatches) {
+     for (let idx = 0; idx < groupMatches[group].length; idx++) {
+       const match = groupMatches[group][idx];
+       const matchDateTime = parseMatchDateTime(match.date, match.time);
+       if (matchDateTime) {
+         const matchDate = new Date(matchDateTime);
+         matchDate.setHours(0, 0, 0, 0);
+         // Check if match is today AND not completed yet
+         if (matchDate.getTime() === today.getTime() && !actualResults[match.match]?.result) {
+           todaysMatches.push({
+             group: group,
+             idx: idx,
+             match: match,
+             displayName: match.displayMatch,
+             time: match.time
+           });
+         }
+       }
+     }
+   }
+   return todaysMatches;
+}
+
+function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
+   // Expand the group if it's collapsed
+   const groupDiv = document.getElementById(groupId);
+   if (groupDiv && groupDiv.style.display === "none") {
+     groupDiv.style.display = "block";
+   }
+   
+   // Scroll to the match
+   const matchElement = document.getElementById(matchElementId);
+   if (matchElement) {
+     matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
+     // Add a temporary highlight effect
+     matchElement.style.transition = "background 0.3s";
+     matchElement.style.background = "#fff3cd";
+     setTimeout(() => {
+       matchElement.style.background = "";
+     }, 2000);
+   } else {
+     // If match element doesn't have an ID yet, we need to add IDs when creating matches
+     // For now, just scroll to the group
+     const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest('.group-block');
+     if (groupBlock) {
+       groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+     }
+   }
+}
+
+function createTodaysMatchesSection() {
+   const todaysMatches = getTodaysMatches();
+   if (todaysMatches.length === 0) return '';
+   
+   let html = `
+     <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+       <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's Matches</h3>
+   `;
+   
+   todaysMatches.forEach((tm, idx) => {
+     const groupId = `group-${tm.group.replace(/ /g, '_')}`;
+     const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
+     
+     let transmissionHtml = '';
+     if (tm.match.transmission) {
+       if (tm.match.transmission.includes('LiveModeTV')) {
+         // This link is valid and independent
+         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none; border-radius: 8px;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
+       } else {
+         transmissionHtml = `<span>📺 ${tm.match.transmission}</span>`;
+       }
+     }
+     
+     const formattedTime = formatDisplayDate(tm.match.date, tm.match.time);
+     const marginBottom = idx === todaysMatches.length - 1 ? '0' : '6px';
+     
+     // Use a div instead of an anchor – no nested links
+     html += `
+       <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
+          style="cursor: pointer; display: block; background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: ${marginBottom};">
+           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+           <span style="font-weight: bold; white-space: nowrap;">${tm.displayName}</span>
+           <span style="white-space: nowrap;">📅 ${formattedTime}</span>
+           ${transmissionHtml}
+         </div>
+       </div>
+     `;
+   });
+   
+   html += `</div>`;
+   return html;
+}
+
+function updateTodayMatches() {
+   const container = document.getElementById("today-matches-container");
+   if (!container) return;
+   const sectionHtml = createTodaysMatchesSection();
+   if (sectionHtml) {
+     container.style.display = "block";
+     container.innerHTML = sectionHtml;
+   } else {
+     container.style.display = "none";
+     container.innerHTML = "";
+   }
 }
 
 function toggleGroup(id) {
@@ -998,6 +1137,63 @@ function initTabs() {
      });
    });
 }
+
+async function shareApp() {
+  const shareData = {
+    title: 'World Cup 2026 Predictor',
+    text: 'Make your predictions for World Cup 2026!',
+    url: window.location.href
+  };
+
+  try {
+    if (navigator.share && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      showShareFeedback('✅ Link copied! Share with friends.');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error('Share failed:', err);
+      showShareFeedback('📋 Copy this link: ' + window.location.href);
+    }
+  }
+}
+
+function showShareFeedback(message) {
+  const feedback = document.createElement('div');
+  feedback.textContent = message;
+  feedback.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    animation: fadeOut 2s forwards;
+    white-space: nowrap;
+    font-size: 14px;
+  `;
+  document.body.appendChild(feedback);
+  
+  setTimeout(() => {
+    feedback.remove();
+  }, 2000);
+}
+
+// Add CSS animation if not already present
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+`;
+document.head.appendChild(style);
 
 if ('serviceWorker' in navigator) {
    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.log('SW failed:', e)));
