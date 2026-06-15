@@ -323,7 +323,7 @@
  </div>
 
  <script> 
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxWV5W9b4w3JsHHQIwKHO7qbcoGQBcLhBxBFNVppuYhAhIgMtRHjX3S1pvF3ML4y7Iz/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz5O-6TCHr2T0_L4pSkdQ_0HJQndylwWeeRzg-MW07jaRHnuiq9hbVk6F9FEwSwCgf_/exec";
  const ADMIN_PASSWORD = "wc2026";
  
  let actualResults = {};
@@ -337,33 +337,51 @@
 function parseMatchDateTime(dateStr, timeStr) {
    if (!dateStr || !timeStr) return null;
    
-   let matchDate;
+   let year = 2026, month, day, hour, minute;
    
-   // Handle ISO format "2026-06-14T23:00:00.000Z"
+   // Parse the time
+   const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
+   if (!timeParts) return null;
+   hour = parseInt(timeParts[1]);
+   minute = parseInt(timeParts[2]);
+   
+   // For ISO format, extract the date from UTC but use local time
    if (dateStr.includes('T') || dateStr.includes('-')) {
-     // Keep as UTC date
-     matchDate = new Date(dateStr);
+     const utcDate = new Date(dateStr);
+     // For a match at 03:00 local time, the UTC date is the previous day at 23:00
+     // We want to use the local date, so we need to check if the time crosses midnight
+     let localDay = utcDate.getUTCDate();
+     let localMonth = utcDate.getUTCMonth();
+     let localYear = utcDate.getUTCFullYear();
+     
+     // If time is early morning (00:00-05:00), the local date might be the next day
+     // For Portugal, UTC+1 means 23:00 UTC = 00:00 local next day
+     // So we need to adjust
+     if (hour < 5 && utcDate.getUTCHours() >= 22) {
+       localDay += 1;
+       // Handle month/year rollover
+       if (localDay > new Date(localYear, localMonth + 1, 0).getDate()) {
+         localDay = 1;
+         localMonth += 1;
+         if (localMonth > 11) {
+           localMonth = 0;
+           localYear += 1;
+         }
+       }
+     }
+     
+     return new Date(localYear, localMonth, localDay, hour, minute);
    }
-   // Handle format "DD/MM/YYYY"
+   // Handle DD/MM/YYYY format
    else if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
-     const day = parseInt(parts[0]);
-     const month = parseInt(parts[1]);
-     const year = parts[2] ? parseInt(parts[2]) : 2026;
-     const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
-     if (timeParts) {
-       const hour = parseInt(timeParts[1]);
-       const minute = parseInt(timeParts[2]);
-       matchDate = new Date(year, month - 1, day, hour, minute);
-     } else {
-       return null;
-     }
-   }
-   else {
-     return null;
+     day = parseInt(parts[0]);
+     month = parseInt(parts[1]) - 1;
+     if (parts[2]) year = parseInt(parts[2]);
+     return new Date(year, month, day, hour, minute);
    }
    
-   return matchDate;
+   return null;
 }
 
 function formatDisplayDate(dateStr, timeStr) {
@@ -371,12 +389,12 @@ function formatDisplayDate(dateStr, timeStr) {
      return timeStr || '';
    }
    
-   let year, month, day;
+   let day, month;
    
    // Handle ISO format "2026-06-14T23:00:00.000Z"
    if (dateStr.includes('T') || dateStr.includes('-')) {
      const date = new Date(dateStr);
-     // Adjust for local timezone (Portugal)
+     // Adjust to local time (Portugal)
      const localDate = new Date(date.getTime());
      day = localDate.getDate();
      month = localDate.getMonth() + 1;
@@ -404,26 +422,44 @@ function isWithinThreeHoursAfter(matchDateTime) {
 
 // Google Calendar URL generator
 function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
-   let day, month, year;
+   let year, month, day, hour, minute;
    
-   if (dateStr.includes('/')) {
+   // Handle ISO format "2026-06-14T23:00:00.000Z"
+   if (dateStr.includes('T') || dateStr.includes('-')) {
+     const utcDate = new Date(dateStr);
+     // Use UTC components for the date (this matches the actual kickoff time in Portugal)
+     year = utcDate.getUTCFullYear();
+     month = utcDate.getUTCMonth() + 1;
+     day = utcDate.getUTCDate();
+     
+     // Parse the local time from timeStr
+     const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
+     if (!timeParts) return null;
+     hour = parseInt(timeParts[1]);
+     minute = parseInt(timeParts[2]);
+   }
+   // Handle format "DD/MM/YYYY"
+   else if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
      day = parseInt(parts[0]);
      month = parseInt(parts[1]);
      year = parts[2] ? parseInt(parts[2]) : 2026;
+     
+     const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
+     if (!timeParts) return null;
+     hour = parseInt(timeParts[1]);
+     minute = parseInt(timeParts[2]);
    }
    else {
+     console.error('Invalid date format:', dateStr);
      return null;
    }
    
-   const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
-   if (!timeParts) return null;
-   const hour = parseInt(timeParts[1]);
-   const minute = parseInt(timeParts[2]);
-   
+   // Create start date using local time components
    const startDate = new Date(year, month - 1, day, hour, minute);
    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
    
+   // Format for Google Calendar: YYYYMMDDTHHMMSSZ
    const formatForCalendar = (date) => {
      const y = date.getFullYear();
      const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -442,7 +478,12 @@ function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr
    
    const details = `World Cup 2026 match: ${homeTeam} vs ${visitorTeam}\nTransmission: ${transmission || 'TBD'}${watchLink}\n\nMake your prediction at: ${window.location.href}`;
    
-   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${encodeURIComponent(details)}`;
+   const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${encodeURIComponent(details)}`;
+   
+   // Debug log to verify the URL
+   console.log('Calendar URL:', calendarUrl);
+   
+   return calendarUrl;
 }
 
 function showAdminLogin() {
@@ -889,10 +930,17 @@ function loadMatches() {
        const actualScore = actual ? actual.score : null;
        const isCompleted = actualResult !== null;
        
-       const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
-       const now = new Date();
-       // Compare using UTC timestamps
-       const isPast = matchDateTime ? now.getTime() > matchDateTime.getTime() : false;
+      const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
+      const now = new Date();
+      const isPast = matchDateTime ? now > matchDateTime : false;
+
+      // Debug log - remove after testing
+      if (matchObj.match === "Ivory Coast vs Ecuador") {
+        console.log(`Match: ${matchObj.match}`);
+        console.log(`  matchDateTime: ${matchDateTime}`);
+        console.log(`  now: ${now}`);
+        console.log(`  isPast: ${isPast}`);
+      }
        const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
        
