@@ -337,7 +337,7 @@
 function parseMatchDateTime(dateStr, timeStr) {
    if (!dateStr || !timeStr) return null;
    
-   let year = 2026, month, day, hour, minute;
+   let year, month, day, hour, minute;
    
    // Parse the time
    const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
@@ -345,43 +345,28 @@ function parseMatchDateTime(dateStr, timeStr) {
    hour = parseInt(timeParts[1]);
    minute = parseInt(timeParts[2]);
    
-   // For ISO format, extract the date from UTC but use local time
-   if (dateStr.includes('T') || dateStr.includes('-')) {
+   // Handle ISO format (coming from Google Sheets)
+   if (dateStr.includes('T')) {
      const utcDate = new Date(dateStr);
-     // For a match at 03:00 local time, the UTC date is the previous day at 23:00
-     // We want to use the local date, so we need to check if the time crosses midnight
-     let localDay = utcDate.getUTCDate();
-     let localMonth = utcDate.getUTCMonth();
-     let localYear = utcDate.getUTCFullYear();
-     
-     // If time is early morning (00:00-05:00), the local date might be the next day
-     // For Portugal, UTC+1 means 23:00 UTC = 00:00 local next day
-     // So we need to adjust
-     if (hour < 5 && utcDate.getUTCHours() >= 22) {
-       localDay += 1;
-       // Handle month/year rollover
-       if (localDay > new Date(localYear, localMonth + 1, 0).getDate()) {
-         localDay = 1;
-         localMonth += 1;
-         if (localMonth > 11) {
-           localMonth = 0;
-           localYear += 1;
-         }
-       }
-     }
-     
-     return new Date(localYear, localMonth, localDay, hour, minute);
+     // For Portugal (UTC+1), add 1 hour to get local time
+     const localDate = new Date(utcDate.getTime() + 60 * 60 * 1000);
+     year = localDate.getFullYear();
+     month = localDate.getMonth();
+     day = localDate.getDate();
    }
    // Handle DD/MM/YYYY format
    else if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
      day = parseInt(parts[0]);
      month = parseInt(parts[1]) - 1;
-     if (parts[2]) year = parseInt(parts[2]);
-     return new Date(year, month, day, hour, minute);
+     year = parseInt(parts[2]) || 2026;
+   }
+   else {
+     return null;
    }
    
-   return null;
+   // Create date with local components
+   return new Date(year, month, day, hour, minute);
 }
 
 function formatDisplayDate(dateStr, timeStr) {
@@ -422,68 +407,50 @@ function isWithinThreeHoursAfter(matchDateTime) {
 
 // Google Calendar URL generator
 function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
-   let year, month, day, hour, minute;
+   // Parse date - handle ISO format
+   let year, month, day;
+   let hour, minute;
    
-   // Handle ISO format "2026-06-14T23:00:00.000Z"
-   if (dateStr.includes('T') || dateStr.includes('-')) {
+   // Parse the time
+   const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
+   if (!timeParts) return null;
+   hour = parseInt(timeParts[1]);
+   minute = parseInt(timeParts[2]);
+   
+   // Handle ISO format
+   if (dateStr.includes('T')) {
      const utcDate = new Date(dateStr);
-     // Use UTC components for the date (this matches the actual kickoff time in Portugal)
-     year = utcDate.getUTCFullYear();
-     month = utcDate.getUTCMonth() + 1;
-     day = utcDate.getUTCDate();
-     
-     // Parse the local time from timeStr
-     const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
-     if (!timeParts) return null;
-     hour = parseInt(timeParts[1]);
-     minute = parseInt(timeParts[2]);
+     // Add 1 hour for Portugal timezone
+     const localDate = new Date(utcDate.getTime() + 60 * 60 * 1000);
+     year = localDate.getFullYear();
+     month = localDate.getMonth() + 1;
+     day = localDate.getDate();
    }
-   // Handle format "DD/MM/YYYY"
+   // Handle DD/MM/YYYY
    else if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
      day = parseInt(parts[0]);
      month = parseInt(parts[1]);
-     year = parts[2] ? parseInt(parts[2]) : 2026;
-     
-     const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
-     if (!timeParts) return null;
-     hour = parseInt(timeParts[1]);
-     minute = parseInt(timeParts[2]);
+     year = parseInt(parts[2]) || 2026;
    }
    else {
-     console.error('Invalid date format:', dateStr);
      return null;
    }
    
-   // Create start date using local time components
-   const startDate = new Date(year, month - 1, day, hour, minute);
-   const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
-   
-   // Format for Google Calendar: YYYYMMDDTHHMMSSZ
-   const formatForCalendar = (date) => {
-     const y = date.getFullYear();
-     const m = String(date.getMonth() + 1).padStart(2, '0');
-     const d = String(date.getDate()).padStart(2, '0');
-     const h = String(date.getHours()).padStart(2, '0');
-     const min = String(date.getMinutes()).padStart(2, '0');
-     return `${y}${m}${d}T${h}${min}00Z`;
-   };
+   // Format for Google Calendar (local time, no UTC conversion)
+   const formatNumber = (n) => String(n).padStart(2, '0');
+   const startDateStr = `${year}${formatNumber(month)}${formatNumber(day)}T${formatNumber(hour)}${formatNumber(minute)}00`;
+   const endDateStr = `${year}${formatNumber(month)}${formatNumber(day)}T${formatNumber(hour + 2)}${formatNumber(minute)}00`;
    
    const title = `${homeTeam} vs ${visitorTeam}`;
-   
    let watchLink = '';
    if (transmission && transmission.includes('LiveModeTV')) {
      watchLink = '\n\n📺 Watch Live: https://www.youtube.com/@LiveModeTV_PT';
    }
-   
    const details = `World Cup 2026 match: ${homeTeam} vs ${visitorTeam}\nTransmission: ${transmission || 'TBD'}${watchLink}\n\nMake your prediction at: ${window.location.href}`;
    
-   const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${encodeURIComponent(details)}`;
-   
-   // Debug log to verify the URL
-   console.log('Calendar URL:', calendarUrl);
-   
-   return calendarUrl;
+   // Use local time format (without Z)
+   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDateStr}/${endDateStr}&details=${encodeURIComponent(details)}&ctz=Europe/Lisbon`;
 }
 
 function showAdminLogin() {
