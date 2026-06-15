@@ -253,6 +253,47 @@
  .admin-group-title:hover { background: #0b7dda; }
  .admin-matches-container { margin-bottom: 15px; }
  
+ .loading-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: rgba(0,0,0,0.5);
+   display: none;
+   justify-content: center;
+   align-items: center;
+   z-index: 9999;
+ }
+ .loading-overlay.active {
+   display: flex;
+ }
+ .loading-spinner {
+   background: white;
+   padding: 20px 30px;
+   border-radius: 10px;
+   text-align: center;
+   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+ }
+ .loading-spinner .spinner {
+   width: 40px;
+   height: 40px;
+   border: 4px solid #f3f3f3;
+   border-top: 4px solid #4CAF50;
+   border-radius: 50%;
+   animation: spin 1s linear infinite;
+   margin: 0 auto 10px auto;
+ }
+ .loading-spinner p {
+   margin: 0;
+   color: #333;
+   font-size: 14px;
+ }
+ @keyframes spin {
+   0% { transform: rotate(0deg); }
+   100% { transform: rotate(360deg); }
+ }
+ 
  @media (max-width: 768px) { 
    .match-name { display: inline-flex; margin-right: 8px; } 
    .match-time { display: inline; }
@@ -264,13 +305,20 @@
  </style> 
 </head> 
 <body> 
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading matches and picks...</p>
+  </div>
+</div>
+
  <h1>🏆 World Cup 2026 Predictor</h1>
  
   <div id="today-matches-container" class="container" style="display: none; padding: 0;"></div>
   
   <div id="welcome-message" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: #4CAF50;">
       <p>Select an existing player or Enter your name.</p>
-       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; updateLeaderboardVisibility();">
+       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px;">
          <option value="">-- Select player --</option>
        </select>
          <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px;">
@@ -352,6 +400,17 @@
  let isAdminMode = false;
  let groupMatches = {};
 
+function showLoading(message = "Loading matches and picks...") {
+  const overlay = document.getElementById("loadingOverlay");
+  const textElement = overlay.querySelector(".loading-spinner p");
+  if (textElement) textElement.textContent = message;
+  overlay.classList.add("active");
+}
+
+function hideLoading() {
+  const overlay = document.getElementById("loadingOverlay");
+  overlay.classList.remove("active");
+}
 
  // Helper function to parse match date and time
 function parseMatchDateTime(dateStr, timeStr) {
@@ -624,6 +683,9 @@ async function saveAllScores() {
      }
    }
    if (scoreUpdates.length === 0) { alert("No scores to save!"); return; }
+   
+   showLoading("Saving scores...");
+   
    try {
      const params = new URLSearchParams();
      params.append("action", "saveScores");
@@ -631,7 +693,10 @@ async function saveAllScores() {
      await fetch(`${WEBAPP_URL}?${params.toString()}`);
      alert(`✅ ${scoreUpdates.length} match scores saved!`);
      closeAdminMode();
-   } catch(e) { alert("Error saving scores: " + e.message); }
+   } catch(e) { 
+     alert("Error saving scores: " + e.message);
+     hideLoading();
+   }
 }
 
 function updatePlayerDropdown() {
@@ -688,6 +753,9 @@ async function savePicks() {
      }
    }
    if (newPicks.length === 0) { alert("No picks selected!"); return; }
+   
+   showLoading("Saving your picks...");
+   
    try {
      const deleteParams = new URLSearchParams();
      deleteParams.append("action", "deletePlayerPicks");
@@ -700,7 +768,10 @@ async function savePicks() {
      await fetch(`${WEBAPP_URL}?${params.toString()}`);
      alert(`✅ Saved ${newPicks.length} picks for ${player}!`);
      await loadAllData();
-   } catch(e) { alert("Error: " + e.message); }
+   } catch(e) { 
+     alert("Error: " + e.message);
+     hideLoading();
+   }
 }
 
 async function loadMyPicks(playerName = null) {
@@ -715,6 +786,8 @@ async function loadMyPicks(playerName = null) {
      alert("Enter your name!"); 
      return; 
    }
+   
+   showLoading(`Loading picks for ${player}...`);
    
    try {
      const response = await fetch(`${WEBAPP_URL}?action=load`);
@@ -743,13 +816,16 @@ async function loadMyPicks(playerName = null) {
    } catch(e) { 
      alert("Error: " + e.message); 
    } finally { 
-     isLoading = false; 
+     isLoading = false;
+     hideLoading();
    }
 }
 
 async function loadAllData() {
    if (isLoading) return;
    isLoading = true;
+   showLoading("Loading matches and picks...");
+   
    try {
      const response = await fetch(`${WEBAPP_URL}?action=load`);
      const data = await response.json();
@@ -817,7 +893,12 @@ async function loadAllData() {
      }
      updateProgress();
      updateLeaderboardVisibility(); // This will show/hide based on dropdown selection
-   } catch(e) { alert("Error loading: " + e.message); } finally { isLoading = false; }
+   } catch(e) { 
+     alert("Error loading: " + e.message); 
+   } finally { 
+     isLoading = false;
+     hideLoading();
+   }
 }
 
 function getResultSymbol(result) {
