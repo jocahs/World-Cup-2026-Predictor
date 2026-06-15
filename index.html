@@ -269,7 +269,7 @@
 <div class="container">
    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
      <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; min-width: 200px;">
+       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; min-width: 200px; updateLeaderboardVisibility();">
          <option value="">-- Select existing player --</option>
        </select>
        <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center;">
@@ -358,6 +358,7 @@
  let isLoading = false;
  let isAdminMode = false;
  let groupMatches = {};
+
 
  // Helper function to parse match date and time
 function parseMatchDateTime(dateStr, timeStr) {
@@ -485,6 +486,17 @@ function showAdminLogin() {
    loadAllData();
  }
  
+function updateLeaderboardVisibility() {
+  const selectedFromDropdown = document.getElementById("playerSelect").value;
+  const leaderboard = document.getElementById("leaderboard");
+  
+  if (selectedFromDropdown && selectedFromDropdown !== "") {
+    leaderboard.style.display = "block";
+  } else {
+    leaderboard.style.display = "none";
+  }
+}
+
  function getFlagCode(teamName) {
    const flagMap = {
      'Mexico': 'mx', 'South Africa': 'za', 'South Korea': 'kr', 'Czechia': 'cz',
@@ -645,9 +657,28 @@ function updatePlayerDropdown() {
 function selectPlayer() {
    const playerName = document.getElementById("playerSelect").value;
    if (playerName) {
-     document.getElementById("playerName").value = playerName;
-     loadMyPicks();
+     // Player selected from dropdown - load their picks, passing the name
+     loadMyPicks(playerName);
+     updateLeaderboardVisibility();
+   } else {
+     // "-- Select existing player --" selected - clear everything
+     clearAllPicks();
+     document.getElementById("playerName").value = ""; // Clear the text input
+     updateLeaderboardVisibility();
    }
+}
+
+function clearAllPicks() {
+   // Clear all radio button selections
+   for (let group in groupMatches) {
+     for (let i = 0; i < groupMatches[group].length; i++) {
+       const matchId = `${group}_${i}`;
+       document.querySelectorAll(`input[name="${matchId}"]`).forEach(radio => {
+         radio.checked = false;
+       });
+     }
+   }
+   updateProgress();
 }
 
 async function savePicks() {
@@ -679,11 +710,19 @@ async function savePicks() {
    } catch(e) { alert("Error: " + e.message); }
 }
 
-async function loadMyPicks() {
+async function loadMyPicks(playerName = null) {
    if (isLoading) return;
    isLoading = true;
-   const player = document.getElementById("playerName").value.trim();
-   if (!player) { isLoading = false; alert("Enter your name!"); return; }
+   
+   // Use provided playerName or get from input field
+   const player = playerName || document.getElementById("playerName").value.trim();
+   
+   if (!player) { 
+     isLoading = false; 
+     alert("Enter your name!"); 
+     return; 
+   }
+   
    try {
      const response = await fetch(`${WEBAPP_URL}?action=load`);
      const data = await response.json();
@@ -707,7 +746,12 @@ async function loadMyPicks() {
      });
      updateProgress();
      alert(`✅ Loaded ${userPicks.length} picks for ${player}`);
-   } catch(e) { alert("Error: " + e.message); } finally { isLoading = false; }
+     updateLeaderboardVisibility();
+   } catch(e) { 
+     alert("Error: " + e.message); 
+   } finally { 
+     isLoading = false; 
+   }
 }
 
 async function loadAllData() {
@@ -750,7 +794,7 @@ async function loadAllData() {
      loadMatches();
      updateTodayMatches();
      
-      const playerScores = [];
+           const playerScores = [];
       for (let player of currentPlayers) {
         let score = 0, total = 0;
         const playerPicks = allPicks.filter(p => p.player === player);
@@ -771,7 +815,7 @@ async function loadAllData() {
      const leaderboardDiv = document.getElementById("leaderboard");
      const leaderboardList = document.getElementById("leaderboard-list");
      if (playerScores.length > 0) {
-       leaderboardDiv.style.display = "block";
+       // Do NOT set display to block here - let updateLeaderboardVisibility control it
        leaderboardList.innerHTML = "";
        playerScores.forEach((p, i) => {
          const percent = p.total > 0 ? Math.round(p.score/p.total*100) : 0;
@@ -779,6 +823,7 @@ async function loadAllData() {
        });
      }
      updateProgress();
+     updateLeaderboardVisibility(); // This will show/hide based on dropdown selection
    } catch(e) { alert("Error loading: " + e.message); } finally { isLoading = false; }
 }
 
