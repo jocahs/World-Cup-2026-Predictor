@@ -314,15 +314,15 @@
 
  <h1>🏆 World Cup 2026 Predictor</h1>
  
-  <div id="today-matches-container" class="container" style="display: none; padding: 0;"></div>
+  <div id="today-matches-container" class="container" style="display: none; padding: 0;margin: 0px auto -10px;"></div>
   
-  <div id="welcome-message" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: #4CAF50;">
-      <p>Select an existing player or Enter your name.</p>
-       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px;">
+  <div id="welcome-message" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: #4CAF50;margin: 10px auto 10px;">
+      <p style="max-width: 400px;; line-height: 1.5; margin: 10px auto;">Select an existing player or Enter your name.</p>
+       <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
          <option value="">-- Select player --</option>
        </select>
-         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px;">
-       <p>Then select a stage to view the matches and pick your predictions!</p>
+         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 0;">
+       <p style="line-height: 1.5; margin: 10px 20px;">Then select a stage to view the matches and pick your predictions!</p>
   </div>
   </div>
    <div id="progress-container"></div>
@@ -330,7 +330,7 @@
 
 
   <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
-    <h2 style="margin-top: 0; margin-bottom: 0;">🏅 Leaderboard</h2>
+    <h2 style="margin-top: 0; margin-bottom: -10;">🏅 Leaderboard</h2>
     <ol id="leaderboard-list"></ol>
   </div>
 
@@ -351,7 +351,7 @@
     <div id="semi-matches" class="matches-container"></div>
     <div id="final-matches" class="matches-container"></div>
    
-   <div style="margin-top: 20px; text-align: center;">
+   <div style="margin: -10px auto; text-align: center;">
      <button onclick="savePicks()">💾 Save My Picks</button>
       <button onclick="showAdminLogin()" style="background: #f44336; color: white;">🔐 Edit Scores (Admin)</button>
     </div>
@@ -389,7 +389,7 @@
  </div>
 
  <script> 
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwpCcE5YPBRwZQInCcxeAdz1iZxdtlBRrctvtRXsqY3dCuSd5Xhq1eL2F-2pF0KxEU8/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwMcepo8QqNKAp-9EreEKtA0SYtECM2plg1g9wDOZZjNDqBKGKagEo3uSvhyrLmv8v/exec";
  const ADMIN_PASSWORD = "wc2026";
  
  let actualResults = {};
@@ -739,36 +739,103 @@ function clearAllPicks() {
 }
 
 async function savePicks() {
-   const player = document.getElementById("playerName").value.trim();
-   if (!player) { alert("Enter your name!"); return; }
-   const newPicks = [];
+   const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
+   
+   if (!player) { 
+     alert("Enter your name!"); 
+     return; 
+   }
+   
+   // Get current picks from the UI (only for upcoming matches within deadline)
+   const currentPicks = [];
+   const now = new Date();
+   
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
-       const match = groupMatches[group][i].match;
+       const matchObj = groupMatches[group][i];
+       const match = matchObj.match;
+       
+       // Skip matches that already have results (completed)
        if (actualResults[match] && actualResults[match].result) continue;
+       
+       // Check if match deadline has passed (3 hours after match start)
+       const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
+       const deadlineTime = matchDateTime ? new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000) : null;
+       const isPastDeadline = deadlineTime ? now >= deadlineTime : false;
+       
+       // Skip matches that are past deadline
+       if (isPastDeadline) continue;
+       
        const matchId = `${group}_${i}`;
        const selected = document.querySelector(`input[name="${matchId}"]:checked`);
-       if (selected) newPicks.push({ match: match, pick: selected.value });
+       if (selected) {
+         currentPicks.push({ 
+           match: match, 
+           pick: selected.value
+         });
+       }
      }
    }
-   if (newPicks.length === 0) { alert("No picks selected!"); return; }
+   
+   if (currentPicks.length === 0) { 
+     alert("No picks selected for upcoming matches!");
+     return; 
+   }
    
    showLoading("Saving your picks...");
    
    try {
-     const deleteParams = new URLSearchParams();
-     deleteParams.append("action", "deletePlayerPicks");
-     deleteParams.append("player", player);
-     await fetch(`${WEBAPP_URL}?${deleteParams.toString()}`);
-     const params = new URLSearchParams();
-     params.append("action", "save");
-     params.append("player", player);
-     params.append("picks", JSON.stringify(newPicks));
-     await fetch(`${WEBAPP_URL}?${params.toString()}`);
-     alert(`✅ Saved ${newPicks.length} picks for ${player}!`);
+     // Get existing picks from server first
+     const response = await fetch(`${WEBAPP_URL}?action=load`);
+     const data = await response.json();
+     if (!data.success) throw new Error(data.error);
+     
+     // Get existing picks for this player
+     const existingPicks = data.picks.filter(p => p.player === player) || [];
+     
+     // Create maps for comparison
+     const existingMap = new Map();
+     existingPicks.forEach(pick => {
+       existingMap.set(pick.match, pick.pick.toString());
+     });
+     
+     const currentMap = new Map();
+     currentPicks.forEach(pick => {
+       currentMap.set(pick.match, pick.pick.toString());
+     });
+     
+     // Find picks that have changed
+     const picksToUpdate = [];
+     for (let [match, pick] of currentMap) {
+       const existingPick = existingMap.get(match);
+       if (existingPick !== pick) {
+         picksToUpdate.push({ match: match, pick: pick });
+       }
+     }
+     
+     if (picksToUpdate.length === 0) {
+       alert("No changes detected! Your picks are already saved.");
+       hideLoading();
+       return;
+     }
+     
+     // Send each updated pick individually
+     for (let update of picksToUpdate) {
+       const updateParams = new URLSearchParams();
+       updateParams.append("action", "updatePick");
+       updateParams.append("player", player);
+       updateParams.append("match", update.match);
+       updateParams.append("pick", update.pick);
+       
+       await fetch(`${WEBAPP_URL}?${updateParams.toString()}`);
+     }
+     
+     alert(`✅ Updated ${picksToUpdate.length} pick(s) for ${player}!`);
      await loadAllData();
    } catch(e) { 
-     alert("Error: " + e.message);
+     console.error("Save error:", e);
+     alert("Error saving picks: " + e.message);
+   } finally {
      hideLoading();
    }
 }
@@ -777,7 +844,6 @@ async function loadMyPicks(playerName = null) {
    if (isLoading) return;
    isLoading = true;
    
-   // Use provided playerName or get from input field
    const player = playerName || document.getElementById("playerName").value.trim();
    
    if (!player) { 
@@ -792,13 +858,17 @@ async function loadMyPicks(playerName = null) {
      const response = await fetch(`${WEBAPP_URL}?action=load`);
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
+     
+     // Handle both old and new pick formats
      const userPicks = data.picks.filter(p => p.player === player);
+     
      for (let group in groupMatches) {
        for (let i = 0; i < groupMatches[group].length; i++) {
          const matchId = `${group}_${i}`;
          document.querySelectorAll(`input[name="${matchId}"]`).forEach(r => r.checked = false);
        }
      }
+     
      userPicks.forEach(pick => {
        for (let group in groupMatches) {
          const idx = groupMatches[group].findIndex(m => m.match === pick.match);
@@ -809,6 +879,7 @@ async function loadMyPicks(playerName = null) {
          }
        }
      });
+     
      updateProgress();
      alert(`✅ Loaded ${userPicks.length} picks for ${player}`);
      updateLeaderboardVisibility();
@@ -838,9 +909,6 @@ async function loadAllData() {
          const groupName = match.group || "Other";
          if (!groupMatches[groupName]) groupMatches[groupName] = [];
          const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
-         
-         // Debug: log the date to see what's coming from the sheet
-         console.log(`Match: ${match.name}, Date: ${match.date}, Time: ${match.time}`);
          
          groupMatches[groupName].push({ 
            match: match.name, 
@@ -1032,13 +1100,6 @@ function loadMatches() {
       const now = new Date();
       const isPast = matchDateTime ? now >= matchDateTime : false;
 
-      // Debug log - remove after testing
-      if (matchObj.match === "Ivory Coast vs Ecuador") {
-        console.log(`Match: ${matchObj.match}`);
-        console.log(`  matchDateTime: ${matchDateTime}`);
-        console.log(`  now: ${now}`);
-        console.log(`  isPast: ${isPast}`);
-      }
        const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
        
@@ -1052,10 +1113,15 @@ function loadMatches() {
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
        matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
        
-       let resultBadge = '';
-       if (actualResult && actualScore) resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
-       else if (actualResult) resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
-       else resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
+      let resultBadge = '';
+      if (actualResult && actualScore) {
+        resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
+      } else if (actualResult) {
+        resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
+      } else if (isPast) {
+        // Match deadline has passed but no result yet - show ? - ?
+        resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
+      }
        
        const formattedDateTime = formatDisplayDate(matchObj.date, matchObj.time);
        
@@ -1118,8 +1184,7 @@ function loadMatches() {
 function getTodaysMatches() {
    const today = new Date();
    today.setHours(0, 0, 0, 0);
-   const tomorrow = new Date(today);
-   tomorrow.setDate(tomorrow.getDate() + 1);
+   const now = new Date();
    
    const todaysMatches = [];
    
@@ -1130,21 +1195,33 @@ function getTodaysMatches() {
        if (matchDateTime) {
          const matchDate = new Date(matchDateTime);
          matchDate.setHours(0, 0, 0, 0);
-         // Check if match is today AND not completed yet
-         if (matchDate.getTime() === today.getTime() && !actualResults[match.match]?.result) {
+         
+         // Calculate the deadline (3 hours after match start)
+         const deadlineTime = new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000);
+         
+         // Check if match is today AND deadline hasn't passed yet AND not completed
+         if (matchDate.getTime() === today.getTime() && 
+             now < deadlineTime && 
+             !actualResults[match.match]?.result) {
            todaysMatches.push({
              group: group,
              idx: idx,
              match: match,
              displayName: match.displayMatch,
-             time: match.time
+             time: match.time,
+             dateTime: matchDateTime // Store for sorting
            });
          }
        }
      }
    }
+   
+   // Sort matches chronologically by date/time
+   todaysMatches.sort((a, b) => a.dateTime - b.dateTime);
+   
    return todaysMatches;
 }
+
 
 function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
    // Expand the group if it's collapsed
@@ -1179,7 +1256,7 @@ function createTodaysMatchesSection() {
    
    let html = `
      <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-       <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's UpcomingMatches</h3>
+       <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's Live/Upcoming Matches</h3>
        <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
    `;
    
@@ -1238,10 +1315,20 @@ function markUnsaved(matchId) { updateProgress(); }
 
 function updateProgress() {
    let total = 0, saved = 0;
+   const now = new Date();
+   
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
-       const match = groupMatches[group][i].match;
-       if (!actualResults[match] || !actualResults[match].result) {
+       const matchObj = groupMatches[group][i];
+       const match = matchObj.match;
+       const isCompleted = actualResults[match] && actualResults[match].result;
+       
+       // Check if match deadline has passed
+       const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
+       const isPast = matchDateTime ? now >= matchDateTime : false;
+       
+       // Only count matches that are NOT completed AND NOT past deadline
+       if (!isCompleted && !isPast) {
          total++;
          if (document.querySelector(`input[name="${group}_${i}"]:checked`)) saved++;
        }
