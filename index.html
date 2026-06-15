@@ -1049,36 +1049,39 @@ function createTodaysMatchesSection() {
        <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's Matches</h3>
    `;
    
-   todaysMatches.forEach(tm => {
+   todaysMatches.forEach((tm, idx) => {
      const groupId = `group-${tm.group.replace(/ /g, '_')}`;
      const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
      
      let transmissionHtml = '';
      if (tm.match.transmission) {
        if (tm.match.transmission.includes('LiveModeTV')) {
-         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none;  background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;" onclick="event.stopPropagation()">📺 ${tm.match.transmission}</a>`;
-         } else {
+         // This link is valid and independent
+         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none; border-radius: 8px;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
+       } else {
          transmissionHtml = `<span>📺 ${tm.match.transmission}</span>`;
        }
      }
      
      const formattedTime = formatDisplayDate(tm.match.date, tm.match.time);
+     const marginBottom = idx === todaysMatches.length - 1 ? '0' : '6px';
      
+     // Use a div instead of an anchor – no nested links
      html += `
-       <a href="#" onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx}); return false;" style="color: white; text-decoration: none; display: block; background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;">
-         <div style="display: flex; align-items: center; column-gap: 8px; row-gap: 1px; flex-wrap: wrap;">
-           <span style="font-weight: bold;">${tm.displayName}</span>
-           <span>📅 ${formattedTime}</span>
+       <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
+          style="cursor: pointer; display: block; background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: ${marginBottom};">
+         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+           <span style="font-weight: bold; white-space: nowrap;">${tm.displayName}</span>
+           <span style="white-space: nowrap;">📅 ${formattedTime}</span>
            ${transmissionHtml}
          </div>
-       </a>
+       </div>
      `;
    });
    
    html += `</div>`;
    return html;
 }
-
 function toggleGroup(id) {
    const el = document.getElementById(`group-${id}`);
    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
