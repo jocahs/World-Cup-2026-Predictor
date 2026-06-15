@@ -286,7 +286,9 @@
   <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
     <h2 style="margin-top: 0; margin-bottom: 0;">🏅 Leaderboard</h2>
     <ol id="leaderboard-list"></ol>
-  </div> 
+  </div>
+  
+  <div id="today-matches-container" class="container" style="display: none; padding: 0;"></div>
 
  <div class="container">
    <div class="stage-tabs">
@@ -728,6 +730,7 @@ async function loadAllData() {
      currentPlayers = Array.from(playerSet).sort();
      updatePlayerDropdown();
      loadMatches();
+     updateTodayMatches();
      
       const playerScores = [];
       for (let player of currentPlayers) {
@@ -868,12 +871,6 @@ function createStandingsTable(standings) {
 function loadMatches() {
    const container = document.getElementById("group-matches");
    container.innerHTML = "";
-   
-   // Add Today's Matches section at the top
-   const todaysSection = createTodaysMatchesSection();
-   if (todaysSection) {
-     container.innerHTML = todaysSection;
-   }
    
    const sortedGroups = Object.keys(groupMatches).sort();
    
@@ -1070,7 +1067,7 @@ function createTodaysMatchesSection() {
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
           style="cursor: pointer; display: block; background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: ${marginBottom};">
-         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
            <span style="font-weight: bold; white-space: nowrap;">${tm.displayName}</span>
            <span style="white-space: nowrap;">📅 ${formattedTime}</span>
            ${transmissionHtml}
@@ -1082,6 +1079,20 @@ function createTodaysMatchesSection() {
    html += `</div>`;
    return html;
 }
+
+function updateTodayMatches() {
+   const container = document.getElementById("today-matches-container");
+   if (!container) return;
+   const sectionHtml = createTodaysMatchesSection();
+   if (sectionHtml) {
+     container.style.display = "block";
+     container.innerHTML = sectionHtml;
+   } else {
+     container.style.display = "none";
+     container.innerHTML = "";
+   }
+}
+
 function toggleGroup(id) {
    const el = document.getElementById(`group-${id}`);
    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
