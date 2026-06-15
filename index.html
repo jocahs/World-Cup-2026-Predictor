@@ -282,10 +282,10 @@
    <div id="progress-container"></div>
  </div>
 
- <div id="leaderboard" class="leaderboard" style="display: none;">
-   <h2>🏅 Leaderboard</h2>
-   <ol id="leaderboard-list"></ol>
- </div>
+  <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
+    <h2 style="margin-top: 0; margin-bottom: 0;">🏅 Leaderboard</h2>
+    <ol id="leaderboard-list"></ol>
+  </div> 
 
  <div class="container">
    <div class="stage-tabs">
@@ -728,22 +728,23 @@ async function loadAllData() {
      updatePlayerDropdown();
      loadMatches();
      
-     const playerScores = [];
-     for (let player of currentPlayers) {
-       let score = 0, total = 0;
-       const playerPicks = allPicks.filter(p => p.player === player);
-       for (let group in groupMatches) {
-         for (let m of groupMatches[group]) {
-           const actual = actualResults[m.match];
-           const pick = playerPicks.find(p => p.match === m.match);
-           if (actual && actual.result) {
-             total++;
-             if (pick && pick.pick === actual.result) score++;
-           }
-         }
-       }
-       playerScores.push({ name: player, score: score, total: total });
-     }
+      const playerScores = [];
+      for (let player of currentPlayers) {
+        let score = 0, total = 0;
+        const playerPicks = allPicks.filter(p => p.player === player);
+        for (let group in groupMatches) {
+          for (let m of groupMatches[group]) {
+            const actual = actualResults[m.match];
+            const pick = playerPicks.find(p => p.match === m.match);
+            // Only count if the player actually made a pick for this match AND the match has a result
+            if (actual && actual.result && pick) {
+              total++;
+              if (pick.pick === actual.result) score++;
+            }
+          }
+        }
+        playerScores.push({ name: player, score: score, total: total });
+      }
      playerScores.sort((a,b) => b.score - a.score);
      const leaderboardDiv = document.getElementById("leaderboard");
      const leaderboardList = document.getElementById("leaderboard-list");
