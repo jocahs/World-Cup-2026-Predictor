@@ -260,6 +260,7 @@
    .player-pick { white-space: nowrap; }
    .team-flag { width: 18px; height: 12px; }
  }
+
  </style> 
 </head> 
 <body> 
@@ -267,7 +268,7 @@
  
  <div class="container">
    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
-     <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+     <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px;">
        <label style="font-weight: bold;">Your Name: </label>
        <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 200px;">
        <select id="playerSelect" class="player-select" onchange="selectPlayer()">
@@ -868,6 +869,12 @@ function loadMatches() {
    const container = document.getElementById("group-matches");
    container.innerHTML = "";
    
+   // Add Today's Matches section at the top
+   const todaysSection = createTodaysMatchesSection();
+   if (todaysSection) {
+     container.innerHTML = todaysSection;
+   }
+   
    const sortedGroups = Object.keys(groupMatches).sort();
    
    for (let group of sortedGroups) {
@@ -910,6 +917,7 @@ function loadMatches() {
        
        const matchDiv = document.createElement("div");
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
+       matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
        
        let resultBadge = '';
        if (actualResult && actualScore) resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
@@ -972,6 +980,103 @@ function loadMatches() {
      container.appendChild(groupDiv);
    }
    updateProgress();
+}
+
+function getTodaysMatches() {
+   const today = new Date();
+   today.setHours(0, 0, 0, 0);
+   const tomorrow = new Date(today);
+   tomorrow.setDate(tomorrow.getDate() + 1);
+   
+   const todaysMatches = [];
+   
+   for (let group in groupMatches) {
+     for (let idx = 0; idx < groupMatches[group].length; idx++) {
+       const match = groupMatches[group][idx];
+       const matchDateTime = parseMatchDateTime(match.date, match.time);
+       if (matchDateTime) {
+         const matchDate = new Date(matchDateTime);
+         matchDate.setHours(0, 0, 0, 0);
+         // Check if match is today AND not completed yet
+         if (matchDate.getTime() === today.getTime() && !actualResults[match.match]?.result) {
+           todaysMatches.push({
+             group: group,
+             idx: idx,
+             match: match,
+             displayName: match.displayMatch,
+             time: match.time
+           });
+         }
+       }
+     }
+   }
+   return todaysMatches;
+}
+
+function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
+   // Expand the group if it's collapsed
+   const groupDiv = document.getElementById(groupId);
+   if (groupDiv && groupDiv.style.display === "none") {
+     groupDiv.style.display = "block";
+   }
+   
+   // Scroll to the match
+   const matchElement = document.getElementById(matchElementId);
+   if (matchElement) {
+     matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
+     // Add a temporary highlight effect
+     matchElement.style.transition = "background 0.3s";
+     matchElement.style.background = "#fff3cd";
+     setTimeout(() => {
+       matchElement.style.background = "";
+     }, 2000);
+   } else {
+     // If match element doesn't have an ID yet, we need to add IDs when creating matches
+     // For now, just scroll to the group
+     const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest('.group-block');
+     if (groupBlock) {
+       groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+     }
+   }
+}
+
+function createTodaysMatchesSection() {
+   const todaysMatches = getTodaysMatches();
+   if (todaysMatches.length === 0) return '';
+   
+   let html = `
+     <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+       <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's Matches</h3>
+   `;
+   
+   todaysMatches.forEach(tm => {
+     const groupId = `group-${tm.group.replace(/ /g, '_')}`;
+     const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
+     
+     let transmissionHtml = '';
+     if (tm.match.transmission) {
+       if (tm.match.transmission.includes('LiveModeTV')) {
+         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none;  background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;" onclick="event.stopPropagation()">📺 ${tm.match.transmission}</a>`;
+         } else {
+         transmissionHtml = `<span>📺 ${tm.match.transmission}</span>`;
+       }
+     }
+     
+     const formattedTime = formatDisplayDate(tm.match.date, tm.match.time);
+     
+     html += `
+       <a href="#" onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx}); return false;" style="color: white; text-decoration: none; display: block; background: rgba(255,255,255,0.15); padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;">
+         <div style="display: flex; align-items: center; column-gap: 8px; row-gap: 1px; flex-wrap: wrap;">
+           <span style="font-weight: bold;">${tm.displayName}</span>
+           <span>📅 ${formattedTime}</span>
+           ${transmissionHtml}
+         </div>
+       </a>
+     `;
+   });
+   
+   html += `</div>`;
+   return html;
 }
 
 function toggleGroup(id) {
