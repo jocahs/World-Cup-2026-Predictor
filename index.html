@@ -323,7 +323,7 @@
  </div>
 
  <script> 
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz5O-6TCHr2T0_L4pSkdQ_0HJQndylwWeeRzg-MW07jaRHnuiq9hbVk6F9FEwSwCgf_/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwpCcE5YPBRwZQInCcxeAdz1iZxdtlBRrctvtRXsqY3dCuSd5Xhq1eL2F-2pF0KxEU8/exec";
  const ADMIN_PASSWORD = "wc2026";
  
  let actualResults = {};
@@ -405,41 +405,26 @@ function isWithinThreeHoursAfter(matchDateTime) {
    return now.getTime() <= threeHoursAfter.getTime();
 }
 
-// Google Calendar URL generator - FINAL FIX
+// Google Calendar URL generator - SIMPLIFIED (date is already DD/MM/YYYY)
 function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
-   // Parse date and time
-   let year, month, day, hour, minute;
+   // Parse DD/MM/YYYY date
+   const dateParts = dateStr.split('/');
+   if (dateParts.length !== 3) return null;
    
-   // Parse the time first
+   const day = parseInt(dateParts[0]);
+   const month = parseInt(dateParts[1]);
+   const year = parseInt(dateParts[2]);
+   
+   // Parse time
    const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
    if (!timeParts) return null;
-   hour = parseInt(timeParts[1]);
-   minute = parseInt(timeParts[2]);
-   
-   // Handle ISO format (coming from Google Sheets)
-   if (dateStr.includes('T')) {
-     const utcDate = new Date(dateStr);
-     // Add 1 hour for Portugal timezone (UTC+1)
-     const localDate = new Date(utcDate.getTime() + 60 * 60 * 1000);
-     year = localDate.getFullYear();
-     month = localDate.getMonth() + 1;
-     day = localDate.getDate();
-   }
-   // Handle DD/MM/YYYY format
-   else if (dateStr.includes('/')) {
-     const parts = dateStr.split('/');
-     day = parseInt(parts[0]);
-     month = parseInt(parts[1]);
-     year = parseInt(parts[2]) || 2026;
-   }
-   else {
-     return null;
-   }
+   const hour = parseInt(timeParts[1]);
+   const minute = parseInt(timeParts[2]);
    
    // Format numbers with leading zeros
    const pad = (n) => String(n).padStart(2, '0');
    
-   // Create date strings for Google Calendar (local time, NO Z suffix)
+   // Create date strings for Google Calendar (local time)
    const startDate = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
    const endDate = `${year}${pad(month)}${pad(day)}T${pad(hour + 2)}${pad(minute)}00`;
    
@@ -450,7 +435,6 @@ function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr
    }
    const details = `World Cup 2026 match: ${homeTeam} vs ${visitorTeam}\nTransmission: ${transmission || 'TBD'}${watchLink}\n\nMake your prediction at: ${window.location.href}`;
    
-   // CRITICAL: Use ctz parameter to specify timezone, NO Z in dates
    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(details)}&ctz=Europe/Lisbon`;
 }
 
