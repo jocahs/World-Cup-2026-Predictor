@@ -405,7 +405,7 @@ function isWithinThreeHoursAfter(matchDateTime) {
    return now.getTime() <= threeHoursAfter.getTime();
 }
 
-// Google Calendar URL generator - SIMPLIFIED
+// Google Calendar URL generator - FINAL FIX
 function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
    // Parse date and time
    let year, month, day, hour, minute;
@@ -419,7 +419,7 @@ function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr
    // Handle ISO format (coming from Google Sheets)
    if (dateStr.includes('T')) {
      const utcDate = new Date(dateStr);
-     // Add 1 hour for Portugal timezone
+     // Add 1 hour for Portugal timezone (UTC+1)
      const localDate = new Date(utcDate.getTime() + 60 * 60 * 1000);
      year = localDate.getFullYear();
      month = localDate.getMonth() + 1;
@@ -439,7 +439,7 @@ function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr
    // Format numbers with leading zeros
    const pad = (n) => String(n).padStart(2, '0');
    
-   // Create date strings for Google Calendar (local time, no Z)
+   // Create date strings for Google Calendar (local time, NO Z suffix)
    const startDate = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
    const endDate = `${year}${pad(month)}${pad(day)}T${pad(hour + 2)}${pad(minute)}00`;
    
@@ -450,7 +450,7 @@ function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr
    }
    const details = `World Cup 2026 match: ${homeTeam} vs ${visitorTeam}\nTransmission: ${transmission || 'TBD'}${watchLink}\n\nMake your prediction at: ${window.location.href}`;
    
-   // Use ctz parameter to specify timezone
+   // CRITICAL: Use ctz parameter to specify timezone, NO Z in dates
    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(details)}&ctz=Europe/Lisbon`;
 }
 
