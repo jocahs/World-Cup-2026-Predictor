@@ -228,6 +228,49 @@
    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
+#player-selection {
+  display: none;
+}
+#player-selection.visible {
+  display: block;
+}
+
+/* Hide pick elements by default */
+.pick-elements {
+  display: none;
+}
+.pick-elements.visible {
+  display: block;
+}
+
+/* Floating notification */
+.floating-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: #4CAF50;
+  color: white;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  font-size: 16px;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-width: 400px;
+  text-align: center;
+}
+.floating-notification.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: auto;
+}
+.floating-notification.error {
+  background: #f44336;
+}
+
  button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
  .btn-blue { background: #2196F3; }
  .btn-orange { background: #FF9800; }
@@ -320,7 +363,9 @@
  
   <div id="today-matches-container" class="container" style="display: none; padding: 0;margin: 0px auto -10px; "></div>
   
-  <div id="player-selection" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: linear-gradient(135deg,  #ffa726 0%, #ff7043 100%);margin: 10px auto 10px;">
+  <button id="togglePlayerBtn" onclick="togglePlayerSelection()" style="margin: 10px auto; display: block; padding: 10px; background: linear-gradient(135deg,  #ea9b24 0%, #ff7043 100%);">Predict Match Results</button>
+  
+  <div id="player-selection" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: linear-gradient(135deg,  #ea9b24 0%, #ff7043 100%);margin: 10px auto 10px;">
       <p style="max-width: 400px;; line-height: 1.5; margin: 0px auto;">Select an existing player or Enter your name.</p>
        <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
          <option value="">-- Select player --</option>
@@ -338,28 +383,26 @@
     <ol id="leaderboard-list"></ol>
   </div>
 
-    <div class="stage-tabs">
-      <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
-      <div class="stage-tab" data-stage="round32">🔴 Round of 32</div>
-      <div class="stage-tab" data-stage="round16">🟡 Round of 16</div>
-      <div class="stage-tab" data-stage="quarter">🔵 Quarter-Finals</div>
-      <div class="stage-tab" data-stage="semi">⚡ Semi-Finals</div>
-      <div class="stage-tab" data-stage="final">🏆 Final</div>
-    </div>
+  <div class="stage-tabs">
+    <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
+    <div class="stage-tab" data-stage="round32">🔴 Round of 32</div>
+    <div class="stage-tab" data-stage="round16">🟡 Round of 16</div>
+    <div class="stage-tab" data-stage="quarter">🔵 Quarter-Finals</div>
+    <div class="stage-tab" data-stage="semi">⚡ Semi-Finals</div>
+    <div class="stage-tab" data-stage="final">🏆 Final</div>
+  </div>
 
+  <div id="group-matches" class="matches-container"></div>
+  <div id="round32-matches" class="matches-container"></div>
+  <div id="round16-matches" class="matches-container"></div>
+  <div id="quarter-matches" class="matches-container"></div>
+  <div id="semi-matches" class="matches-container"></div>
+  <div id="final-matches" class="matches-container"></div>
 
-    <div id="group-matches" class="matches-container"></div>
-    <div id="round32-matches" class="matches-container"></div>
-    <div id="round16-matches" class="matches-container"></div>
-    <div id="quarter-matches" class="matches-container"></div>
-    <div id="semi-matches" class="matches-container"></div>
-    <div id="final-matches" class="matches-container"></div>
-   
    <div style="margin: -10px auto; text-align: center;">
      <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
       <button onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
     </div>
- </div>
 
 <div class="container" style="text-align: center; margin-top: 20px;">
   <p style="margin-top: 10px; color: #666; font-size: 0.9em;">Scan to open this page or click to share</p>
@@ -392,6 +435,9 @@
    </div>
  </div>
 
+ <!-- Floating Notification -->
+ <div id="floatingNotification" class="floating-notification"></div>
+
  <script> 
  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwMcepo8QqNKAp-9EreEKtA0SYtECM2plg1g9wDOZZjNDqBKGKagEo3uSvhyrLmv8v/exec";
  const ADMIN_PASSWORD = "wc2026";
@@ -402,6 +448,28 @@
  let isLoading = false;
  let isAdminMode = false;
  let groupMatches = {};
+
+function showFloatingNotification(message, isError = false) {
+  const notification = document.getElementById('floatingNotification');
+  if (!notification) return;
+  
+  notification.textContent = message;
+  notification.className = 'floating-notification';
+  if (isError) {
+    notification.classList.add('error');
+  }
+  
+  // Force reflow
+  void notification.offsetWidth;
+  
+  notification.classList.add('show');
+  
+  // Auto-hide after 3 seconds
+  clearTimeout(notification._hideTimeout);
+  notification._hideTimeout = setTimeout(() => {
+    notification.classList.remove('show');
+  }, 3000);
+}
 
 function showLoading(message = "Loading matches and picks...") {
   const overlay = document.getElementById("loadingOverlay");
@@ -423,13 +491,22 @@ function updatePlayerControlsVisibility() {
   
   const hasPlayer = playerSelect && playerSelect.value !== "";
   const hasName = playerName && playerName.value.trim() !== "";
+  const canPick = hasPlayer || hasName;
   
-  if (hasPlayer || hasName) {
+  if (canPick) {
     saveBtn.classList.remove("hidden");
     progressContainer.classList.remove("hidden");
+    // Show all pick elements (picks-row and radio-group)
+    document.querySelectorAll('.pick-elements').forEach(el => {
+      el.classList.add('visible');
+    });
   } else {
     saveBtn.classList.add("hidden");
     progressContainer.classList.add("hidden");
+    // Hide all pick elements
+    document.querySelectorAll('.pick-elements').forEach(el => {
+      el.classList.remove('visible');
+    });
   }
 }
 
@@ -549,7 +626,7 @@ function showAdminLogin() {
        adminSection.scrollIntoView({ behavior: "smooth" });
      }
    } else if (password) {
-     alert("Wrong password!");
+     showFloatingNotification("Wrong password!", true);
    }
  }
  
@@ -703,7 +780,10 @@ async function saveAllScores() {
        }
      }
    }
-   if (scoreUpdates.length === 0) { alert("No scores to save!"); return; }
+   if (scoreUpdates.length === 0) { 
+     showFloatingNotification("No scores to save!", true);
+     return; 
+   }
    
    showLoading("Saving scores...");
    
@@ -712,10 +792,10 @@ async function saveAllScores() {
      params.append("action", "saveScores");
      params.append("data", JSON.stringify(scoreUpdates));
      await fetch(`${WEBAPP_URL}?${params.toString()}`);
-     alert(`✅ ${scoreUpdates.length} match scores saved!`);
+     showFloatingNotification(`✅ ${scoreUpdates.length} match scores saved!`);
      closeAdminMode();
    } catch(e) { 
-     alert("Error saving scores: " + e.message);
+     showFloatingNotification("Error saving scores: " + e.message, true);
      hideLoading();
    }
 }
@@ -780,7 +860,7 @@ async function savePicks() {
    const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
    
    if (!player) { 
-     alert("Enter your name!"); 
+     showFloatingNotification("Enter your name!", true);
      return; 
    }
    
@@ -816,7 +896,7 @@ async function savePicks() {
    }
    
    if (currentPicks.length === 0) { 
-     alert("No picks selected for upcoming matches!");
+     showFloatingNotification("No picks selected for upcoming matches!", true);
      return; 
    }
    
@@ -852,7 +932,7 @@ async function savePicks() {
      }
      
      if (picksToUpdate.length === 0) {
-       alert("No changes detected! Your picks are already saved.");
+       showFloatingNotification("No changes detected! Your picks are already saved.");
        hideLoading();
        return;
      }
@@ -868,11 +948,11 @@ async function savePicks() {
        await fetch(`${WEBAPP_URL}?${updateParams.toString()}`);
      }
      
-     alert(`✅ Updated ${picksToUpdate.length} pick(s) for ${player}!`);
+     showFloatingNotification(`✅ Updated ${picksToUpdate.length} pick(s) for ${player}!`);
      await loadAllData();
    } catch(e) { 
      console.error("Save error:", e);
-     alert("Error saving picks: " + e.message);
+     showFloatingNotification("Error saving picks: " + e.message, true);
    } finally {
      hideLoading();
    }
@@ -886,7 +966,7 @@ async function loadMyPicks(playerName = null) {
    
    if (!player) { 
      isLoading = false; 
-     alert("Enter your name!"); 
+     showFloatingNotification("Enter your name!", true);
      return; 
    }
    
@@ -919,11 +999,11 @@ async function loadMyPicks(playerName = null) {
      });
      
      updateProgress();
-     alert(`✅ Loaded ${userPicks.length} picks for ${player}`);
+     showFloatingNotification(`✅ Loaded ${userPicks.length} picks for ${player}`);
      updateLeaderboardVisibility();
      updatePlayerControlsVisibility();
    } catch(e) { 
-     alert("Error: " + e.message); 
+     showFloatingNotification("Error: " + e.message, true);
    } finally { 
      isLoading = false;
      hideLoading();
@@ -1000,8 +1080,9 @@ async function loadAllData() {
      updateProgress();
      updateLeaderboardVisibility(); // This will show/hide based on dropdown selection
      updatePlayerControlsVisibility();
+
    } catch(e) { 
-     alert("Error loading: " + e.message); 
+     showFloatingNotification("Error loading: " + e.message, true);
    } finally { 
      isLoading = false;
      hideLoading();
@@ -1212,13 +1293,19 @@ function loadMatches() {
           radioHtml = `<div class="radio-group disabled"></div>`;
         }
        
-       matchDiv.innerHTML = `<div class="match-header"><span class="match-name">${matchObj.displayMatch}</span>${timeDisplay}${resultBadge}</div>${picksHtml}${radioHtml}`;
+       // Wrap picks and radio in a container that can be hidden
+       const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
+       
+       matchDiv.innerHTML = `<div class="match-header"><span class="match-name">${matchObj.displayMatch}</span>${timeDisplay}${resultBadge}</div>${pickElementsHtml}`;
        matchesDiv.appendChild(matchDiv);
      });
      groupDiv.appendChild(matchesDiv);
      container.appendChild(groupDiv);
    }
    updateProgress();
+   
+   // Apply visibility based on current player selection state
+   updatePlayerControlsVisibility();
 }
 
 function getTodaysMatches() {
@@ -1446,38 +1533,31 @@ async function shareApp() {
       await navigator.share(shareData);
     } else {
       await navigator.clipboard.writeText(window.location.href);
-      showShareFeedback('✅ Link copied! Share with friends.');
+      showFloatingNotification('✅ Link copied! Share with friends.');
     }
   } catch (err) {
     if (err.name !== 'AbortError') {
       console.error('Share failed:', err);
-      showShareFeedback('📋 Copy this link: ' + window.location.href);
+      showFloatingNotification('📋 Copy this link: ' + window.location.href);
     }
   }
 }
 
-function showShareFeedback(message) {
-  const feedback = document.createElement('div');
-  feedback.textContent = message;
-  feedback.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #4CAF50;
-    color: white;
-    padding: 10px 10px;
-    border-radius: 5px;
-    z-index: 1000;
-    animation: fadeOut 2s forwards;
-    white-space: nowrap;
-    font-size: 14px;
-  `;
-  document.body.appendChild(feedback);
+function togglePlayerSelection() {
+  const playerSelection = document.getElementById("player-selection");
+  const toggleBtn = document.getElementById("togglePlayerBtn");
   
-  setTimeout(() => {
-    feedback.remove();
-  }, 2000);
+  if (playerSelection) {
+    // Simply toggle the visibility
+    playerSelection.classList.toggle("visible");
+    
+    // Update button text based on visibility
+    if (playerSelection.classList.contains("visible")) {
+      toggleBtn.textContent = "Hide player selection";
+    } else {
+      toggleBtn.textContent = "Predict Match Results";
+    }
+  }
 }
 
 // Add CSS animation if not already present
