@@ -6,11 +6,13 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
  
  <link rel="manifest" href="manifest.json">
- <meta name="theme-color" content="#4CAF50">
+ <meta name="theme-color" content="#000000">
  <meta name="apple-mobile-web-app-capable" content="yes">
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
- <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jocahs/worldcup-predictor/main/icon-192.png">
- 
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+ <link rel="apple-touch-startup-image" href="icon-1125x2436.png">
+
  <style> 
  body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 20px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; } 
  .container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -351,11 +353,15 @@
 
  </style> 
 </head> 
-<body> 
+<body>
+
+<div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+  <img src="icon-1125x2436.png" alt="World Cup 2026 Predictor" style="width: 100%; height: 100%; object-fit: contain; background: #000000;">
+</div>
 <div id="loadingOverlay" class="loading-overlay">
   <div class="loading-spinner">
     <div class="spinner"></div>
-    <p>Loading matches and picks...</p>
+    <p>Loading matches...</p>
   </div>
 </div>
 
@@ -404,15 +410,30 @@
       <button onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
     </div>
 
-<div class="container" style="text-align: center; margin-top: 20px;">
-  <p style="margin-top: 10px; color: #666; font-size: 0.9em;">Scan to open this page or click to share</p>
-  <div onclick="shareApp()" style="cursor: pointer; display: inline-block; position: relative;">
-    <img src="WC2026_QR.jpg" alt="WC2026 QR Code" style="max-width: 200px; width: 100%; height: auto; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s;">
+<div class="container" style="text-align: center; margin-top: 10px; padding: 10px;">
+  
+ <div onclick="shareApp()" style="cursor: pointer; display: inline-block; position: relative; -webkit-touch-callout: none;">
+      <p style="margin: 5px 0 10px; color: #666; font-size: 0.9em;">Scan to open this page or click to share</p>
+      <img src="WC2026_QR.jpg" alt="WC2026 QR Code" style="max-width: 200px; width: 100%; height: auto; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s;">
     <div style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; margin-bottom: 10px;">
       Click to share 📤
       <div style="position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #333;"></div>
     </div>
   </div>
+  
+  <p style="margin: 5px 0; color: #666; font-size: 0.9em;">
+  <a href="mailto:jocahs.jocahs@gmail.com" style="color: #666; text-decoration: none; transition: color 0.3s; padding: 8px 12px; display: inline-block; position: relative;" 
+     onmouseover="this.style.color='#4CAF50'; document.getElementById('emailTooltip').style.display='block';" 
+     onmouseout="this.style.color='#666'; document.getElementById('emailTooltip').style.display='none';">
+    @ 2026 João Silva
+    <span id="emailTooltip" style="display: none; position: absolute; top: 50%; left: 100%; transform: translateY(-50%); background: #333; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; margin-left: 4px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+      mail me
+      <span style="position: absolute; top: 50%; right: 100%; transform: translateY(-50%); width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-right: 6px solid #333;"></span>
+    </span>
+  </a>
+</p>
+
+  
   <style>
     div[onclick="shareApp()"]:hover > div {
       opacity: 1;
@@ -422,7 +443,7 @@
     }
   </style>
 </div>
- 
+
  <div id="admin-section" style="display: none;">
    <div class="container">
      <h3>🔧 Edit Match Scores</h3>
@@ -471,16 +492,19 @@ function showFloatingNotification(message, isError = false) {
   }, 3000);
 }
 
-function showLoading(message = "Loading matches and picks...") {
+function showLoading(message = "Loading matches...") {
   const overlay = document.getElementById("loadingOverlay");
   const textElement = overlay.querySelector(".loading-spinner p");
   if (textElement) textElement.textContent = message;
   overlay.classList.add("active");
+  // Ensure overlay is visible
+  overlay.style.display = "flex";
 }
 
 function hideLoading() {
   const overlay = document.getElementById("loadingOverlay");
   overlay.classList.remove("active");
+  overlay.style.display = "none";
 }
 
 function updatePlayerControlsVisibility() {
@@ -497,14 +521,14 @@ function updatePlayerControlsVisibility() {
     saveBtn.classList.remove("hidden");
     progressContainer.classList.remove("hidden");
     // Show all pick elements (picks-row and radio-group)
-    document.querySelectorAll('.pick-elements').forEach(el => {
+    document.querySelectorAll('.pick-elements').forEach(function(el) {
       el.classList.add('visible');
     });
   } else {
     saveBtn.classList.add("hidden");
     progressContainer.classList.add("hidden");
     // Hide all pick elements
-    document.querySelectorAll('.pick-elements').forEach(el => {
+    document.querySelectorAll('.pick-elements').forEach(function(el) {
       el.classList.remove('visible');
     });
   }
@@ -633,7 +657,7 @@ function showAdminLogin() {
  function closeAdminMode() {
    isAdminMode = false;
    document.getElementById("admin-section").style.display = "none";
-   loadAllData();
+   loadMatchesOnly();
  }
  
 function updateLeaderboardVisibility() {
@@ -644,6 +668,35 @@ function updateLeaderboardVisibility() {
     leaderboard.style.display = "block";
   } else {
     leaderboard.style.display = "none";
+  }
+}
+
+function updateLeaderboard() {
+  const playerScores = [];
+  for (let player of currentPlayers) {
+    let score = 0, total = 0;
+    const playerPicks = allPicks.filter(p => p.player === player);
+    for (let group in groupMatches) {
+      for (let m of groupMatches[group]) {
+        const actual = actualResults[m.match];
+        const pick = playerPicks.find(p => p.match === m.match);
+        if (actual && actual.result && pick) {
+          total++;
+          if (pick.pick === actual.result) score++;
+        }
+      }
+    }
+    playerScores.push({ name: player, score: score, total: total });
+  }
+  playerScores.sort((a,b) => b.score - a.score);
+  const leaderboardList = document.getElementById("leaderboard-list");
+  if (playerScores.length > 0) {
+    leaderboardList.innerHTML = "";
+    playerScores.forEach((p, i) => {
+      const percent = p.total > 0 ? Math.round(p.score/p.total*100) : 0;
+      const pointsText = p.score === 1 ? 'point' : 'points';
+      leaderboardList.innerHTML += `<li><strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%) <strong>: ${p.score} ${pointsText}</strong> ${i === 0 ? "🏆" : ""}</li>`;
+    });
   }
 }
 
@@ -814,15 +867,17 @@ function updatePlayerDropdown() {
 }
 
 function onPlayerNameEdit() {
-  // Reset the player-select dropdown to "-- Select player --"
   const select = document.getElementById("playerSelect");
+  const playerName = document.getElementById("playerName");
   if (select) {
     select.value = "";
-    // Clear all picks from the UI
     clearAllPicks();
-    // Hide the leaderboard
     updateLeaderboardVisibility();
     updatePlayerControlsVisibility();
+    // If name is entered, load picks
+    if (playerName && playerName.value.trim() !== "") {
+      loadMyPicks(playerName.value.trim());
+    }
   }
 }
 
@@ -831,12 +886,9 @@ function selectPlayer() {
    if (playerName) {
      // Player selected from dropdown - load their picks, passing the name
      loadMyPicks(playerName);
-     updateLeaderboardVisibility();
-     updatePlayerControlsVisibility();
    } else {
-     // "-- Select player --" selected - clear everything
      clearAllPicks();
-     document.getElementById("playerName").value = ""; // Clear the text input
+     document.getElementById("playerName").value = "";
      updateLeaderboardVisibility();
      updatePlayerControlsVisibility();
    }
@@ -949,7 +1001,7 @@ async function savePicks() {
      }
      
      showFloatingNotification(`✅ Updated ${picksToUpdate.length} pick(s) for ${player}!`);
-     await loadAllData();
+     await loadMatchesOnly();
    } catch(e) { 
      console.error("Save error:", e);
      showFloatingNotification("Error saving picks: " + e.message, true);
@@ -977,9 +1029,24 @@ async function loadMyPicks(playerName = null) {
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
      
-     // Handle both old and new pick formats
-     const userPicks = data.picks.filter(p => p.player === player);
+     // Now load all picks
+     allPicks = data.picks || [];
+     actualResults = data.results || {};
      
+     // Update player list
+     const playerSet = new Set();
+     allPicks.forEach(p => playerSet.add(p.player));
+     currentPlayers = Array.from(playerSet).sort();
+     updatePlayerDropdown();
+     
+     // Reload matches with picks included
+     loadMatches();
+     updateTodayMatches();
+     
+     // Load picks for the selected player
+     const userPicks = allPicks.filter(p => p.player === player);
+     
+     // Clear and set radio buttons
      for (let group in groupMatches) {
        for (let i = 0; i < groupMatches[group].length; i++) {
          const matchId = `${group}_${i}`;
@@ -998,10 +1065,13 @@ async function loadMyPicks(playerName = null) {
        }
      });
      
+     // Update leaderboard
+     updateLeaderboard();
      updateProgress();
-     showFloatingNotification(`✅ Loaded ${userPicks.length} picks for ${player}`);
      updateLeaderboardVisibility();
      updatePlayerControlsVisibility();
+     
+     showFloatingNotification(`✅ Loaded ${userPicks.length} picks for ${player}`);
    } catch(e) { 
      showFloatingNotification("Error: " + e.message, true);
    } finally { 
@@ -1010,18 +1080,20 @@ async function loadMyPicks(playerName = null) {
    }
 }
 
-async function loadAllData() {
+async function loadMatchesOnly() {
    if (isLoading) return;
    isLoading = true;
-   showLoading("Loading matches and picks...");
+   showLoading("Loading matches...");
    
    try {
      const response = await fetch(`${WEBAPP_URL}?action=load`);
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
-     allPicks = data.picks || [];
+     
+     // Get results
      actualResults = data.results || {};
      
+     // Get matches
      if (data.matches && data.matches.length > 0) {
        for (let group in groupMatches) delete groupMatches[group];
        data.matches.forEach(match => {
@@ -1042,51 +1114,43 @@ async function loadAllData() {
        });
      }
      
+     // Load ALL picks to get player list, but don't display them yet
+     allPicks = data.picks || [];
+     
+     // Build player list from all picks
      const playerSet = new Set();
      allPicks.forEach(p => playerSet.add(p.player));
      currentPlayers = Array.from(playerSet).sort();
+     
+     // Update dropdown with player names
      updatePlayerDropdown();
+     
+     // Load matches without picks displayed
      loadMatches();
      updateTodayMatches();
-     
-           const playerScores = [];
-      for (let player of currentPlayers) {
-        let score = 0, total = 0;
-        const playerPicks = allPicks.filter(p => p.player === player);
-        for (let group in groupMatches) {
-          for (let m of groupMatches[group]) {
-            const actual = actualResults[m.match];
-            const pick = playerPicks.find(p => p.match === m.match);
-            // Only count if the player actually made a pick for this match AND the match has a result
-            if (actual && actual.result && pick) {
-              total++;
-              if (pick.pick === actual.result) score++;
-            }
-          }
-        }
-        playerScores.push({ name: player, score: score, total: total });
-      }
-     playerScores.sort((a,b) => b.score - a.score);
-     const leaderboardDiv = document.getElementById("leaderboard");
-     const leaderboardList = document.getElementById("leaderboard-list");
-     if (playerScores.length > 0) {
-       leaderboardList.innerHTML = "";
-        playerScores.forEach((p, i) => {
-          const percent = p.total > 0 ? Math.round(p.score/p.total*100) : 0;
-          const pointsText = p.score === 1 ? 'point' : 'points';
-          leaderboardList.innerHTML += `<li><strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%) <strong>: ${p.score} ${pointsText}</strong> ${i === 0 ? "🏆" : ""}</li>`;
-        });
-     }
      updateProgress();
-     updateLeaderboardVisibility(); // This will show/hide based on dropdown selection
+     updateLeaderboardVisibility();
      updatePlayerControlsVisibility();
-
+     
+     // Force hide loading overlay
+     hideLoading();
+     
    } catch(e) { 
-     showFloatingNotification("Error loading: " + e.message, true);
+     console.error("Error loading matches:", e);
+     showFloatingNotification("Error loading matches: " + e.message, true);
+     hideLoading();
    } finally { 
      isLoading = false;
-     hideLoading();
+     // Ensure loading is hidden even if something went wrong
+     setTimeout(() => {
+       hideLoading();
+     }, 1000);
    }
+}
+
+async function loadAllData() {
+   // Just load matches initially - picks will load when player is selected
+   await loadMatchesOnly();
 }
 
 function getResultSymbol(result) {
@@ -1195,6 +1259,7 @@ function createStandingsTable(standings) {
 
 function loadMatches() {
    const container = document.getElementById("group-matches");
+   if (!container) return;
    container.innerHTML = "";
    
    const sortedGroups = Object.keys(groupMatches).sort();
@@ -1225,9 +1290,19 @@ function loadMatches() {
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
        
        const playerPicks = [];
-       for (let player of currentPlayers) {
-         const pick = allPicks.find(p => p.player === player && p.match === matchObj.match);
-         if (pick) playerPicks.push({ name: player, pick: pick.pick, correct: actualResult && pick.pick === actualResult });
+       // Check if picks should be shown - only show if a player is selected
+       const playerSelect = document.getElementById("playerSelect");
+       const playerName = document.getElementById("playerName");
+       const hasPlayer = playerSelect && playerSelect.value !== "";
+       const hasName = playerName && playerName.value.trim() !== "";
+       const showPicks = hasPlayer || hasName;
+       
+       // Only show picks if a player is selected
+       if (showPicks && currentPlayers.length > 0) {
+         for (let player of currentPlayers) {
+           const pick = allPicks.find(p => p.player === player && p.match === matchObj.match);
+           if (pick) playerPicks.push({ name: player, pick: pick.pick, correct: actualResult && pick.pick === actualResult });
+         }
        }
        
        const matchDiv = document.createElement("div");
@@ -1240,7 +1315,6 @@ function loadMatches() {
       } else if (actualResult) {
         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
       } else if (isPast) {
-        // Match deadline has passed but no result yet - show ? - ?
         resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
       }
        
@@ -1445,12 +1519,16 @@ function createTodaysMatchesSection() {
        }
      }
      
+     // Format the time for display
+     const timeDisplay = tm.match.time ? tm.match.time : '';
+     
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
           style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 8px; min-width: 220px;">
          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
            <span style="font-weight: bold; font-size: 1em;">${tm.displayName}</span>
            <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; font-size: 0.9em;">
+             ${timeDisplay ? `<span style="padding-top: 3px;">${timeDisplay}</span>` : ''}
              ${transmissionHtml ? transmissionHtml : ''}
            </div>
          </div>
@@ -1461,7 +1539,6 @@ function createTodaysMatchesSection() {
    html += `</div></div>`;
    return html;
 }
-
 function updateTodayMatches() {
    const container = document.getElementById("today-matches-container");
    if (!container) return;
@@ -1522,23 +1599,36 @@ function initTabs() {
 }
 
 async function shareApp() {
-  const shareData = {
-    title: 'World Cup 2026 Predictor',
-    text: 'Make your predictions for World Cup 2026!',
-    url: window.location.href
-  };
-
   try {
-    if (navigator.share && navigator.canShare(shareData)) {
-      await navigator.share(shareData);
-    } else {
+    // Check if Web Share API is available
+    if (navigator.share) {
+      const shareData = {
+        title: 'World Cup 2026 Predictor',
+        text: 'Make your predictions for World Cup 2026!',
+        url: window.location.href
+      };
+      
+      if (navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+    }
+    
+    // Fallback: copy to clipboard
+    try {
       await navigator.clipboard.writeText(window.location.href);
       showFloatingNotification('✅ Link copied! Share with friends.');
+    } catch (clipboardError) {
+      // If clipboard fails, show the link in a notification
+      showFloatingNotification('📋 Copy this link: ' + window.location.href);
     }
+    
   } catch (err) {
+    // If user cancels share, don't show error
     if (err.name !== 'AbortError') {
       console.error('Share failed:', err);
-      showFloatingNotification('📋 Copy this link: ' + window.location.href);
+      // Fallback: show the link
+      showFloatingNotification('📋 Share this link: ' + window.location.href);
     }
   }
 }
@@ -1577,6 +1667,21 @@ if ('serviceWorker' in navigator) {
 
 initTabs();
 loadAllData();
+
+// Hide splash screen when page is ready
+window.addEventListener('load', function() {
+  const splash = document.getElementById('splash-screen');
+  if (splash) {
+    setTimeout(function() {
+      splash.style.transition = 'opacity 0.8s ease';
+      splash.style.opacity = '0';
+      setTimeout(function() {
+        splash.style.display = 'none';
+      }, 800);
+    }, 2000); // Show splash for 2000ms before fading out
+  }
+});
+
  </script> 
 </body> 
 </html>

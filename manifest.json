@@ -9,8 +9,8 @@
   "scope": "/World-Cup-2026-Predictor/",
   "display": "standalone",
   "display_override": ["standalone"],
-  "theme_color": "#4CAF50",
-  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "background_color": "#000000",
   "orientation": "portrait",
   "categories": ["sports", "games"],
   "icons": [
@@ -25,6 +25,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "icon-1125x2436.png",
+      "sizes": "1125x2436",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "screenshots": [
