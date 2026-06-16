@@ -16,7 +16,7 @@
  .container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
  h1 { color: #1a1a1a; text-align: center; }
  .stage-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
- .stage-tab { padding: 10px 20px; background: #e0e0e0; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+ .stage-tab { padding: 10px 10px; background: #e0e0e0; cursor: pointer; border-radius: 5px; transition: 0.3s; }
  .stage-tab.active { background: #4CAF50; color: white; }
  .matches-container { display: none; }
  .matches-container.active { display: block; }
@@ -234,7 +234,7 @@
  .btn-red { background: #f44336; }
  .btn-purple { background: #9C27B0; }
  .btn-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
- .leaderboard { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+ .leaderboard { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
  .leaderboard ol { margin: 0; padding-left: 20px; }
  .leaderboard li { margin: 5px 0; }
  .progress-bar { background: #e0e0e0; border-radius: 10px; height: 20px; margin: 10px 0; overflow: hidden; }
@@ -318,15 +318,15 @@
 
  <h1>🏆 World Cup 2026 Predictor</h1>
  
-  <div id="today-matches-container" class="container" style="display: none; padding: 0;margin: 0px auto -10px;"></div>
+  <div id="today-matches-container" class="container" style="display: none; padding: 0;margin: 0px auto -10px; "></div>
   
-  <div id="welcome-message" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: #4CAF50;margin: 10px auto 10px;">
-      <p style="max-width: 400px;; line-height: 1.5; margin: 10px auto;">Select an existing player or Enter your name.</p>
+  <div id="player-selection" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: linear-gradient(135deg,  #ffa726 0%, #ff7043 100%);margin: 10px auto 10px;">
+      <p style="max-width: 400px;; line-height: 1.5; margin: 0px auto;">Select an existing player or Enter your name.</p>
        <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
          <option value="">-- Select player --</option>
        </select>
          <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 0;" oninput="onPlayerNameEdit()">
-       <p style="line-height: 1.5; margin: 10px 20px;">Then select a stage to view the matches and pick your predictions!</p>
+       <p style="line-height: 1.5; margin: 0px 20px;">Then select a stage to view the matches and pick your predictions!</p>
   </div>
   </div>
    <div id="progress-container" class="hidden"></div>
@@ -334,7 +334,7 @@
 
 
   <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
-    <h2 style="margin-top: 0; margin-bottom: -10;">🏅 Leaderboard</h2>
+    <h2 style="margin-top: 0; margin-bottom: 0;">🏅 Leaderboard</h2>
     <ol id="leaderboard-list"></ol>
   </div>
 
@@ -357,7 +357,7 @@
    
    <div style="margin: -10px auto; text-align: center;">
      <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
-      <button onclick="showAdminLogin()" style="background: #f44336; color: white;">🔐 Edit Scores (Admin)</button>
+      <button onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
     </div>
  </div>
 
@@ -990,12 +990,12 @@ async function loadAllData() {
      const leaderboardDiv = document.getElementById("leaderboard");
      const leaderboardList = document.getElementById("leaderboard-list");
      if (playerScores.length > 0) {
-       // Do NOT set display to block here - let updateLeaderboardVisibility control it
        leaderboardList.innerHTML = "";
-       playerScores.forEach((p, i) => {
-         const percent = p.total > 0 ? Math.round(p.score/p.total*100) : 0;
-         leaderboardList.innerHTML += `<li><strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%) ${i === 0 ? "🏆" : ""}</li>`;
-       });
+        playerScores.forEach((p, i) => {
+          const percent = p.total > 0 ? Math.round(p.score/p.total*100) : 0;
+          const pointsText = p.score === 1 ? 'point' : 'points';
+          leaderboardList.innerHTML += `<li><strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%) <strong>: ${p.score} ${pointsText}</strong> ${i === 0 ? "🏆" : ""}</li>`;
+        });
      }
      updateProgress();
      updateLeaderboardVisibility(); // This will show/hide based on dropdown selection
@@ -1340,7 +1340,7 @@ function createTodaysMatchesSection() {
    if (todaysMatches.length === 0) return '';
    
    let html = `
-     <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+     <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
        <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's Live/Upcoming Matches</h3>
        <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
    `;
@@ -1466,7 +1466,7 @@ function showShareFeedback(message) {
     transform: translateX(-50%);
     background: #4CAF50;
     color: white;
-    padding: 10px 20px;
+    padding: 10px 10px;
     border-radius: 5px;
     z-index: 1000;
     animation: fadeOut 2s forwards;
