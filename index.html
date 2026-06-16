@@ -321,7 +321,7 @@
        <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
          <option value="">-- Select player --</option>
        </select>
-         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 0;">
+         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 0;" oninput="onPlayerNameEdit()">
        <p style="line-height: 1.5; margin: 10px 20px;">Then select a stage to view the matches and pick your predictions!</p>
   </div>
   </div>
@@ -709,6 +709,18 @@ function updatePlayerDropdown() {
      if (player === currentValue) option.selected = true;
      select.appendChild(option);
    });
+}
+
+function onPlayerNameEdit() {
+  // Reset the player-select dropdown to "-- Select player --"
+  const select = document.getElementById("playerSelect");
+  if (select) {
+    select.value = "";
+    // Clear all picks from the UI
+    clearAllPicks();
+    // Hide the leaderboard
+    updateLeaderboardVisibility();
+  }
 }
 
 function selectPlayer() {
