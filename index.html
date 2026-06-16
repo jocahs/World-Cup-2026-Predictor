@@ -294,6 +294,10 @@
    100% { transform: rotate(360deg); }
  }
  
+ .hidden {
+   display: none !important;
+ }
+ 
  @media (max-width: 768px) { 
    .match-name { display: inline-flex; margin-right: 8px; } 
    .match-time { display: inline; }
@@ -325,7 +329,7 @@
        <p style="line-height: 1.5; margin: 10px 20px;">Then select a stage to view the matches and pick your predictions!</p>
   </div>
   </div>
-   <div id="progress-container"></div>
+   <div id="progress-container" class="hidden"></div>
  </div>
 
 
@@ -352,7 +356,7 @@
     <div id="final-matches" class="matches-container"></div>
    
    <div style="margin: -10px auto; text-align: center;">
-     <button onclick="savePicks()">💾 Save My Picks</button>
+     <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
       <button onclick="showAdminLogin()" style="background: #f44336; color: white;">🔐 Edit Scores (Admin)</button>
     </div>
  </div>
@@ -409,6 +413,24 @@ function showLoading(message = "Loading matches and picks...") {
 function hideLoading() {
   const overlay = document.getElementById("loadingOverlay");
   overlay.classList.remove("active");
+}
+
+function updatePlayerControlsVisibility() {
+  const playerSelect = document.getElementById("playerSelect");
+  const playerName = document.getElementById("playerName");
+  const saveBtn = document.getElementById("savePicksBtn");
+  const progressContainer = document.getElementById("progress-container");
+  
+  const hasPlayer = playerSelect && playerSelect.value !== "";
+  const hasName = playerName && playerName.value.trim() !== "";
+  
+  if (hasPlayer || hasName) {
+    saveBtn.classList.remove("hidden");
+    progressContainer.classList.remove("hidden");
+  } else {
+    saveBtn.classList.add("hidden");
+    progressContainer.classList.add("hidden");
+  }
 }
 
  // Helper function to parse match date and time
@@ -720,6 +742,7 @@ function onPlayerNameEdit() {
     clearAllPicks();
     // Hide the leaderboard
     updateLeaderboardVisibility();
+    updatePlayerControlsVisibility();
   }
 }
 
@@ -729,11 +752,13 @@ function selectPlayer() {
      // Player selected from dropdown - load their picks, passing the name
      loadMyPicks(playerName);
      updateLeaderboardVisibility();
+     updatePlayerControlsVisibility();
    } else {
      // "-- Select player --" selected - clear everything
      clearAllPicks();
      document.getElementById("playerName").value = ""; // Clear the text input
      updateLeaderboardVisibility();
+     updatePlayerControlsVisibility();
    }
 }
 
@@ -748,6 +773,7 @@ function clearAllPicks() {
      }
    }
    updateProgress();
+   updatePlayerControlsVisibility();
 }
 
 async function savePicks() {
@@ -895,6 +921,7 @@ async function loadMyPicks(playerName = null) {
      updateProgress();
      alert(`✅ Loaded ${userPicks.length} picks for ${player}`);
      updateLeaderboardVisibility();
+     updatePlayerControlsVisibility();
    } catch(e) { 
      alert("Error: " + e.message); 
    } finally { 
@@ -972,6 +999,7 @@ async function loadAllData() {
      }
      updateProgress();
      updateLeaderboardVisibility(); // This will show/hide based on dropdown selection
+     updatePlayerControlsVisibility();
    } catch(e) { 
      alert("Error loading: " + e.message); 
    } finally { 
@@ -1236,30 +1264,75 @@ function getTodaysMatches() {
 
 
 function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
-   // Expand the group if it's collapsed
-   const groupDiv = document.getElementById(groupId);
-   if (groupDiv && groupDiv.style.display === "none") {
-     groupDiv.style.display = "block";
-   }
+   // First, determine which stage tab contains this group
+   let targetStage = 'group'; // default
    
-   // Scroll to the match
-   const matchElement = document.getElementById(matchElementId);
-   if (matchElement) {
-     matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
-     // Add a temporary highlight effect
-     matchElement.style.transition = "background 0.3s";
-     matchElement.style.background = "#fff3cd";
-     setTimeout(() => {
-       matchElement.style.background = "";
-     }, 2000);
-   } else {
-     // If match element doesn't have an ID yet, we need to add IDs when creating matches
-     // For now, just scroll to the group
-     const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest('.group-block');
-     if (groupBlock) {
-       groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+   // Check which stage container the group belongs to
+   const groupElement = document.getElementById(groupId);
+   if (groupElement) {
+     // Find the parent matches-container
+     let parent = groupElement.parentElement;
+     while (parent) {
+       if (parent.classList && parent.classList.contains('matches-container')) {
+         // Get the stage from the container id
+         if (parent.id === 'group-matches') targetStage = 'group';
+         else if (parent.id === 'round32-matches') targetStage = 'round32';
+         else if (parent.id === 'round16-matches') targetStage = 'round16';
+         else if (parent.id === 'quarter-matches') targetStage = 'quarter';
+         else if (parent.id === 'semi-matches') targetStage = 'semi';
+         else if (parent.id === 'final-matches') targetStage = 'final';
+         break;
+       }
+       parent = parent.parentElement;
      }
    }
+   
+   // Switch to the correct stage tab
+   document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+   document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
+   
+   // Find and activate the correct tab
+   const tab = document.querySelector(`.stage-tab[data-stage="${targetStage}"]`);
+   if (tab) tab.classList.add('active');
+   
+   // Show the correct container
+   const container = document.getElementById(`${targetStage}-matches`);
+   if (container) container.classList.add('active');
+   
+   // Now scroll to the match (with a small delay to allow DOM to update)
+   setTimeout(() => {
+     // Expand the group if it's collapsed
+     const groupDiv = document.getElementById(groupId);
+     if (groupDiv && groupDiv.style.display === "none") {
+       groupDiv.style.display = "block";
+     }
+     
+     // Also make sure the parent group block is visible
+     const groupBlock = groupDiv ? groupDiv.closest('.group-block') : null;
+     if (groupBlock) {
+       groupBlock.style.display = 'block';
+     }
+     
+     // Scroll to the match
+     const matchElement = document.getElementById(matchElementId);
+     if (matchElement) {
+       // First, make sure the match is visible by scrolling to it
+       matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
+       
+       // Add a temporary highlight effect
+       matchElement.style.transition = "background 0.3s";
+       matchElement.style.background = "#fff3cd";
+       setTimeout(() => {
+         matchElement.style.background = "";
+       }, 3000);
+     } else {
+       // If match element doesn't exist yet, try to find it by group
+       const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest('.group-block');
+       if (groupBlock) {
+         groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+       }
+     }
+   }, 100);
 }
 
 function createTodaysMatchesSection() {
@@ -1285,15 +1358,12 @@ function createTodaysMatchesSection() {
        }
      }
      
-     const formattedTime = formatDisplayDate(tm.match.date, tm.match.time);
-     
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
           style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 8px; min-width: 220px;">
          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
            <span style="font-weight: bold; font-size: 1em;">${tm.displayName}</span>
            <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; font-size: 0.9em;">
-             <span>📅 ${formattedTime}</span>
              ${transmissionHtml ? transmissionHtml : ''}
            </div>
          </div>
@@ -1347,7 +1417,10 @@ function updateProgress() {
      }
    }
    const percent = total > 0 ? Math.round(saved/total*100) : 0;
-   document.getElementById("progress-container").innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}% Complete (${saved}/${total} upcoming matches)</div></div>`;
+   const progressContainer = document.getElementById("progress-container");
+   if (progressContainer) {
+     progressContainer.innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}% Complete (${saved}/${total} upcoming matches)</div></div>`;
+   }
 }
 
 function initTabs() {
