@@ -1707,16 +1707,60 @@ function getGroupQualifiers() {
   return groups;
 }
 
-// Function to get the best third-place teams
-function getBestThirdPlaceTeams(groups) {
+// Function to get third-place teams with their stats for sorting
+function getThirdPlaceTeamsWithStats(groups) {
   const thirdPlaceTeams = [];
   const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
   
   groupLetters.forEach(letter => {
     if (groups[letter] && groups[letter].third) {
+      // Find the group's matches to calculate stats for the third-place team
+      const groupName = 'Group ' + letter;
+      const matches = groupMatches[groupName] || [];
+      
+      // Calculate the third-place team's stats
+      let points = 0;
+      let goalDiff = 0;
+      let goalsFor = 0;
+      
+      matches.forEach(match => {
+        const actual = actualResults[match.match];
+        if (actual && actual.score) {
+          const scoreParts = actual.score.split('-');
+          const homeScore = parseInt(scoreParts[0]);
+          const awayScore = parseInt(scoreParts[1]);
+          
+          // Extract team names from displayMatch
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = match.displayMatch;
+          const teams = tempDiv.textContent.split(' vs ');
+          
+          if (teams.length === 2) {
+            const team1 = teams[0].trim();
+            const team2 = teams[1].trim();
+            
+            // Determine which team is the third-place team
+            if (team1 === groups[letter].third) {
+              goalsFor += homeScore;
+              goalDiff += (homeScore - awayScore);
+              if (homeScore > awayScore) points += 3;
+              else if (homeScore === awayScore) points += 1;
+            } else if (team2 === groups[letter].third) {
+              goalsFor += awayScore;
+              goalDiff += (awayScore - homeScore);
+              if (awayScore > homeScore) points += 3;
+              else if (awayScore === homeScore) points += 1;
+            }
+          }
+        }
+      });
+      
       thirdPlaceTeams.push({
         group: letter,
-        team: groups[letter].third
+        team: groups[letter].third,
+        points: points,
+        goalDiff: goalDiff,
+        goalsFor: goalsFor
       });
     }
   });
@@ -1724,26 +1768,38 @@ function getBestThirdPlaceTeams(groups) {
   return thirdPlaceTeams;
 }
 
+// Function to get the best third-place teams (sorted by points, goal diff, goals for)
+function getBestThirdPlaceTeams(groups) {
+  const thirdPlaceTeams = getThirdPlaceTeamsWithStats(groups);
+  
+  // Sort by points (descending), then goal difference (descending), then goals for (descending)
+  thirdPlaceTeams.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+    return b.goalsFor - a.goalsFor;
+  });
+  
+  // Return only the top 8
+  return thirdPlaceTeams.slice(0, 8);
+}
+
 // Function to generate Round of 32 matches
 function generateRound32Matches() {
   const groups = getGroupQualifiers();
   const thirdPlaceTeams = getBestThirdPlaceTeams(groups);
   
-  // Assign third place teams to their positions
-  const thirdPlaceAssignments = {
-    'B/E/F/I': thirdPlaceTeams[0]?.team || null,
-    'A/C/D/F': thirdPlaceTeams[1]?.team || null,
-    'A/B/C/G': thirdPlaceTeams[2]?.team || null,
-    'A/B/C/H': thirdPlaceTeams[3]?.team || null,
-    'A/B/D/E': thirdPlaceTeams[4]?.team || null,
-    'C/D/G/H': thirdPlaceTeams[5]?.team || null,
-    'B/E/F/K': thirdPlaceTeams[6]?.team || null,
-    'B/E/I/J': thirdPlaceTeams[7]?.team || null,
-    'C/F/G/J': thirdPlaceTeams[8]?.team || null,
-    'E/F/G/H': thirdPlaceTeams[9]?.team || null,
-    'A/C/D/I': thirdPlaceTeams[10]?.team || null,
-    'D/E/H/I': thirdPlaceTeams[11]?.team || null
-  };
+  // Assign third place teams to their positions based on ranking
+  // The best third-place team goes to the first available slot, etc.
+  const thirdPlaceAssignments = {};
+  const thirdPlaceKeys = ['B/E/F/I', 'A/C/D/F', 'A/B/C/G', 'A/B/C/H', 'A/B/D/E', 'C/D/G/H', 'B/E/F/K', 'B/E/I/J', 'C/F/G/J', 'E/F/G/H', 'A/C/D/I', 'D/E/H/I'];
+  
+  // Assign the 8 best third-place teams to the first 8 slots
+  const sortedKeys = thirdPlaceKeys.slice(0, 8);
+  thirdPlaceTeams.forEach((team, index) => {
+    if (index < sortedKeys.length) {
+      thirdPlaceAssignments[sortedKeys[index]] = team.team;
+    }
+  });
   
   // Round of 32 match pairings
   const round32Matches = [
