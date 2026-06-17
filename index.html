@@ -1430,28 +1430,44 @@ function createNextMatchesSection() {
      tempDiv.innerHTML = tm.displayName;
      const teamText = tempDiv.textContent || tempDiv.innerText || '';
      
-     // Get time + transmission text
-     let timeTransmissionText = '';
+     // Format date as "Jun 20"
+     let dateFormatted = '';
+     if (tm.match.date) {
+       const dateParts = tm.match.date.split('/');
+       if (dateParts.length === 3) {
+         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+         const month = parseInt(dateParts[1]) - 1;
+         const day = parseInt(dateParts[0]);
+         dateFormatted = monthNames[month] + ' ' + day;
+       }
+     }
+     
+     // Get date + time + transmission text for width calculation
+     let dateTimeTransmissionText = '';
+     if (dateFormatted) {
+       dateTimeTransmissionText += dateFormatted + ' ';
+     }
      if (tm.match.time) {
-       timeTransmissionText += tm.match.time + ' ';
+       dateTimeTransmissionText += tm.match.time + ' ';
      }
      if (tm.match.transmission) {
-       timeTransmissionText += tm.match.transmission;
+       dateTimeTransmissionText += tm.match.transmission;
      }
      
      // Calculate EXACT width needed - MINIMAL padding
-     const charWidth = 7.5; // Even smaller
-     const flagWidth = 18; // Smaller flag width
+     const charWidth = 7.5;
+     const flagWidth = 18;
      const flagCount = 2;
-     const vsText = 20; // " vs " 
+     const vsText = 20;
      
      const teamContentWidth = (teamText.length * charWidth) + (flagCount * flagWidth) + vsText;
-     const timeContentWidth = (timeTransmissionText.length * charWidth) + 5;
+     const timeContentWidth = (dateTimeTransmissionText.length * charWidth) + 5;
      const neededWidth = Math.max(teamContentWidth, timeContentWidth, 150);
      
      return {
        ...tm,
        neededWidth: Math.min(neededWidth, 380),
+       dateFormatted: dateFormatted
      };
    });
    
@@ -1475,7 +1491,7 @@ function createNextMatchesSection() {
    
    let html = `
      <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-       <h3 style="margin: 0 0 4px 0; font-size: 1.1em;">⚡ Next Matches</h3>
+       <h3 style="margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next Matches</h3>
        <div style="max-height: ${maxHeight}px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: ${gapSize}px; justify-content: center; align-content: flex-start; padding: 2px; scrollbar-width: thin; scrollbar-gutter: stable;">
    `;
    
@@ -1486,25 +1502,37 @@ function createNextMatchesSection() {
      let transmissionHtml = '';
      if (tm.match.transmission) {
        if (tm.match.transmission.includes('LiveModeTV')) {
-         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
+         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: #FFD700; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
        } else {
-         transmissionHtml = `<span style="font-size: 0.9em; white-space: nowrap;">📺 ${tm.match.transmission}</span>`;
+         transmissionHtml = `<span style="color: white; font-size: 0.9em; white-space: nowrap;">📺 ${tm.match.transmission}</span>`;
        }
      }
      
+     // Build time display with date + time (no calendar symbol)
+     let dateHtml = '';
      let timeHtml = '';
      if (tm.match.date && tm.match.time) {
+       // Format: "Jun 20" and "23:00" separately
+       let displayDate = '';
+       let displayTime = tm.match.time;
+       if (tm.dateFormatted) {
+         displayDate = tm.dateFormatted;
+       }
+       
        const homeTeamClean = tm.match.homeTeam || '';
        const visitorTeamClean = tm.match.visitorTeam || '';
        if (homeTeamClean && visitorTeamClean) {
          const calUrl = getGoogleCalendarUrl(tm.match.match, homeTeamClean, visitorTeamClean, tm.match.date, tm.match.time, tm.match.transmission);
          if (calUrl) {
-           timeHtml = `<a href="${calUrl}" target="_blank" style="color: white; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();" title="Click to add to Google Calendar">📅 ${tm.match.time}</a>`;
+           dateHtml = `<a href="${calUrl}" target="_blank" style="color: #FFFFFF; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();" title="Click to add to Google Calendar">${displayDate}</a>`;
+           timeHtml = `<a href="${calUrl}" target="_blank" style="color: #FFD700; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();" title="Click to add to Google Calendar">${displayTime}</a>`;
          } else {
-           timeHtml = `<span style="font-size: 0.9em; white-space: nowrap;">${tm.match.time}</span>`;
+           dateHtml = `<span style="color: #FFFFFF; font-size: 0.9em; white-space: nowrap;">${displayDate}</span>`;
+           timeHtml = `<span style="color: #FFD700; font-size: 0.9em; white-space: nowrap;">${displayTime}</span>`;
          }
        } else {
-         timeHtml = `<span style="font-size: 0.9em; white-space: nowrap;">${tm.match.time}</span>`;
+         dateHtml = `<span style="color: #FFFFFF; font-size: 0.9em; white-space: nowrap;">${displayDate}</span>`;
+         timeHtml = `<span style="color: #FFD700; font-size: 0.9em; white-space: nowrap;">${displayTime}</span>`;
        }
      }
      
@@ -1514,8 +1542,9 @@ function createNextMatchesSection() {
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
           style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 4px 0px !important; border-radius: 6px; flex: 0 0 ${cardFlexBasis}px; max-width: ${Math.min(cardFlexBasis, 380)}px; min-width: ${Math.max(cardFlexBasis, 150)}px; box-sizing: border-box; overflow: visible; display: flex; align-items: center; justify-content: center;">
          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%;">
-           <span style="font-weight: bold; font-size: 0.9em; text-align: center; line-height: 1.2; white-space: nowrap; width: 100%; display: block;">${tm.displayName}</span>
+           <span style="font-weight: bold; font-size: 0.9em; text-align: center; line-height: 1.2; white-space: nowrap; width: 100%; display: block; color: #FFFFFF;">${tm.displayName}</span>
            <div style="display: flex; flex-wrap: nowrap; gap: 4px; justify-content: center; font-size: 0.9em; align-items: center; white-space: nowrap; width: 100%;">
+             ${dateHtml}
              ${timeHtml}
              ${transmissionHtml ? transmissionHtml : ''}
            </div>
