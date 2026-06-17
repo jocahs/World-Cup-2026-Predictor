@@ -367,7 +367,7 @@
 
  <h1>🏆 World Cup 2026 Predictor</h1>
  
-  <div id="today-matches-container" class="container" style="display: none; padding: 0;margin: 0px auto -10px; "></div>
+  <div id="today-matches-container" class="container" style="display: none; padding: 0; margin: 0px auto -10px;"></div>
   
   <button id="togglePlayerBtn" onclick="togglePlayerSelection()" style="margin: 10px auto; display: block; padding: 10px; background: linear-gradient(135deg,  #ea9b24 0%, #ff7043 100%);">Predict Match Results</button>
   
@@ -461,14 +461,14 @@
 
  <script> 
  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwMcepo8QqNKAp-9EreEKtA0SYtECM2plg1g9wDOZZjNDqBKGKagEo3uSvhyrLmv8v/exec";
- const ADMIN_PASSWORD = "wc2026";
- 
- let actualResults = {};
- let allPicks = [];
- let currentPlayers = [];
- let isLoading = false;
- let isAdminMode = false;
- let groupMatches = {};
+const ADMIN_PASSWORD = "wc2026";
+
+let actualResults = {};
+let allPicks = [];
+let currentPlayers = [];
+let isLoading = false;
+let isAdminMode = false;
+let groupMatches = {};
 
 function showFloatingNotification(message, isError = false) {
   const notification = document.getElementById('floatingNotification');
@@ -480,12 +480,9 @@ function showFloatingNotification(message, isError = false) {
     notification.classList.add('error');
   }
   
-  // Force reflow
   void notification.offsetWidth;
-  
   notification.classList.add('show');
   
-  // Auto-hide after 3 seconds
   clearTimeout(notification._hideTimeout);
   notification._hideTimeout = setTimeout(() => {
     notification.classList.remove('show');
@@ -497,7 +494,6 @@ function showLoading(message = "Loading matches...") {
   const textElement = overlay.querySelector(".loading-spinner p");
   if (textElement) textElement.textContent = message;
   overlay.classList.add("active");
-  // Ensure overlay is visible
   overlay.style.display = "flex";
 }
 
@@ -520,42 +516,35 @@ function updatePlayerControlsVisibility() {
   if (canPick) {
     saveBtn.classList.remove("hidden");
     progressContainer.classList.remove("hidden");
-    // Show all pick elements (picks-row and radio-group)
     document.querySelectorAll('.pick-elements').forEach(function(el) {
       el.classList.add('visible');
     });
   } else {
     saveBtn.classList.add("hidden");
     progressContainer.classList.add("hidden");
-    // Hide all pick elements
     document.querySelectorAll('.pick-elements').forEach(function(el) {
       el.classList.remove('visible');
     });
   }
 }
 
- // Helper function to parse match date and time
 function parseMatchDateTime(dateStr, timeStr) {
    if (!dateStr || !timeStr) return null;
    
    let year, month, day, hour, minute;
    
-   // Parse the time
    const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
    if (!timeParts) return null;
    hour = parseInt(timeParts[1]);
    minute = parseInt(timeParts[2]);
    
-   // Handle ISO format (coming from Google Sheets)
    if (dateStr.includes('T')) {
      const utcDate = new Date(dateStr);
-     // For Portugal (UTC+1), add 1 hour to get local time
      const localDate = new Date(utcDate.getTime() + 60 * 60 * 1000);
      year = localDate.getFullYear();
      month = localDate.getMonth();
      day = localDate.getDate();
    }
-   // Handle DD/MM/YYYY format
    else if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
      day = parseInt(parts[0]);
@@ -566,7 +555,6 @@ function parseMatchDateTime(dateStr, timeStr) {
      return null;
    }
    
-   // Create date with local components
    return new Date(year, month, day, hour, minute);
 }
 
@@ -577,15 +565,12 @@ function formatDisplayDate(dateStr, timeStr) {
    
    let day, month;
    
-   // Handle ISO format "2026-06-14T23:00:00.000Z"
    if (dateStr.includes('T') || dateStr.includes('-')) {
      const date = new Date(dateStr);
-     // Adjust to local time (Portugal)
      const localDate = new Date(date.getTime());
      day = localDate.getDate();
      month = localDate.getMonth() + 1;
    }
-   // Handle format "DD/MM/YYYY"
    else if (dateStr.includes('/')) {
      const parts = dateStr.split('/');
      day = parseInt(parts[0]);
@@ -606,9 +591,7 @@ function isWithinThreeHoursAfter(matchDateTime) {
    return now.getTime() <= threeHoursAfter.getTime();
 }
 
-// Google Calendar URL generator - SIMPLIFIED (date is already DD/MM/YYYY)
 function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
-   // Parse DD/MM/YYYY date
    const dateParts = dateStr.split('/');
    if (dateParts.length !== 3) return null;
    
@@ -616,16 +599,13 @@ function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr
    const month = parseInt(dateParts[1]);
    const year = parseInt(dateParts[2]);
    
-   // Parse time
    const timeParts = timeStr.match(/(\d{2}):(\d{2})/);
    if (!timeParts) return null;
    const hour = parseInt(timeParts[1]);
    const minute = parseInt(timeParts[2]);
    
-   // Format numbers with leading zeros
    const pad = (n) => String(n).padStart(2, '0');
    
-   // Create date strings for Google Calendar (local time)
    const startDate = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
    const endDate = `${year}${pad(month)}${pad(day)}T${pad(hour + 2)}${pad(minute)}00`;
    
@@ -700,7 +680,7 @@ function updateLeaderboard() {
   }
 }
 
- function getFlagCode(teamName) {
+function getFlagCode(teamName) {
    const flagMap = {
      'Mexico': 'mx', 'South Africa': 'za', 'South Korea': 'kr', 'Czechia': 'cz',
      'Canada': 'ca', 'Bosnia and Herzegovina': 'ba', 'Bosnia': 'ba', 'Qatar': 'qa', 'Switzerland': 'ch',
@@ -874,7 +854,6 @@ function onPlayerNameEdit() {
     clearAllPicks();
     updateLeaderboardVisibility();
     updatePlayerControlsVisibility();
-    // If name is entered, load picks
     if (playerName && playerName.value.trim() !== "") {
       loadMyPicks(playerName.value.trim());
     }
@@ -884,7 +863,6 @@ function onPlayerNameEdit() {
 function selectPlayer() {
    const playerName = document.getElementById("playerSelect").value;
    if (playerName) {
-     // Player selected from dropdown - load their picks, passing the name
      loadMyPicks(playerName);
    } else {
      clearAllPicks();
@@ -895,7 +873,6 @@ function selectPlayer() {
 }
 
 function clearAllPicks() {
-   // Clear all radio button selections
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
        const matchId = `${group}_${i}`;
@@ -916,7 +893,6 @@ async function savePicks() {
      return; 
    }
    
-   // Get current picks from the UI (only for upcoming matches within deadline)
    const currentPicks = [];
    const now = new Date();
    
@@ -925,15 +901,12 @@ async function savePicks() {
        const matchObj = groupMatches[group][i];
        const match = matchObj.match;
        
-       // Skip matches that already have results (completed)
        if (actualResults[match] && actualResults[match].result) continue;
        
-       // Check if match deadline has passed (3 hours after match start)
        const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
        const deadlineTime = matchDateTime ? new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000) : null;
        const isPastDeadline = deadlineTime ? now >= deadlineTime : false;
        
-       // Skip matches that are past deadline
        if (isPastDeadline) continue;
        
        const matchId = `${group}_${i}`;
@@ -955,15 +928,12 @@ async function savePicks() {
    showLoading("Saving your picks...");
    
    try {
-     // Get existing picks from server first
      const response = await fetch(`${WEBAPP_URL}?action=load`);
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
      
-     // Get existing picks for this player
      const existingPicks = data.picks.filter(p => p.player === player) || [];
      
-     // Create maps for comparison
      const existingMap = new Map();
      existingPicks.forEach(pick => {
        existingMap.set(pick.match, pick.pick.toString());
@@ -974,7 +944,6 @@ async function savePicks() {
        currentMap.set(pick.match, pick.pick.toString());
      });
      
-     // Find picks that have changed
      const picksToUpdate = [];
      for (let [match, pick] of currentMap) {
        const existingPick = existingMap.get(match);
@@ -989,7 +958,6 @@ async function savePicks() {
        return;
      }
      
-     // Send each updated pick individually
      for (let update of picksToUpdate) {
        const updateParams = new URLSearchParams();
        updateParams.append("action", "updatePick");
@@ -1029,24 +997,19 @@ async function loadMyPicks(playerName = null) {
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
      
-     // Now load all picks
      allPicks = data.picks || [];
      actualResults = data.results || {};
      
-     // Update player list
      const playerSet = new Set();
      allPicks.forEach(p => playerSet.add(p.player));
      currentPlayers = Array.from(playerSet).sort();
      updatePlayerDropdown();
      
-     // Reload matches with picks included
      loadMatches();
      updateTodayMatches();
      
-     // Load picks for the selected player
      const userPicks = allPicks.filter(p => p.player === player);
      
-     // Clear and set radio buttons
      for (let group in groupMatches) {
        for (let i = 0; i < groupMatches[group].length; i++) {
          const matchId = `${group}_${i}`;
@@ -1065,7 +1028,6 @@ async function loadMyPicks(playerName = null) {
        }
      });
      
-     // Update leaderboard
      updateLeaderboard();
      updateProgress();
      updateLeaderboardVisibility();
@@ -1090,10 +1052,8 @@ async function loadMatchesOnly() {
      const data = await response.json();
      if (!data.success) throw new Error(data.error);
      
-     // Get results
      actualResults = data.results || {};
      
-     // Get matches
      if (data.matches && data.matches.length > 0) {
        for (let group in groupMatches) delete groupMatches[group];
        data.matches.forEach(match => {
@@ -1114,25 +1074,19 @@ async function loadMatchesOnly() {
        });
      }
      
-     // Load ALL picks to get player list, but don't display them yet
      allPicks = data.picks || [];
      
-     // Build player list from all picks
      const playerSet = new Set();
      allPicks.forEach(p => playerSet.add(p.player));
      currentPlayers = Array.from(playerSet).sort();
      
-     // Update dropdown with player names
      updatePlayerDropdown();
-     
-     // Load matches without picks displayed
      loadMatches();
      updateTodayMatches();
      updateProgress();
      updateLeaderboardVisibility();
      updatePlayerControlsVisibility();
      
-     // Force hide loading overlay
      hideLoading();
      
    } catch(e) { 
@@ -1141,7 +1095,6 @@ async function loadMatchesOnly() {
      hideLoading();
    } finally { 
      isLoading = false;
-     // Ensure loading is hidden even if something went wrong
      setTimeout(() => {
        hideLoading();
      }, 1000);
@@ -1149,7 +1102,6 @@ async function loadMatchesOnly() {
 }
 
 async function loadAllData() {
-   // Just load matches initially - picks will load when player is selected
    await loadMatchesOnly();
 }
 
@@ -1290,14 +1242,12 @@ function loadMatches() {
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
        
        const playerPicks = [];
-       // Check if picks should be shown - only show if a player is selected
        const playerSelect = document.getElementById("playerSelect");
        const playerName = document.getElementById("playerName");
        const hasPlayer = playerSelect && playerSelect.value !== "";
        const hasName = playerName && playerName.value.trim() !== "";
        const showPicks = hasPlayer || hasName;
        
-       // Only show picks if a player is selected
        if (showPicks && currentPlayers.length > 0) {
          for (let player of currentPlayers) {
            const pick = allPicks.find(p => p.player === player && p.match === matchObj.match);
@@ -1358,7 +1308,6 @@ function loadMatches() {
        }
        
         let radioHtml = '';
-        // Lock picks if match has a result OR match start time has passed
         if (!isCompleted && !isPast) {
           radioHtml = `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label></div>`;
         } else if (!isCompleted && isPast) {
@@ -1367,7 +1316,6 @@ function loadMatches() {
           radioHtml = `<div class="radio-group disabled"></div>`;
         }
        
-       // Wrap picks and radio in a container that can be hidden
        const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
        
        matchDiv.innerHTML = `<div class="match-header"><span class="match-name">${matchObj.displayMatch}</span>${timeDisplay}${resultBadge}</div>${pickElementsHtml}`;
@@ -1377,65 +1325,17 @@ function loadMatches() {
      container.appendChild(groupDiv);
    }
    updateProgress();
-   
-   // Apply visibility based on current player selection state
    updatePlayerControlsVisibility();
 }
 
-function getTodaysMatches() {
-   const today = new Date();
-   today.setHours(0, 0, 0, 0);
-   const now = new Date();
-   
-   const todaysMatches = [];
-   
-   for (let group in groupMatches) {
-     for (let idx = 0; idx < groupMatches[group].length; idx++) {
-       const match = groupMatches[group][idx];
-       const matchDateTime = parseMatchDateTime(match.date, match.time);
-       if (matchDateTime) {
-         const matchDate = new Date(matchDateTime);
-         matchDate.setHours(0, 0, 0, 0);
-         
-         // Calculate the deadline (3 hours after match start)
-         const deadlineTime = new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000);
-         
-         // Check if match is today AND deadline hasn't passed yet AND not completed
-         if (matchDate.getTime() === today.getTime() && 
-             now < deadlineTime && 
-             !actualResults[match.match]?.result) {
-           todaysMatches.push({
-             group: group,
-             idx: idx,
-             match: match,
-             displayName: match.displayMatch,
-             time: match.time,
-             dateTime: matchDateTime // Store for sorting
-           });
-         }
-       }
-     }
-   }
-   
-   // Sort matches chronologically by date/time
-   todaysMatches.sort((a, b) => a.dateTime - b.dateTime);
-   
-   return todaysMatches;
-}
-
-
 function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
-   // First, determine which stage tab contains this group
-   let targetStage = 'group'; // default
+   let targetStage = 'group';
    
-   // Check which stage container the group belongs to
    const groupElement = document.getElementById(groupId);
    if (groupElement) {
-     // Find the parent matches-container
      let parent = groupElement.parentElement;
      while (parent) {
        if (parent.classList && parent.classList.contains('matches-container')) {
-         // Get the stage from the container id
          if (parent.id === 'group-matches') targetStage = 'group';
          else if (parent.id === 'round32-matches') targetStage = 'round32';
          else if (parent.id === 'round16-matches') targetStage = 'round16';
@@ -1448,46 +1348,35 @@ function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
      }
    }
    
-   // Switch to the correct stage tab
    document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
    document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
    
-   // Find and activate the correct tab
    const tab = document.querySelector(`.stage-tab[data-stage="${targetStage}"]`);
    if (tab) tab.classList.add('active');
    
-   // Show the correct container
    const container = document.getElementById(`${targetStage}-matches`);
    if (container) container.classList.add('active');
    
-   // Now scroll to the match (with a small delay to allow DOM to update)
    setTimeout(() => {
-     // Expand the group if it's collapsed
      const groupDiv = document.getElementById(groupId);
      if (groupDiv && groupDiv.style.display === "none") {
        groupDiv.style.display = "block";
      }
      
-     // Also make sure the parent group block is visible
      const groupBlock = groupDiv ? groupDiv.closest('.group-block') : null;
      if (groupBlock) {
        groupBlock.style.display = 'block';
      }
      
-     // Scroll to the match
      const matchElement = document.getElementById(matchElementId);
      if (matchElement) {
-       // First, make sure the match is visible by scrolling to it
        matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
-       
-       // Add a temporary highlight effect
        matchElement.style.transition = "background 0.3s";
        matchElement.style.background = "#fff3cd";
        setTimeout(() => {
          matchElement.style.background = "";
        }, 3000);
      } else {
-       // If match element doesn't exist yet, try to find it by group
        const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest('.group-block');
        if (groupBlock) {
          groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1496,39 +1385,138 @@ function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
    }, 100);
 }
 
-function createTodaysMatchesSection() {
-   const todaysMatches = getTodaysMatches();
-   if (todaysMatches.length === 0) return '';
+function getNextMatches() {
+   const now = new Date();
+   const upcomingMatches = [];
+   
+   for (let group in groupMatches) {
+     for (let idx = 0; idx < groupMatches[group].length; idx++) {
+       const match = groupMatches[group][idx];
+       const matchDateTime = parseMatchDateTime(match.date, match.time);
+       if (matchDateTime) {
+         const deadlineTime = new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000);
+         
+         if (now < deadlineTime && !actualResults[match.match]?.result) {
+           upcomingMatches.push({
+             group: group,
+             idx: idx,
+             match: match,
+             displayName: match.displayMatch,
+             time: match.time,
+             dateTime: matchDateTime
+           });
+         }
+       }
+     }
+   }
+   
+   upcomingMatches.sort((a, b) => a.dateTime - b.dateTime);
+   return upcomingMatches.slice(0, 8);
+}
+
+function createNextMatchesSection() {
+   const nextMatches = getNextMatches();
+   if (nextMatches.length === 0) return '';
+   
+   const gapSize = 6;
+   const windowWidth = window.innerWidth;
+   const containerPadding = 10;
+   const availableWidth = windowWidth - containerPadding;
+   
+   // Calculate the width needed for each match individually
+   const matchesWithWidth = nextMatches.map(tm => {
+     // Get team names text without HTML tags
+     const tempDiv = document.createElement('div');
+     tempDiv.innerHTML = tm.displayName;
+     const teamText = tempDiv.textContent || tempDiv.innerText || '';
+     
+     // Get time + transmission text
+     let timeTransmissionText = '';
+     if (tm.match.time) {
+       timeTransmissionText += tm.match.time + ' ';
+     }
+     if (tm.match.transmission) {
+       timeTransmissionText += tm.match.transmission;
+     }
+     
+     // Calculate EXACT width needed - MINIMAL padding
+     const charWidth = 7.5; // Even smaller
+     const flagWidth = 18; // Smaller flag width
+     const flagCount = 2;
+     const vsText = 20; // " vs " 
+     
+     const teamContentWidth = (teamText.length * charWidth) + (flagCount * flagWidth) + vsText;
+     const timeContentWidth = (timeTransmissionText.length * charWidth) + 5;
+     const neededWidth = Math.max(teamContentWidth, timeContentWidth, 150);
+     
+     return {
+       ...tm,
+       neededWidth: Math.min(neededWidth, 380),
+     };
+   });
+   
+   // Calculate how many cards can fit per row
+   let cardsPerRow = 4;
+   const avgWidth = matchesWithWidth.reduce((sum, m) => sum + m.neededWidth, 0) / matchesWithWidth.length;
+   const estimatedWidth = Math.max(avgWidth, 150);
+   
+   for (let i = 4; i >= 1; i--) {
+     const rowWidth = (estimatedWidth * i) + (gapSize * (i - 1));
+     if (rowWidth <= availableWidth) {
+       cardsPerRow = i;
+       break;
+     }
+   }
+   if (cardsPerRow === 0) cardsPerRow = 1;
+   
+   const numberOfRows = 2;
+   const cardHeight = 76;
+   const maxHeight = (cardHeight * numberOfRows) + (gapSize * (numberOfRows - 1)) + 10;
    
    let html = `
-     <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-       <h3 style="margin: 0 0 10px 0; font-size: 1.2em;">⚡ Today's Live/Upcoming Matches</h3>
-       <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+     <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+       <h3 style="margin: 0 0 4px 0; font-size: 1.1em;">⚡ Next Matches</h3>
+       <div style="max-height: ${maxHeight}px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: ${gapSize}px; justify-content: center; align-content: flex-start; padding: 2px; scrollbar-width: thin; scrollbar-gutter: stable;">
    `;
    
-   todaysMatches.forEach((tm, idx) => {
+   matchesWithWidth.forEach((tm, idx) => {
      const groupId = `group-${tm.group.replace(/ /g, '_')}`;
      const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
      
      let transmissionHtml = '';
      if (tm.match.transmission) {
        if (tm.match.transmission.includes('LiveModeTV')) {
-         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
+         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: white; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
        } else {
-         transmissionHtml = `<span>📺 ${tm.match.transmission}</span>`;
+         transmissionHtml = `<span style="font-size: 0.9em; white-space: nowrap;">📺 ${tm.match.transmission}</span>`;
        }
      }
      
-     // Format the time for display
-     const timeDisplay = tm.match.time ? tm.match.time : '';
+     let timeHtml = '';
+     if (tm.match.date && tm.match.time) {
+       const homeTeamClean = tm.match.homeTeam || '';
+       const visitorTeamClean = tm.match.visitorTeam || '';
+       if (homeTeamClean && visitorTeamClean) {
+         const calUrl = getGoogleCalendarUrl(tm.match.match, homeTeamClean, visitorTeamClean, tm.match.date, tm.match.time, tm.match.transmission);
+         if (calUrl) {
+           timeHtml = `<a href="${calUrl}" target="_blank" style="color: white; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();" title="Click to add to Google Calendar">📅 ${tm.match.time}</a>`;
+         } else {
+           timeHtml = `<span style="font-size: 0.9em; white-space: nowrap;">${tm.match.time}</span>`;
+         }
+       } else {
+         timeHtml = `<span style="font-size: 0.9em; white-space: nowrap;">${tm.match.time}</span>`;
+       }
+     }
+     
+     const cardFlexBasis = tm.neededWidth;
      
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
-          style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 8px; min-width: 220px;">
-         <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-           <span style="font-weight: bold; font-size: 1em;">${tm.displayName}</span>
-           <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; font-size: 0.9em;">
-             ${timeDisplay ? `<span style="padding-top: 3px;">${timeDisplay}</span>` : ''}
+          style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 4px 0px !important; border-radius: 6px; flex: 0 0 ${cardFlexBasis}px; max-width: ${Math.min(cardFlexBasis, 380)}px; min-width: ${Math.max(cardFlexBasis, 150)}px; box-sizing: border-box; overflow: visible; display: flex; align-items: center; justify-content: center;">
+         <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%;">
+           <span style="font-weight: bold; font-size: 0.9em; text-align: center; line-height: 1.2; white-space: nowrap; width: 100%; display: block;">${tm.displayName}</span>
+           <div style="display: flex; flex-wrap: nowrap; gap: 4px; justify-content: center; font-size: 0.9em; align-items: center; white-space: nowrap; width: 100%;">
+             ${timeHtml}
              ${transmissionHtml ? transmissionHtml : ''}
            </div>
          </div>
@@ -1539,10 +1527,11 @@ function createTodaysMatchesSection() {
    html += `</div></div>`;
    return html;
 }
+
 function updateTodayMatches() {
    const container = document.getElementById("today-matches-container");
    if (!container) return;
-   const sectionHtml = createTodaysMatchesSection();
+   const sectionHtml = createNextMatchesSection();
    if (sectionHtml) {
      container.style.display = "block";
      container.innerHTML = sectionHtml;
@@ -1551,6 +1540,19 @@ function updateTodayMatches() {
      container.innerHTML = "";
    }
 }
+
+// Debounced resize handler
+let resizeTimeout;
+window.addEventListener('resize', function() {
+   clearTimeout(resizeTimeout);
+   resizeTimeout = setTimeout(() => {
+     const container = document.getElementById("today-matches-container");
+     if (container && container.style.display !== "none") {
+       updateTodayMatches();
+     }
+   }, 300);
+});
+
 
 function toggleGroup(id) {
    const el = document.getElementById(`group-${id}`);
@@ -1569,11 +1571,9 @@ function updateProgress() {
        const match = matchObj.match;
        const isCompleted = actualResults[match] && actualResults[match].result;
        
-       // Check if match deadline has passed
        const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
        const isPast = matchDateTime ? now >= matchDateTime : false;
        
-       // Only count matches that are NOT completed AND NOT past deadline
        if (!isCompleted && !isPast) {
          total++;
          if (document.querySelector(`input[name="${group}_${i}"]:checked`)) saved++;
@@ -1600,7 +1600,6 @@ function initTabs() {
 
 async function shareApp() {
   try {
-    // Check if Web Share API is available
     if (navigator.share) {
       const shareData = {
         title: 'World Cup 2026 Predictor',
@@ -1614,20 +1613,16 @@ async function shareApp() {
       }
     }
     
-    // Fallback: copy to clipboard
     try {
       await navigator.clipboard.writeText(window.location.href);
       showFloatingNotification('✅ Link copied! Share with friends.');
     } catch (clipboardError) {
-      // If clipboard fails, show the link in a notification
       showFloatingNotification('📋 Copy this link: ' + window.location.href);
     }
     
   } catch (err) {
-    // If user cancels share, don't show error
     if (err.name !== 'AbortError') {
       console.error('Share failed:', err);
-      // Fallback: show the link
       showFloatingNotification('📋 Share this link: ' + window.location.href);
     }
   }
@@ -1638,10 +1633,8 @@ function togglePlayerSelection() {
   const toggleBtn = document.getElementById("togglePlayerBtn");
   
   if (playerSelection) {
-    // Simply toggle the visibility
     playerSelection.classList.toggle("visible");
     
-    // Update button text based on visibility
     if (playerSelection.classList.contains("visible")) {
       toggleBtn.textContent = "Hide player selection";
     } else {
@@ -1678,10 +1671,9 @@ window.addEventListener('load', function() {
       setTimeout(function() {
         splash.style.display = 'none';
       }, 800);
-    }, 2000); // Show splash for 2000ms before fading out
+    }, 2000);
   }
 });
-
  </script> 
 </body> 
 </html>
