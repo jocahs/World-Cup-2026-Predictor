@@ -1803,26 +1803,26 @@ function generateRound32Matches() {
   });
   
   // Round of 32 match pairings with reasons
-const round32Matches = [
-  { id: 1, home: '1st Group D', homeReason: '1st Group D', away: '3rd Group B/E/F/I', awayReason: '' },
-  { id: 2, home: '1st Group E', homeReason: '1st Group E', away: '3rd Group A/C/D/F', awayReason: '' },
-  { id: 3, home: '1st Group F', homeReason: '1st Group F', away: '3rd Group A/B/C/G', awayReason: '' },
-  { id: 4, home: '1st Group G', homeReason: '1st Group G', away: '3rd Group A/B/C/H', awayReason: '' },
-  { id: 5, home: '1st Group H', homeReason: '1st Group H', away: '3rd Group A/B/D/E', awayReason: '' },
-  { id: 6, home: '1st Group I', homeReason: '1st Group I', away: '3rd Group C/D/G/H', awayReason: '' },
-  { id: 7, home: '1st Group J', homeReason: '1st Group J', away: '3rd Group B/E/F/K', awayReason: '' },
-  { id: 8, home: '1st Group K', homeReason: '1st Group K', away: '3rd Group B/E/I/J', awayReason: '' },
-  { id: 9, home: '1st Group L', homeReason: '1st Group L', away: '3rd Group C/F/G/J', awayReason: '' },
-  { id: 10, home: '1st Group A', homeReason: '1st Group A', away: '3rd Group E/F/G/H', awayReason: '' },
-  { id: 11, home: '1st Group B', homeReason: '1st Group B', away: '3rd Group A/C/D/I', awayReason: '' },
-  { id: 12, home: '1st Group C', homeReason: '1st Group C', away: '3rd Group D/E/H/I', awayReason: '' },
-  { id: 13, home: '2nd Group A', homeReason: '2nd Group A', away: '2nd Group B', awayReason: '2nd Group B' },
-  { id: 14, home: '2nd Group C', homeReason: '2nd Group C', away: '2nd Group D', awayReason: '2nd Group D' },
-  { id: 15, home: '2nd Group E', homeReason: '2nd Group E', away: '2nd Group F', awayReason: '2nd Group F' },
-  { id: 16, home: '2nd Group G', homeReason: '2nd Group G', away: '2nd Group H', awayReason: '2nd Group H' },
-  { id: 17, home: '2nd Group I', homeReason: '2nd Group I', away: '2nd Group J', awayReason: '2nd Group J' },
-  { id: 18, home: '2nd Group K', homeReason: '2nd Group K', away: '2nd Group L', awayReason: '2nd Group L' }
-];
+  const round32Matches = [
+    { id: 1, home: '1st Group D', homeReason: '1st Group D', away: '3rd Group B/E/F/I', awayReason: '' },
+    { id: 2, home: '1st Group E', homeReason: '1st Group E', away: '3rd Group A/C/D/F', awayReason: '' },
+    { id: 3, home: '1st Group F', homeReason: '1st Group F', away: '3rd Group A/B/C/G', awayReason: '' },
+    { id: 4, home: '1st Group G', homeReason: '1st Group G', away: '3rd Group A/B/C/H', awayReason: '' },
+    { id: 5, home: '1st Group H', homeReason: '1st Group H', away: '3rd Group A/B/D/E', awayReason: '' },
+    { id: 6, home: '1st Group I', homeReason: '1st Group I', away: '3rd Group C/D/G/H', awayReason: '' },
+    { id: 7, home: '1st Group J', homeReason: '1st Group J', away: '3rd Group B/E/F/K', awayReason: '' },
+    { id: 8, home: '1st Group K', homeReason: '1st Group K', away: '3rd Group B/E/I/J', awayReason: '' },
+    { id: 9, home: '1st Group L', homeReason: '1st Group L', away: '3rd Group C/F/G/J', awayReason: '' },
+    { id: 10, home: '1st Group A', homeReason: '1st Group A', away: '3rd Group E/F/G/H', awayReason: '' },
+    { id: 11, home: '1st Group B', homeReason: '1st Group B', away: '3rd Group A/C/D/I', awayReason: '' },
+    { id: 12, home: '1st Group C', homeReason: '1st Group C', away: '3rd Group D/E/H/I', awayReason: '' },
+    { id: 13, home: '2nd Group A', homeReason: '2nd Group A', away: '2nd Group B', awayReason: '2nd Group B' },
+    { id: 14, home: '2nd Group C', homeReason: '2nd Group C', away: '2nd Group D', awayReason: '2nd Group D' },
+    { id: 15, home: '2nd Group E', homeReason: '2nd Group E', away: '2nd Group F', awayReason: '2nd Group F' },
+    { id: 16, home: '2nd Group G', homeReason: '2nd Group G', away: '2nd Group H', awayReason: '2nd Group H' },
+    { id: 17, home: '2nd Group I', homeReason: '2nd Group I', away: '2nd Group J', awayReason: '2nd Group J' },
+    { id: 18, home: '2nd Group K', homeReason: '2nd Group K', away: '2nd Group L', awayReason: '2nd Group L' }
+  ];
   
   // Replace placeholders with actual team names
   return round32Matches.map(match => {
@@ -1844,9 +1844,8 @@ const round32Matches = [
     if (awayTeam.includes('3rd Group')) {
       const key = awayTeam.replace('3rd Group ', '');
       awayTeam = thirdPlaceAssignments[key] || awayTeam;
-      awayReason = thirdPlaceReasons[key] || '3rd Place';
+      awayReason = thirdPlaceReasons[key] || '3rd Group ' + key;
     }
-
     
     return {
       ...match,
@@ -1883,41 +1882,39 @@ function renderRound32Bracket() {
 }
 
 
-// Helper function to create a match card
 function createMatchCard(match, matchNumber) {
   // Helper to process a single team
   function processTeam(team, reason) {
     const isTBD = team === 'TBD' || team.includes('1st Group') || team.includes('2nd Group') || team.includes('3rd Group');
     const flag = getFlagCode(team);
     const displayName = isTBD ? '(to be determined)' : team;
-    const flagHtml = (!isTBD && flag) ? `<img src="https://flagcdn.com/20x15/${flag}.png" class="team-flag" style="width: 30px; height: 22px; vertical-align: middle;" alt="${team} flag">` : '';
-    const padding = flagHtml ? '34px' : '0px';
-    const style = isTBD ? 'color: #999; font-style: italic; font-size: 1em;' : '';
+    const flagHtml = (!isTBD && flag) ? `<img src="https://flagcdn.com/20x15/${flag}.png" class="team-flag" style="width: 26px; height: 18px; vertical-align: middle; flex-shrink: 0;" alt="${team} flag">` : '';
+    const style = isTBD ? 'color: #999; font-style: italic; font-size: 0.85em;' : '';
     
-    return { displayName, flagHtml, padding, style, reason };
+    return { displayName, flagHtml, style, reason, isTBD, team };
   }
   
   const home = processTeam(match.homeTeam || match.home || 'TBD', match.homeReason || '');
   const away = processTeam(match.awayTeam || match.away || 'TBD', match.awayReason || '');
   
   return `
-    <div class="round32-match" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; min-height: 48px; flex: 0 0 375px; box-sizing: border-box;">
-      <div style="font-size: 1.125em; color: #999; font-weight: bold; min-width: 38px; flex-shrink: 0; text-align: center;">#${matchNumber}</div>
-      <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 6px; min-width: 0;">
-        <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
-          <div style="display: flex; align-items: center; white-space: nowrap; gap: 4px;">
+    <div class="round32-match" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; min-height: 48px; width: 400px; flex-shrink: 0; box-sizing: border-box;">
+      <div style="font-size: 1.125em; color: #999; font-weight: bold; min-width: 38px; flex-shrink: 0; text-align: left;">#${matchNumber}</div>
+      <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-width: 0;">
+        <div style="display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1; max-width: 42%;">
+          <div style="display: flex; align-items: center; white-space: nowrap; gap: 6px; justify-content: center; width: 100%;">
             ${home.flagHtml}
             <span style="font-weight: 500; font-size: 1.275em; ${home.style}">${home.displayName}</span>
           </div>
-          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: ${home.padding};">${home.reason}</span>
+          <span style="font-size: 0.825em; color: #888; white-space: nowrap; text-align: center; width: 100%; margin-top: 4px;">${home.reason}</span>
         </div>
-        <span style="color: #999; font-size: 1.05em; flex-shrink: 0; align-self: center;">vs</span>
-        <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
-          <div style="display: flex; align-items: center; white-space: nowrap; gap: 4px;">
+        <span style="color: #999; font-size: 1.05em; flex-shrink: 0; align-self: center; padding: 0 8px;">vs</span>
+        <div style="display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1; max-width: 42%;">
+          <div style="display: flex; align-items: center; white-space: nowrap; gap: 6px; justify-content: center; width: 100%;">
             ${away.flagHtml}
             <span style="font-weight: 500; font-size: 1.275em; ${away.style}">${away.displayName}</span>
           </div>
-          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: ${away.padding};">${away.reason}</span>
+          <span style="font-size: 0.825em; color: #888; white-space: nowrap; text-align: center; width: 100%; margin-top: 4px;">${away.reason}</span>
         </div>
       </div>
     </div>
