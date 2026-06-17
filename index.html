@@ -21,11 +21,6 @@
  .stage-tab { padding: 10px 10px; background: #e0e0e0; cursor: pointer; border-radius: 5px; transition: 0.3s; }
  .stage-tab.active { background: #4CAF50; color: white; }
  
-  .stage-tab:not([data-stage="group"]) {
-   display: none !important;
- }
- 
- 
  .matches-container { display: none; }
  .matches-container.active { display: block; }
  .group-block { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #2196F3; }
@@ -231,7 +226,7 @@
    width: 20px;
    height: 15px;
    vertical-align: middle;
-   margin-right: 5px;
+   margin-right: 3px;
    border-radius: 2px;
    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
@@ -350,12 +345,38 @@
    display: none !important;
  }
  
+ /* Round of 32 Bracket Styles */
+ .round32-match {
+   background: #f9f9f9;
+   border: 1px solid #e0e0e0;
+   border-radius: 8px;
+   padding: 10px 12px;
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   transition: all 0.3s ease;
+ }
+ 
+ .round32-match:hover {
+   background: #f0f0f0;
+   transform: translateY(-2px);
+   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+ }
+ 
+ .round32-match.completed {
+   background: #e8f5e9;
+   border-left: 4px solid #4CAF50;
+ }
+ 
  @media (max-width: 768px) { 
    .match-name { display: inline-flex; margin-right: 8px; } 
    .match-time { display: inline; }
    .picks-row { flex-direction: row; flex-wrap: wrap; gap: 8px; }
    .player-pick { white-space: nowrap; }
    .team-flag { width: 18px; height: 12px; }
+   .round32-bracket-grid {
+     grid-template-columns: 1fr !important;
+   }
  }
 
  </style> 
@@ -1580,7 +1601,7 @@ function createNextMatchesSection() {
      
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
-          style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 4px 0px !important; border-radius: 6px; flex: 0 0 ${cardFlexBasis}px; max-width: ${Math.min(cardFlexBasis, 380)}px; min-width: ${Math.max(cardFlexBasis, 150)}px; box-sizing: border-box; overflow: visible; display: flex; align-items: center; justify-content: center;">
+          style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 4px 0px !important; border-radius: 6px; flex: 0 0 ${cardFlexBasis}px; max-width: ${Math.min(cardFlexBasis, 380)}px; min-width: ${Math.max(cardFlexBasis, 200)}px; box-sizing: border-box; overflow: visible; display: flex; align-items: center; justify-content: center;">
          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%;">
            <span style="font-weight: bold; font-size: 0.9em; text-align: center; line-height: 1.2; white-space: nowrap; width: 100%; display: block; color: #FFFFFF;">${tm.displayName}</span>
            <div style="display: flex; flex-wrap: nowrap; gap: 4px; justify-content: center; font-size: 0.9em; align-items: center; white-space: nowrap; width: 100%;">
@@ -1656,6 +1677,176 @@ function updateProgress() {
    }
 }
 
+// ============ ROUND OF 32 FUNCTIONS ============
+
+// Function to get group standings and determine qualifiers
+function getGroupQualifiers() {
+  const groups = {};
+  
+  // Get all group names from groupMatches
+  const groupNames = Object.keys(groupMatches);
+  
+  groupNames.forEach(groupName => {
+    // Calculate standings for this group
+    const standings = calculateGroupStandings(groupName, groupMatches[groupName]);
+    
+    // Get the top 3 teams (winner, runner-up, third place)
+    const qualifiers = {
+      winner: standings[0]?.name || null,
+      runnerUp: standings[1]?.name || null,
+      third: standings[2]?.name || null
+    };
+    
+    // Store in groups object with the group letter
+    const groupLetter = groupName.replace('Group ', '');
+    groups[groupLetter] = qualifiers;
+  });
+  
+  return groups;
+}
+
+// Function to get the best third-place teams
+function getBestThirdPlaceTeams(groups) {
+  const thirdPlaceTeams = [];
+  const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+  
+  groupLetters.forEach(letter => {
+    if (groups[letter] && groups[letter].third) {
+      thirdPlaceTeams.push({
+        group: letter,
+        team: groups[letter].third
+      });
+    }
+  });
+  
+  return thirdPlaceTeams;
+}
+
+// Function to generate Round of 32 matches
+function generateRound32Matches() {
+  const groups = getGroupQualifiers();
+  const thirdPlaceTeams = getBestThirdPlaceTeams(groups);
+  
+  // Assign third place teams to their positions
+  const thirdPlaceAssignments = {
+    'B/E/F/I': thirdPlaceTeams[0]?.team || null,
+    'A/C/D/F': thirdPlaceTeams[1]?.team || null,
+    'A/B/C/G': thirdPlaceTeams[2]?.team || null,
+    'A/B/C/H': thirdPlaceTeams[3]?.team || null,
+    'A/B/D/E': thirdPlaceTeams[4]?.team || null,
+    'C/D/G/H': thirdPlaceTeams[5]?.team || null,
+    'B/E/F/K': thirdPlaceTeams[6]?.team || null,
+    'B/E/I/J': thirdPlaceTeams[7]?.team || null,
+    'C/F/G/J': thirdPlaceTeams[8]?.team || null,
+    'E/F/G/H': thirdPlaceTeams[9]?.team || null,
+    'A/C/D/I': thirdPlaceTeams[10]?.team || null,
+    'D/E/H/I': thirdPlaceTeams[11]?.team || null
+  };
+  
+  // Round of 32 match pairings
+  const round32Matches = [
+    { id: 1, home: 'D Winner', away: '3rd B/E/F/I' },
+    { id: 2, home: 'E Winner', away: '3rd A/C/D/F' },
+    { id: 3, home: 'F Winner', away: '3rd A/B/C/G' },
+    { id: 4, home: 'G Winner', away: '3rd A/B/C/H' },
+    { id: 5, home: 'H Winner', away: '3rd A/B/D/E' },
+    { id: 6, home: 'I Winner', away: '3rd C/D/G/H' },
+    { id: 7, home: 'J Winner', away: '3rd B/E/F/K' },
+    { id: 8, home: 'K Winner', away: '3rd B/E/I/J' },
+    { id: 9, home: 'L Winner', away: '3rd C/F/G/J' },
+    { id: 10, home: 'A Winner', away: '3rd E/F/G/H' },
+    { id: 11, home: 'B Winner', away: '3rd A/C/D/I' },
+    { id: 12, home: 'C Winner', away: '3rd D/E/H/I' },
+    { id: 13, home: 'A Runner-up', away: 'B Runner-up' },
+    { id: 14, home: 'C Runner-up', away: 'D Runner-up' },
+    { id: 15, home: 'E Runner-up', away: 'F Runner-up' },
+    { id: 16, home: 'G Runner-up', away: 'H Runner-up' },
+    { id: 17, home: 'I Runner-up', away: 'J Runner-up' },
+    { id: 18, home: 'K Runner-up', away: 'L Runner-up' }
+  ];
+  
+  // Replace placeholders with actual team names
+  return round32Matches.map(match => {
+    let homeTeam = match.home;
+    let awayTeam = match.away;
+    
+    // Replace with actual team names if available
+    if (homeTeam.includes('Winner')) {
+      const letter = homeTeam.charAt(0);
+      homeTeam = groups[letter]?.winner || homeTeam;
+    } else if (homeTeam.includes('Runner-up')) {
+      const letter = homeTeam.charAt(0);
+      homeTeam = groups[letter]?.runnerUp || homeTeam;
+    }
+    
+    // Handle third place teams
+    if (awayTeam.includes('3rd')) {
+      const key = awayTeam.replace('3rd ', '');
+      awayTeam = thirdPlaceAssignments[key] || awayTeam;
+    }
+    
+    return {
+      ...match,
+      homeTeam: homeTeam,
+      awayTeam: awayTeam,
+      isCompleted: false,
+      result: null
+    };
+  });
+}
+
+// Function to render the Round of 32 bracket
+function renderRound32Bracket() {
+  const matches = generateRound32Matches();
+  const container = document.getElementById('round32-matches');
+  
+  if (!container) return;
+  
+  let html = `
+    <div style="padding: 8px 6px; background: white; border-radius: 10px; max-width: 100%; overflow: hidden;">
+      <h2 style="text-align: center; color: #1a1a1a; margin-bottom: 14px; font-size: 1.1em;">🏆 Round of 32</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 100%; margin: 0 auto; overflow: hidden;">
+  `;
+  
+  // All matches in a single flow - sorted left to right
+  matches.forEach((match, index) => {
+    html += createMatchCard(match, index + 1);
+  });
+  
+  html += `</div></div>`;
+  container.innerHTML = html;
+}
+
+// Helper function to create a match card
+function createMatchCard(match, matchNumber) {
+  const homeTeam = match.homeTeam || match.home || 'TBD';
+  const awayTeam = match.awayTeam || match.away || 'TBD';
+  
+  // Get flags for each team individually (without "vs")
+  const homeFlag = getFlagCode(homeTeam);
+  const awayFlag = getFlagCode(awayTeam);
+  
+  const homeDisplay = homeTeam !== 'TBD' 
+    ? (homeFlag ? `<img src="https://flagcdn.com/20x15/${homeFlag}.png" class="team-flag" alt="${homeTeam} flag"> ${homeTeam}` : homeTeam)
+    : homeTeam;
+  const awayDisplay = awayTeam !== 'TBD' 
+    ? (awayFlag ? `<img src="https://flagcdn.com/20x15/${awayFlag}.png" class="team-flag" alt="${awayTeam} flag"> ${awayTeam}` : awayTeam)
+    : awayTeam;
+  
+  return `
+    <div class="round32-match" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 4px 6px; display: flex; align-items: center; gap: 4px; min-height: 32px; flex: 0 0 250px; box-sizing: border-box;">
+      <div style="font-size: 0.75em; color: #999; font-weight: bold; min-width: 26px; flex-shrink: 0;">#${matchNumber}</div>
+      <div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 4px; min-width: 0;">
+        <span style="font-weight: 500; font-size: 0.85em; white-space: nowrap;">${homeDisplay}</span>
+        <span style="color: #999; font-size: 0.7em; flex-shrink: 0;">vs</span>
+        <span style="font-weight: 500; font-size: 0.85em; white-space: nowrap;">${awayDisplay}</span>
+      </div>
+    </div>
+  `;
+}
+
+// ============ END ROUND OF 32 FUNCTIONS ============
+
 function initTabs() {
   // Initially show group matches with active class
   const groupContainer = document.getElementById("group-matches");
@@ -1671,13 +1862,31 @@ function initTabs() {
   
   document.querySelectorAll('.stage-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      if (tab.dataset.stage === 'group') {
+      const stage = tab.dataset.stage;
+      
+      if (stage === 'group') {
         // Toggle group matches visibility
         const container = document.getElementById('group-matches');
         if (container) {
           container.classList.toggle('active');
           tab.classList.toggle('active');
         }
+      } else if (stage === 'round32') {
+        // Show Round of 32
+        const container = document.getElementById('round32-matches');
+        if (container) {
+          // Hide all other containers
+          document.querySelectorAll('.matches-container').forEach(c => {
+            c.classList.remove('active');
+          });
+          // Show this container
+          container.classList.add('active');
+          // Render the bracket
+          renderRound32Bracket();
+        }
+        // Update tab states
+        document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
       }
     });
   });
