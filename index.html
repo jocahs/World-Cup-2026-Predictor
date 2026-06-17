@@ -270,7 +270,8 @@
   pointer-events: auto;
 }
 .floating-notification.error {
-  background: #f44336;
+  background: #f44336 !important;
+  color: white !important;
 }
 
  button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
@@ -449,7 +450,7 @@
      <h3>🔧 Edit Match Scores</h3>
      <p>Enter the final scores for each match.</p>
      <div id="scores-editor"></div>
-     <div style="margin-top: 20px; text-align: center;">
+     <div style="margin-top: 10px; text-align: center;">
        <button onclick="saveAllScores()" class="btn-orange">💾 Save Scores</button>
        <button onclick="closeAdminMode()" class="btn-red">Exit Edit Mode</button>
      </div>
@@ -476,8 +477,14 @@ function showFloatingNotification(message, isError = false) {
   
   notification.textContent = message;
   notification.className = 'floating-notification';
+  
+  // Always use gold background, unless it's an error
   if (isError) {
     notification.classList.add('error');
+  } else {
+    // Override the default green with gold
+    notification.style.background = '#FFD700';
+    notification.style.color = '#333'; // Dark text for better contrast on gold
   }
   
   void notification.offsetWidth;
@@ -486,6 +493,9 @@ function showFloatingNotification(message, isError = false) {
   clearTimeout(notification._hideTimeout);
   notification._hideTimeout = setTimeout(() => {
     notification.classList.remove('show');
+    // Reset background after hiding
+    notification.style.background = '';
+    notification.style.color = '';
   }, 3000);
 }
 
@@ -725,13 +735,13 @@ function loadScoresEditor() {
     for (let group of sortedGroups) {
      const matchesId = `admin-matches-${group.replace(/ /g, '_')}`;
      const groupDiv = document.createElement("div");
-     groupDiv.style.marginBottom = "15px";
+     groupDiv.style.marginBottom = "10px";
      groupDiv.style.border = "1px solid #ddd";
-     groupDiv.style.borderRadius = "8px";
+     groupDiv.style.borderRadius = "6px";
      groupDiv.style.overflow = "hidden";
      groupDiv.innerHTML = `
        <div class="admin-group-title" onclick="toggleAdminGroup('${matchesId}')">📋 ${group} ▼</div>
-       <div id="${matchesId}" class="admin-matches-container" style="padding: 10px 15px; display: none;"></div>
+       <div id="${matchesId}" class="admin-matches-container" style="padding: 6px 10px; display: none;"></div>
      `;
      const matchesDiv = groupDiv.querySelector(`#${matchesId}`);
      
@@ -743,19 +753,21 @@ function loadScoresEditor() {
        const awayScore = scoreParts[1];
        
        const matchDiv = document.createElement("div");
-       matchDiv.style.marginBottom = "12px";
-       matchDiv.style.padding = "8px";
+       matchDiv.style.marginBottom = "6px";
+       matchDiv.style.padding = "4px 6px";
        matchDiv.style.background = "#f9f9f9";
-       matchDiv.style.borderRadius = "5px";
+       matchDiv.style.borderRadius = "4px";
+       matchDiv.style.display = "flex";
+       matchDiv.style.alignItems = "center";
+       matchDiv.style.gap = "8px";
+       matchDiv.style.flexWrap = "wrap";
        matchDiv.innerHTML = `
-         <strong style="font-size: 0.9em;">${matchObj.match}</strong>
-         <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-           <span style="font-size: 0.85em;">🏠 Home:</span>
-           <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 50px; padding: 4px; text-align: center;" min="0" max="20">
-           <span style="font-size: 0.85em;">✈️ Visitor:</span>
-           <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 50px; padding: 4px; text-align: center;" min="0" max="20">
-           <span id="result-preview-${cleanId}" style="font-weight: bold; font-size: 0.8em; margin-left: 5px;"></span>
-         </div>
+         <strong style="font-size: 0.8em; min-width: 120px;">${matchObj.match}</strong>
+         <span style="font-size: 0.75em;">🏠</span>
+         <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 25px; padding: 4px; text-align: center; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc;" min="0" max="20">
+         <span style="font-size: 0.75em;">✈️</span>
+         <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 25px; padding: 4px; text-align: center; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc;" min="0" max="20">
+         <span id="result-preview-${cleanId}" style="font-weight: bold; font-size: 0.75em; margin-left: 2px;"></span>
        `;
        matchesDiv.appendChild(matchDiv);
        
@@ -768,13 +780,13 @@ function loadScoresEditor() {
            const home = parseInt(homeInput.value) || 0;
            const away = parseInt(awayInput.value) || 0;
            if (home > away) {
-             resultSpan.innerHTML = "→ 🏠 Home Win (1)";
+             resultSpan.innerHTML = "→ 🏠 Win";
              resultSpan.style.color = "#4CAF50";
            } else if (home < away) {
-             resultSpan.innerHTML = "→ ✈️ Visitor Win (2)";
+             resultSpan.innerHTML = "→ ✈️ Win";
              resultSpan.style.color = "#f44336";
            } else if (home === away && home !== 0) {
-             resultSpan.innerHTML = "→ 🤝 Draw (X)";
+             resultSpan.innerHTML = "→ 🤝 Draw";
              resultSpan.style.color = "#FF9800";
            } else {
              resultSpan.innerHTML = "";
@@ -846,6 +858,24 @@ function updatePlayerDropdown() {
    });
 }
 
+function updateToggleButtonText() {
+  const playerSelection = document.getElementById("player-selection");
+  const toggleBtn = document.getElementById("togglePlayerBtn");
+  const playerSelect = document.getElementById("playerSelect");
+  const playerName = document.getElementById("playerName");
+  
+  const hasPlayer = playerSelect && playerSelect.value !== "";
+  const hasName = playerName && playerName.value.trim() !== "";
+  const hasPlayerSelected = hasPlayer || hasName;
+  const isVisible = playerSelection && playerSelection.classList.contains("visible");
+  
+  if (isVisible) {
+    toggleBtn.textContent = "Hide player selection";
+  } else {
+    toggleBtn.textContent = hasPlayerSelected ? "Show player selection" : "Predict Match Results";
+  }
+}
+
 function onPlayerNameEdit() {
   const select = document.getElementById("playerSelect");
   const playerName = document.getElementById("playerName");
@@ -858,18 +888,22 @@ function onPlayerNameEdit() {
       loadMyPicks(playerName.value.trim());
     }
   }
+  // Only update button text, don't change visibility
+  updateToggleButtonText();
 }
 
 function selectPlayer() {
-   const playerName = document.getElementById("playerSelect").value;
-   if (playerName) {
-     loadMyPicks(playerName);
-   } else {
-     clearAllPicks();
-     document.getElementById("playerName").value = "";
-     updateLeaderboardVisibility();
-     updatePlayerControlsVisibility();
-   }
+  const playerName = document.getElementById("playerSelect").value;
+  if (playerName) {
+    loadMyPicks(playerName);
+  } else {
+    clearAllPicks();
+    document.getElementById("playerName").value = "";
+    updateLeaderboardVisibility();
+    updatePlayerControlsVisibility();
+  }
+  // Only update button text, don't change visibility
+  updateToggleButtonText();
 }
 
 function clearAllPicks() {
@@ -1660,12 +1694,31 @@ async function shareApp() {
 function togglePlayerSelection() {
   const playerSelection = document.getElementById("player-selection");
   const toggleBtn = document.getElementById("togglePlayerBtn");
+  const playerSelect = document.getElementById("playerSelect");
+  const playerName = document.getElementById("playerName");
   
-  if (playerSelection) {
-    playerSelection.classList.toggle("visible");
+  if (!playerSelection) return;
+  
+  // Check if there's a player selected or name entered
+  const hasPlayer = playerSelect && playerSelect.value !== "";
+  const hasName = playerName && playerName.value.trim() !== "";
+  const hasPlayerSelected = hasPlayer || hasName;
+  
+  const isVisible = playerSelection.classList.contains("visible");
+  
+  // If the player selection is NOT visible, show it and set button to "Hide player selection"
+  if (!isVisible) {
+    // Show the player selection
+    playerSelection.classList.add("visible");
+    // Always show "Hide player selection" after showing
+    toggleBtn.textContent = "Hide player selection";
+  } else {
+    // Player selection IS visible - hide it
+    playerSelection.classList.remove("visible");
     
-    if (playerSelection.classList.contains("visible")) {
-      toggleBtn.textContent = "Hide player selection";
+    // After hiding, determine the button text
+    if (hasPlayerSelected) {
+      toggleBtn.textContent = "Show player selection";
     } else {
       toggleBtn.textContent = "Predict Match Results";
     }
