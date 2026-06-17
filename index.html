@@ -1692,7 +1692,7 @@ function getGroupQualifiers() {
     // Calculate standings for this group
     const standings = calculateGroupStandings(groupName, groupMatches[groupName]);
     
-    // Get the top 3 teams (winner, runner-up, third place)
+    // Get the top 3 teams (winner, 2nd, third place)
     const qualifiers = {
       winner: standings[0]?.name || null,
       runnerUp: standings[1]?.name || null,
@@ -1803,26 +1803,26 @@ function generateRound32Matches() {
   });
   
   // Round of 32 match pairings with reasons
-  const round32Matches = [
-    { id: 1, home: 'D Winner', homeReason: '1st Group D', away: '3rd B/E/F/I', awayReason: '' },
-    { id: 2, home: 'E Winner', homeReason: '1st Group E', away: '3rd A/C/D/F', awayReason: '' },
-    { id: 3, home: 'F Winner', homeReason: '1st Group F', away: '3rd A/B/C/G', awayReason: '' },
-    { id: 4, home: 'G Winner', homeReason: '1st Group G', away: '3rd A/B/C/H', awayReason: '' },
-    { id: 5, home: 'H Winner', homeReason: '1st Group H', away: '3rd A/B/D/E', awayReason: '' },
-    { id: 6, home: 'I Winner', homeReason: '1st Group I', away: '3rd C/D/G/H', awayReason: '' },
-    { id: 7, home: 'J Winner', homeReason: '1st Group J', away: '3rd B/E/F/K', awayReason: '' },
-    { id: 8, home: 'K Winner', homeReason: '1st Group K', away: '3rd B/E/I/J', awayReason: '' },
-    { id: 9, home: 'L Winner', homeReason: '1st Group L', away: '3rd C/F/G/J', awayReason: '' },
-    { id: 10, home: 'A Winner', homeReason: '1st Group A', away: '3rd E/F/G/H', awayReason: '' },
-    { id: 11, home: 'B Winner', homeReason: '1st Group B', away: '3rd A/C/D/I', awayReason: '' },
-    { id: 12, home: 'C Winner', homeReason: '1st Group C', away: '3rd D/E/H/I', awayReason: '' },
-    { id: 13, home: 'A Runner-up', homeReason: '2nd Group A', away: 'B Runner-up', awayReason: '2nd Group B' },
-    { id: 14, home: 'C Runner-up', homeReason: '2nd Group C', away: 'D Runner-up', awayReason: '2nd Group D' },
-    { id: 15, home: 'E Runner-up', homeReason: '2nd Group E', away: 'F Runner-up', awayReason: '2nd Group F' },
-    { id: 16, home: 'G Runner-up', homeReason: '2nd Group G', away: 'H Runner-up', awayReason: '2nd Group H' },
-    { id: 17, home: 'I Runner-up', homeReason: '2nd Group I', away: 'J Runner-up', awayReason: '2nd Group J' },
-    { id: 18, home: 'K Runner-up', homeReason: '2nd Group K', away: 'L Runner-up', awayReason: '2nd Group L' }
-  ];
+const round32Matches = [
+  { id: 1, home: '1st Group D', homeReason: '1st Group D', away: '3rd Group B/E/F/I', awayReason: '' },
+  { id: 2, home: '1st Group E', homeReason: '1st Group E', away: '3rd Group A/C/D/F', awayReason: '' },
+  { id: 3, home: '1st Group F', homeReason: '1st Group F', away: '3rd Group A/B/C/G', awayReason: '' },
+  { id: 4, home: '1st Group G', homeReason: '1st Group G', away: '3rd Group A/B/C/H', awayReason: '' },
+  { id: 5, home: '1st Group H', homeReason: '1st Group H', away: '3rd Group A/B/D/E', awayReason: '' },
+  { id: 6, home: '1st Group I', homeReason: '1st Group I', away: '3rd Group C/D/G/H', awayReason: '' },
+  { id: 7, home: '1st Group J', homeReason: '1st Group J', away: '3rd Group B/E/F/K', awayReason: '' },
+  { id: 8, home: '1st Group K', homeReason: '1st Group K', away: '3rd Group B/E/I/J', awayReason: '' },
+  { id: 9, home: '1st Group L', homeReason: '1st Group L', away: '3rd Group C/F/G/J', awayReason: '' },
+  { id: 10, home: '1st Group A', homeReason: '1st Group A', away: '3rd Group E/F/G/H', awayReason: '' },
+  { id: 11, home: '1st Group B', homeReason: '1st Group B', away: '3rd Group A/C/D/I', awayReason: '' },
+  { id: 12, home: '1st Group C', homeReason: '1st Group C', away: '3rd Group D/E/H/I', awayReason: '' },
+  { id: 13, home: '2nd Group A', homeReason: '2nd Group A', away: '2nd Group B', awayReason: '2nd Group B' },
+  { id: 14, home: '2nd Group C', homeReason: '2nd Group C', away: '2nd Group D', awayReason: '2nd Group D' },
+  { id: 15, home: '2nd Group E', homeReason: '2nd Group E', away: '2nd Group F', awayReason: '2nd Group F' },
+  { id: 16, home: '2nd Group G', homeReason: '2nd Group G', away: '2nd Group H', awayReason: '2nd Group H' },
+  { id: 17, home: '2nd Group I', homeReason: '2nd Group I', away: '2nd Group J', awayReason: '2nd Group J' },
+  { id: 18, home: '2nd Group K', homeReason: '2nd Group K', away: '2nd Group L', awayReason: '2nd Group L' }
+];
   
   // Replace placeholders with actual team names
   return round32Matches.map(match => {
@@ -1832,20 +1832,21 @@ function generateRound32Matches() {
     let awayReason = match.awayReason;
     
     // Replace with actual team names if available
-    if (homeTeam.includes('Winner')) {
-      const letter = homeTeam.charAt(0);
+    if (homeTeam.includes('1st Group')) {
+      const letter = homeTeam.replace('1st Group ', '');
       homeTeam = groups[letter]?.winner || homeTeam;
-    } else if (homeTeam.includes('Runner-up')) {
-      const letter = homeTeam.charAt(0);
+    } else if (homeTeam.includes('2nd Group')) {
+      const letter = homeTeam.replace('2nd Group ', '');
       homeTeam = groups[letter]?.runnerUp || homeTeam;
     }
     
     // Handle third place teams
-    if (awayTeam.includes('3rd')) {
-      const key = awayTeam.replace('3rd ', '');
+    if (awayTeam.includes('3rd Group')) {
+      const key = awayTeam.replace('3rd Group ', '');
       awayTeam = thirdPlaceAssignments[key] || awayTeam;
       awayReason = thirdPlaceReasons[key] || '3rd Place';
     }
+
     
     return {
       ...match,
@@ -1884,17 +1885,20 @@ function renderRound32Bracket() {
 
 // Helper function to create a match card
 function createMatchCard(match, matchNumber) {
-  const homeTeam = match.homeTeam || match.home || 'TBD';
-  const awayTeam = match.awayTeam || match.away || 'TBD';
-  const homeReason = match.homeReason || '';
-  const awayReason = match.awayReason || '';
+  // Helper to process a single team
+  function processTeam(team, reason) {
+    const isTBD = team === 'TBD' || team.includes('1st Group') || team.includes('2nd Group') || team.includes('3rd Group');
+    const flag = getFlagCode(team);
+    const displayName = isTBD ? '(to be determined)' : team;
+    const flagHtml = (!isTBD && flag) ? `<img src="https://flagcdn.com/20x15/${flag}.png" class="team-flag" style="width: 30px; height: 22px; vertical-align: middle;" alt="${team} flag">` : '';
+    const padding = flagHtml ? '34px' : '0px';
+    const style = isTBD ? 'color: #999; font-style: italic; font-size: 1em;' : '';
+    
+    return { displayName, flagHtml, padding, style, reason };
+  }
   
-  // Get flags for each team individually (without "vs")
-  const homeFlag = getFlagCode(homeTeam);
-  const awayFlag = getFlagCode(awayTeam);
-  
-  const homeFlagHtml = homeFlag ? `<img src="https://flagcdn.com/20x15/${homeFlag}.png" class="team-flag" style="width: 30px; height: 22px; vertical-align: middle;" alt="${homeTeam} flag">` : '';
-  const awayFlagHtml = awayFlag ? `<img src="https://flagcdn.com/20x15/${awayFlag}.png" class="team-flag" style="width: 30px; height: 22px; vertical-align: middle;" alt="${awayTeam} flag">` : '';
+  const home = processTeam(match.homeTeam || match.home || 'TBD', match.homeReason || '');
+  const away = processTeam(match.awayTeam || match.away || 'TBD', match.awayReason || '');
   
   return `
     <div class="round32-match" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; min-height: 48px; flex: 0 0 375px; box-sizing: border-box;">
@@ -1902,18 +1906,18 @@ function createMatchCard(match, matchNumber) {
       <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 6px; min-width: 0;">
         <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
           <div style="display: flex; align-items: center; white-space: nowrap; gap: 4px;">
-            ${homeFlagHtml}
-            <span style="font-weight: 500; font-size: 1.275em;">${homeTeam !== 'TBD' ? homeTeam : 'TBD'}</span>
+            ${home.flagHtml}
+            <span style="font-weight: 500; font-size: 1.275em; ${home.style}">${home.displayName}</span>
           </div>
-          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: 34px;">${homeReason}</span>
+          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: ${home.padding};">${home.reason}</span>
         </div>
         <span style="color: #999; font-size: 1.05em; flex-shrink: 0; align-self: center;">vs</span>
         <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
           <div style="display: flex; align-items: center; white-space: nowrap; gap: 4px;">
-            ${awayFlagHtml}
-            <span style="font-weight: 500; font-size: 1.275em;">${awayTeam !== 'TBD' ? awayTeam : 'TBD'}</span>
+            ${away.flagHtml}
+            <span style="font-weight: 500; font-size: 1.275em; ${away.style}">${away.displayName}</span>
           </div>
-          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: 34px;">${awayReason}</span>
+          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: ${away.padding};">${away.reason}</span>
         </div>
       </div>
     </div>
