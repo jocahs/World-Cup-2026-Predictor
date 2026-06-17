@@ -1789,8 +1789,8 @@ function generateRound32Matches() {
   const thirdPlaceTeams = getBestThirdPlaceTeams(groups);
   
   // Assign third place teams to their positions based on ranking
-  // The best third-place team goes to the first available slot, etc.
   const thirdPlaceAssignments = {};
+  const thirdPlaceReasons = {};
   const thirdPlaceKeys = ['B/E/F/I', 'A/C/D/F', 'A/B/C/G', 'A/B/C/H', 'A/B/D/E', 'C/D/G/H', 'B/E/F/K', 'B/E/I/J', 'C/F/G/J', 'E/F/G/H', 'A/C/D/I', 'D/E/H/I'];
   
   // Assign the 8 best third-place teams to the first 8 slots
@@ -1798,35 +1798,38 @@ function generateRound32Matches() {
   thirdPlaceTeams.forEach((team, index) => {
     if (index < sortedKeys.length) {
       thirdPlaceAssignments[sortedKeys[index]] = team.team;
+      thirdPlaceReasons[sortedKeys[index]] = '3rd Group ' + team.group;
     }
   });
   
-  // Round of 32 match pairings
+  // Round of 32 match pairings with reasons
   const round32Matches = [
-    { id: 1, home: 'D Winner', away: '3rd B/E/F/I' },
-    { id: 2, home: 'E Winner', away: '3rd A/C/D/F' },
-    { id: 3, home: 'F Winner', away: '3rd A/B/C/G' },
-    { id: 4, home: 'G Winner', away: '3rd A/B/C/H' },
-    { id: 5, home: 'H Winner', away: '3rd A/B/D/E' },
-    { id: 6, home: 'I Winner', away: '3rd C/D/G/H' },
-    { id: 7, home: 'J Winner', away: '3rd B/E/F/K' },
-    { id: 8, home: 'K Winner', away: '3rd B/E/I/J' },
-    { id: 9, home: 'L Winner', away: '3rd C/F/G/J' },
-    { id: 10, home: 'A Winner', away: '3rd E/F/G/H' },
-    { id: 11, home: 'B Winner', away: '3rd A/C/D/I' },
-    { id: 12, home: 'C Winner', away: '3rd D/E/H/I' },
-    { id: 13, home: 'A Runner-up', away: 'B Runner-up' },
-    { id: 14, home: 'C Runner-up', away: 'D Runner-up' },
-    { id: 15, home: 'E Runner-up', away: 'F Runner-up' },
-    { id: 16, home: 'G Runner-up', away: 'H Runner-up' },
-    { id: 17, home: 'I Runner-up', away: 'J Runner-up' },
-    { id: 18, home: 'K Runner-up', away: 'L Runner-up' }
+    { id: 1, home: 'D Winner', homeReason: '1st Group D', away: '3rd B/E/F/I', awayReason: '' },
+    { id: 2, home: 'E Winner', homeReason: '1st Group E', away: '3rd A/C/D/F', awayReason: '' },
+    { id: 3, home: 'F Winner', homeReason: '1st Group F', away: '3rd A/B/C/G', awayReason: '' },
+    { id: 4, home: 'G Winner', homeReason: '1st Group G', away: '3rd A/B/C/H', awayReason: '' },
+    { id: 5, home: 'H Winner', homeReason: '1st Group H', away: '3rd A/B/D/E', awayReason: '' },
+    { id: 6, home: 'I Winner', homeReason: '1st Group I', away: '3rd C/D/G/H', awayReason: '' },
+    { id: 7, home: 'J Winner', homeReason: '1st Group J', away: '3rd B/E/F/K', awayReason: '' },
+    { id: 8, home: 'K Winner', homeReason: '1st Group K', away: '3rd B/E/I/J', awayReason: '' },
+    { id: 9, home: 'L Winner', homeReason: '1st Group L', away: '3rd C/F/G/J', awayReason: '' },
+    { id: 10, home: 'A Winner', homeReason: '1st Group A', away: '3rd E/F/G/H', awayReason: '' },
+    { id: 11, home: 'B Winner', homeReason: '1st Group B', away: '3rd A/C/D/I', awayReason: '' },
+    { id: 12, home: 'C Winner', homeReason: '1st Group C', away: '3rd D/E/H/I', awayReason: '' },
+    { id: 13, home: 'A Runner-up', homeReason: '2nd Group A', away: 'B Runner-up', awayReason: '2nd Group B' },
+    { id: 14, home: 'C Runner-up', homeReason: '2nd Group C', away: 'D Runner-up', awayReason: '2nd Group D' },
+    { id: 15, home: 'E Runner-up', homeReason: '2nd Group E', away: 'F Runner-up', awayReason: '2nd Group F' },
+    { id: 16, home: 'G Runner-up', homeReason: '2nd Group G', away: 'H Runner-up', awayReason: '2nd Group H' },
+    { id: 17, home: 'I Runner-up', homeReason: '2nd Group I', away: 'J Runner-up', awayReason: '2nd Group J' },
+    { id: 18, home: 'K Runner-up', homeReason: '2nd Group K', away: 'L Runner-up', awayReason: '2nd Group L' }
   ];
   
   // Replace placeholders with actual team names
   return round32Matches.map(match => {
     let homeTeam = match.home;
     let awayTeam = match.away;
+    let homeReason = match.homeReason;
+    let awayReason = match.awayReason;
     
     // Replace with actual team names if available
     if (homeTeam.includes('Winner')) {
@@ -1841,12 +1844,15 @@ function generateRound32Matches() {
     if (awayTeam.includes('3rd')) {
       const key = awayTeam.replace('3rd ', '');
       awayTeam = thirdPlaceAssignments[key] || awayTeam;
+      awayReason = thirdPlaceReasons[key] || '3rd Place';
     }
     
     return {
       ...match,
       homeTeam: homeTeam,
       awayTeam: awayTeam,
+      homeReason: homeReason,
+      awayReason: awayReason,
       isCompleted: false,
       result: null
     };
@@ -1875,29 +1881,40 @@ function renderRound32Bracket() {
   container.innerHTML = html;
 }
 
+
 // Helper function to create a match card
 function createMatchCard(match, matchNumber) {
   const homeTeam = match.homeTeam || match.home || 'TBD';
   const awayTeam = match.awayTeam || match.away || 'TBD';
+  const homeReason = match.homeReason || '';
+  const awayReason = match.awayReason || '';
   
   // Get flags for each team individually (without "vs")
   const homeFlag = getFlagCode(homeTeam);
   const awayFlag = getFlagCode(awayTeam);
   
-  const homeDisplay = homeTeam !== 'TBD' 
-    ? (homeFlag ? `<img src="https://flagcdn.com/20x15/${homeFlag}.png" class="team-flag" alt="${homeTeam} flag"> ${homeTeam}` : homeTeam)
-    : homeTeam;
-  const awayDisplay = awayTeam !== 'TBD' 
-    ? (awayFlag ? `<img src="https://flagcdn.com/20x15/${awayFlag}.png" class="team-flag" alt="${awayTeam} flag"> ${awayTeam}` : awayTeam)
-    : awayTeam;
+  const homeFlagHtml = homeFlag ? `<img src="https://flagcdn.com/20x15/${homeFlag}.png" class="team-flag" style="width: 30px; height: 22px; vertical-align: middle;" alt="${homeTeam} flag">` : '';
+  const awayFlagHtml = awayFlag ? `<img src="https://flagcdn.com/20x15/${awayFlag}.png" class="team-flag" style="width: 30px; height: 22px; vertical-align: middle;" alt="${awayTeam} flag">` : '';
   
   return `
-    <div class="round32-match" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 4px 6px; display: flex; align-items: center; gap: 4px; min-height: 32px; flex: 0 0 250px; box-sizing: border-box;">
-      <div style="font-size: 0.75em; color: #999; font-weight: bold; min-width: 26px; flex-shrink: 0;">#${matchNumber}</div>
-      <div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 4px; min-width: 0;">
-        <span style="font-weight: 500; font-size: 0.85em; white-space: nowrap;">${homeDisplay}</span>
-        <span style="color: #999; font-size: 0.7em; flex-shrink: 0;">vs</span>
-        <span style="font-weight: 500; font-size: 0.85em; white-space: nowrap;">${awayDisplay}</span>
+    <div class="round32-match" style="background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; min-height: 48px; flex: 0 0 375px; box-sizing: border-box;">
+      <div style="font-size: 1.125em; color: #999; font-weight: bold; min-width: 38px; flex-shrink: 0; text-align: center;">#${matchNumber}</div>
+      <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 6px; min-width: 0;">
+        <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
+          <div style="display: flex; align-items: center; white-space: nowrap; gap: 4px;">
+            ${homeFlagHtml}
+            <span style="font-weight: 500; font-size: 1.275em;">${homeTeam !== 'TBD' ? homeTeam : 'TBD'}</span>
+          </div>
+          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: 34px;">${homeReason}</span>
+        </div>
+        <span style="color: #999; font-size: 1.05em; flex-shrink: 0; align-self: center;">vs</span>
+        <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
+          <div style="display: flex; align-items: center; white-space: nowrap; gap: 4px;">
+            ${awayFlagHtml}
+            <span style="font-weight: 500; font-size: 1.275em;">${awayTeam !== 'TBD' ? awayTeam : 'TBD'}</span>
+          </div>
+          <span style="font-size: 0.825em; color: #888; white-space: nowrap; padding-left: 34px;">${awayReason}</span>
+        </div>
       </div>
     </div>
   `;
