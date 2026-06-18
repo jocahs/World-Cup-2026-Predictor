@@ -1465,9 +1465,9 @@ function loadMatches() {
            }
            const calUrl = getGoogleCalendarUrl(matchObj.match, homeTeam, visitorTeam, matchObj.date, matchObj.time, matchObj.transmission);
            if (calUrl) {
-             calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;white-space:nowrap;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
+             calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017 ;text-decoration:none;white-space:nowrap;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
            } else {
-             calHtml = `<span style="color:#FFD700;white-space:nowrap;font-weight:bold;">${dateTimeStr}</span>`;
+             calHtml = `<span style="color:#D4A017 ;white-space:nowrap;font-weight:bold;">${dateTimeStr}</span>`;
            }
          }
          
@@ -1475,7 +1475,7 @@ function loadMatches() {
          if (showTransmission && matchObj.transmission) {
            const transText = matchObj.transmission;
            if (transText.includes('LiveModeTV')) {
-             transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
+             transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#0000E3;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
            } else {
              transHtml = `<span style="color:#000;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
            }
@@ -1675,7 +1675,7 @@ function createNextMatchesSection() {
      if (tm.match.transmission) {
        const transText = tm.match.transmission;
        if (transText.includes('LiveModeTV')) {
-         transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="font-weight: bold;color:#FFD700;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
+         transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="font-weight: bold;color: #0000E3;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
        } else {
          transHtml = `<span style="color:white;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;">${transText}</span>`;
        }
