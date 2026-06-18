@@ -499,6 +499,7 @@ let currentPlayers = [];
 let isLoading = false;
 let isAdminMode = false;
 let groupMatches = {};
+let expandedGroups = {};
 
 function showFloatingNotification(message, isError = false) {
   const notification = document.getElementById('floatingNotification');
@@ -905,34 +906,35 @@ function updateToggleButtonText() {
   }
 }
 
-function onPlayerNameEdit() {
-  const select = document.getElementById("playerSelect");
-  const playerName = document.getElementById("playerName");
-  if (select) {
-    select.value = "";
-    clearAllPicks();
-    updateLeaderboardVisibility();
-    updatePlayerControlsVisibility();
-    if (playerName && playerName.value.trim() !== "") {
-      loadMyPicks(playerName.value.trim());
+async function onPlayerNameEdit() {
+    const select = document.getElementById("playerSelect");
+    const playerName = document.getElementById("playerName");
+    if (select) {
+        select.value = "";
+        clearAllPicks();
+        updateLeaderboardVisibility();
+        updatePlayerControlsVisibility();
+        const name = playerName.value.trim();
+        if (name !== "") {
+            await loadMyPicks(name);
+            // panel stays visible – no hide call
+        }
     }
-  }
-  // Only update button text, don't change visibility
-  updateToggleButtonText();
+    updateToggleButtonText();
 }
 
-function selectPlayer() {
-  const playerName = document.getElementById("playerSelect").value;
-  if (playerName) {
-    loadMyPicks(playerName);
-  } else {
-    clearAllPicks();
-    document.getElementById("playerName").value = "";
-    updateLeaderboardVisibility();
-    updatePlayerControlsVisibility();
-  }
-  // Only update button text, don't change visibility
-  updateToggleButtonText();
+async function selectPlayer() {
+    const playerName = document.getElementById("playerSelect").value;
+    if (playerName) {
+        await loadMyPicks(playerName);
+        hidePlayerSelectionIfVisible(); // hide after loading picks
+    } else {
+        clearAllPicks();
+        document.getElementById("playerName").value = "";
+        updateLeaderboardVisibility();
+        updatePlayerControlsVisibility();
+    }
+    updateToggleButtonText();
 }
 
 function clearAllPicks() {
@@ -1284,8 +1286,16 @@ function loadMatches() {
      groupDiv.className = "group-block";
      groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">📋 ${group} ▼</div>`;
      const matchesDiv = document.createElement("div");
-     matchesDiv.id = `group-${group.replace(/ /g, '_')}`;
-     matchesDiv.style.display = "none";
+     const groupKey = group.replace(/ /g, '_');
+     matchesDiv.id = `group-${groupKey}`;
+     
+     // ----- NEW: restore expanded/collapsed state -----
+     if (expandedGroups[groupKey] === undefined) {
+       expandedGroups[groupKey] = false; // default: collapsed
+     }
+     matchesDiv.style.display = expandedGroups[groupKey] ? "block" : "none";
+     // -------------------------------------------------
+     
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
      if (standingsHtml) matchesDiv.innerHTML = standingsHtml;
@@ -1297,9 +1307,9 @@ function loadMatches() {
        const actualScore = actual ? actual.score : null;
        const isCompleted = actualResult !== null;
        
-      const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
-      const now = new Date();
-      const isPast = matchDateTime ? now >= matchDateTime : false;
+       const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
+       const now = new Date();
+       const isPast = matchDateTime ? now >= matchDateTime : false;
 
        const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
@@ -1322,14 +1332,14 @@ function loadMatches() {
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
        matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
        
-      let resultBadge = '';
-      if (actualResult && actualScore) {
-        resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
-      } else if (actualResult) {
-        resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
-      } else if (isPast) {
-        resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
-      }
+       let resultBadge = '';
+       if (actualResult && actualScore) {
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
+       } else if (actualResult) {
+         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
+       } else if (isPast) {
+         resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
+       }
        
        const formattedDateTime = formatDisplayDate(matchObj.date, matchObj.time);
        
@@ -1370,20 +1380,21 @@ function loadMatches() {
          picksHtml += '</div>';
        }
        
-        let radioHtml = '';
-        if (!isCompleted && !isPast) {
-          radioHtml = `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label></div>`;
-        } else if (!isCompleted && isPast) {
-          radioHtml = `<div class="radio-group disabled"><span class="deadline-note" style="color:#f44336; font-size:0.8em;">⏰ Deadline passed · picks locked</span></div>`;
-        } else {
-          radioHtml = `<div class="radio-group disabled"></div>`;
-        }
+       let radioHtml = '';
+       if (!isCompleted && !isPast) {
+         radioHtml = `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label></div>`;
+       } else if (!isCompleted && isPast) {
+         radioHtml = `<div class="radio-group disabled"><span class="deadline-note" style="color:#f44336; font-size:0.8em;">⏰ Deadline passed · picks locked</span></div>`;
+       } else {
+         radioHtml = `<div class="radio-group disabled"></div>`;
+       }
        
        const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
        
        matchDiv.innerHTML = `<div class="match-header"><span class="match-name">${matchObj.displayMatch}</span>${timeDisplay}${resultBadge}</div>${pickElementsHtml}`;
        matchesDiv.appendChild(matchDiv);
      });
+     
      groupDiv.appendChild(matchesDiv);
      container.appendChild(groupDiv);
    }
@@ -1589,7 +1600,11 @@ window.addEventListener('resize', function() {
 
 function toggleGroup(id) {
    const el = document.getElementById(`group-${id}`);
-   if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+   if (el) {
+      const isHidden = el.style.display === "none" || el.style.display === "";
+      el.style.display = isHidden ? "block" : "none";
+      expandedGroups[id] = el.style.display === "block";
+   }
 }
 
 function markUnsaved(matchId) { updateProgress(); }
@@ -1975,6 +1990,13 @@ function togglePlayerSelection() {
       toggleBtn.textContent = "Predict Match Results";
     }
   }
+}
+
+function hidePlayerSelectionIfVisible() {
+    const playerSelection = document.getElementById("player-selection");
+    if (playerSelection && playerSelection.classList.contains("visible")) {
+        togglePlayerSelection(); // toggles off (hides it)
+    }
 }
 
 // Add CSS animation if not already present
