@@ -1,7 +1,7 @@
-<!DOCTYPE html> 
-<html> 
-<head> 
- <title>World Cup 2026 Predictor</title> 
+<!DOCTYPE html>
+<html>
+<head>
+ <title>World Cup 2026 Predictor</title>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
  
@@ -13,8 +13,8 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
  <link rel="apple-touch-startup-image" href="icon-1125x2436.png">
 
- <style> 
- body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 20px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; } 
+ <style>
+ body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 20px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
  .container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
  h1 { color: #1a1a1a; text-align: center; }
  .stage-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
@@ -65,9 +65,9 @@
    background: #f5f5f5;
  }
  
-.match-card { 
-   background: #f9f9f9; 
-   border-bottom: 1px solid #e0e0e0; 
+.match-card {
+   background: #f9f9f9;
+   border-bottom: 1px solid #e0e0e0;
    padding: 12px 15px;
    margin-bottom: 8px;
    border-radius: 8px;
@@ -76,28 +76,28 @@
 .match-card:last-child {
    border-bottom: none;
 }
-.match-card.completed { 
-   background: #e8f5e9; 
+.match-card.completed {
+   background: #e8f5e9;
    border-left: 4px solid #4CAF50;
 }
 
- .match-header { 
-   display: flex; 
+ .match-header {
+   display: flex;
    align-items: baseline;
    flex-wrap: wrap;
    margin-bottom: 6px;
    gap: 6px;
  }
- .match-name { 
-   font-weight: bold; 
+ .match-name {
+   font-weight: bold;
    font-size: 1em;
    display: inline-flex;
    align-items: center;
    gap: 5px;
  }
- .match-time { 
-   color: #666; 
-   font-size: 0.8em; 
+ .match-time {
+   color: #666;
+   font-size: 0.8em;
  }
 
  .transmission-link {
@@ -287,12 +287,12 @@
  .progress-bar { background: #e0e0e0; border-radius: 10px; height: 20px; margin: 10px 0; overflow: hidden; }
  .progress-fill { background: #4CAF50; height: 100%; transition: width 0.3s; color: white; text-align: center; font-size: 12px; line-height: 20px; }
  .player-select { padding: 8px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; margin-left: 10px; min-width: 150px; }
- .admin-group-title { 
-   background: #2196F3; 
-   color: white; 
-   padding: 8px 12px; 
-   font-weight: bold; 
-   cursor: pointer; 
+ .admin-group-title {
+   background: #2196F3;
+   color: white;
+   padding: 8px 12px;
+   font-weight: bold;
+   cursor: pointer;
    font-size: 0.95em;
    border-radius: 5px;
    margin-bottom: 5px;
@@ -368,8 +368,8 @@
    border-left: 4px solid #4CAF50;
  }
  
- @media (max-width: 768px) { 
-   .match-name { display: inline-flex; margin-right: 8px; } 
+ @media (max-width: 768px) {
+   .match-name { display: inline-flex; margin-right: 8px; }
    .match-time { display: inline; }
    .picks-row { flex-direction: row; flex-wrap: wrap; gap: 8px; }
    .player-pick { white-space: nowrap; }
@@ -379,8 +379,8 @@
    }
  }
 
- </style> 
-</head> 
+ </style>
+</head>
 <body>
 
 <div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
@@ -452,8 +452,8 @@
   </div>
   
   <p style="margin: 5px 0; color: #666; font-size: 0.9em;">
-  <a href="mailto:jocahs.jocahs@gmail.com" style="color: #666; text-decoration: none; transition: color 0.3s; padding: 8px 12px; display: inline-block; position: relative;" 
-     onmouseover="this.style.color='#4CAF50'; document.getElementById('emailTooltip').style.display='block';" 
+  <a href="mailto:jocahs.jocahs@gmail.com" style="color: #666; text-decoration: none; transition: color 0.3s; padding: 8px 12px; display: inline-block; position: relative;"
+     onmouseover="this.style.color='#4CAF50'; document.getElementById('emailTooltip').style.display='block';"
      onmouseout="this.style.color='#666'; document.getElementById('emailTooltip').style.display='none';">
     @ 2026 João Silva
     <span id="emailTooltip" style="display: none; position: absolute; top: 50%; left: 100%; transform: translateY(-50%); background: #333; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; margin-left: 4px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
@@ -489,7 +489,7 @@
  <!-- Floating Notification -->
  <div id="floatingNotification" class="floating-notification"></div>
 
- <script> 
+ <script>
  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwMcepo8QqNKAp-9EreEKtA0SYtECM2plg1g9wDOZZjNDqBKGKagEo3uSvhyrLmv8v/exec";
 const ADMIN_PASSWORD = "wc2026";
 
@@ -854,9 +854,9 @@ async function saveAllScores() {
        }
      }
    }
-   if (scoreUpdates.length === 0) { 
+   if (scoreUpdates.length === 0) {
      showFloatingNotification("No scores to save!", true);
-     return; 
+     return;
    }
    
    showLoading("Saving scores...");
@@ -868,7 +868,7 @@ async function saveAllScores() {
      await fetch(`${WEBAPP_URL}?${params.toString()}`);
      showFloatingNotification(`✅ ${scoreUpdates.length} match scores saved!`);
      closeAdminMode();
-   } catch(e) { 
+   } catch(e) {
      showFloatingNotification("Error saving scores: " + e.message, true);
      hideLoading();
    }
@@ -951,9 +951,9 @@ function clearAllPicks() {
 async function savePicks() {
    const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
    
-   if (!player) { 
+   if (!player) {
      showFloatingNotification("Enter your name!", true);
-     return; 
+     return;
    }
    
    const currentPicks = [];
@@ -975,17 +975,17 @@ async function savePicks() {
        const matchId = `${group}_${i}`;
        const selected = document.querySelector(`input[name="${matchId}"]:checked`);
        if (selected) {
-         currentPicks.push({ 
-           match: match, 
+         currentPicks.push({
+           match: match,
            pick: selected.value
          });
        }
      }
    }
    
-   if (currentPicks.length === 0) { 
+   if (currentPicks.length === 0) {
      showFloatingNotification("No picks selected for upcoming matches!", true);
-     return; 
+     return;
    }
    
    showLoading("Saving your picks...");
@@ -1033,7 +1033,7 @@ async function savePicks() {
      
      showFloatingNotification(`✅ Updated ${picksToUpdate.length} pick(s) for ${player}!`);
      await loadMatchesOnly();
-   } catch(e) { 
+   } catch(e) {
      console.error("Save error:", e);
      showFloatingNotification("Error saving picks: " + e.message, true);
    } finally {
@@ -1047,10 +1047,10 @@ async function loadMyPicks(playerName = null) {
    
    const player = playerName || document.getElementById("playerName").value.trim();
    
-   if (!player) { 
-     isLoading = false; 
+   if (!player) {
+     isLoading = false;
      showFloatingNotification("Enter your name!", true);
-     return; 
+     return;
    }
    
    showLoading(`Loading picks for ${player}...`);
@@ -1097,9 +1097,9 @@ async function loadMyPicks(playerName = null) {
      updatePlayerControlsVisibility();
      
      showFloatingNotification(`✅ Loaded ${userPicks.length} picks for ${player}`);
-   } catch(e) { 
+   } catch(e) {
      showFloatingNotification("Error: " + e.message, true);
-   } finally { 
+   } finally {
      isLoading = false;
      hideLoading();
    }
@@ -1124,8 +1124,8 @@ async function loadMatchesOnly() {
          if (!groupMatches[groupName]) groupMatches[groupName] = [];
          const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
          
-         groupMatches[groupName].push({ 
-           match: match.name, 
+         groupMatches[groupName].push({
+           match: match.name,
            date: match.date,
            time: match.time,
            displayMatch: matchDisplayName,
@@ -1152,11 +1152,11 @@ async function loadMatchesOnly() {
      
      hideLoading();
      
-   } catch(e) { 
+   } catch(e) {
      console.error("Error loading matches:", e);
      showFloatingNotification("Error loading matches: " + e.message, true);
      hideLoading();
-   } finally { 
+   } finally {
      isLoading = false;
      setTimeout(() => {
        hideLoading();
@@ -1477,148 +1477,89 @@ function getNextMatches() {
    return upcomingMatches.slice(0, 8);
 }
 
+// ================== NEW createNextMatchesSection ==================
 function createNextMatchesSection() {
    const nextMatches = getNextMatches();
    if (nextMatches.length === 0) return '';
-   
-   const gapSize = 6;
-   const windowWidth = window.innerWidth;
-   const containerPadding = 10;
-   const availableWidth = windowWidth - containerPadding;
-   
-   // Calculate the width needed for each match individually
-   const matchesWithWidth = nextMatches.map(tm => {
-     // Get team names text without HTML tags
-     const tempDiv = document.createElement('div');
-     tempDiv.innerHTML = tm.displayName;
-     const teamText = tempDiv.textContent || tempDiv.innerText || '';
-     
-     // Format date as "Jun 20"
-     let dateFormatted = '';
-     if (tm.match.date) {
+
+   let html = `
+     <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+       <h3 style="margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next 8 Matches</h3>
+       <div style="max-height: 220px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-content: flex-start; padding: 4px; scrollbar-width: thin; scrollbar-gutter: stable;">
+   `;
+
+   nextMatches.forEach((tm, idx) => {
+     const groupId = `group-${tm.group.replace(/ /g, '_')}`;
+     const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
+
+     const homeTeam = tm.match.homeTeam || '';
+     const visitorTeam = tm.match.visitorTeam || '';
+
+     // Flags
+     const homeFlagCode = getFlagCode(homeTeam);
+     const awayFlagCode = getFlagCode(visitorTeam);
+     const homeFlagHtml = homeFlagCode ? `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` : '';
+     const awayFlagHtml = awayFlagCode ? `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` : '';
+
+     // Format date/time: "mmm dd hh:mm"
+     let dateTimeStr = '';
+     if (tm.match.date && tm.match.time) {
        const dateParts = tm.match.date.split('/');
        if (dateParts.length === 3) {
          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
          const month = parseInt(dateParts[1]) - 1;
          const day = parseInt(dateParts[0]);
-         dateFormatted = monthNames[month] + ' ' + day;
+         dateTimeStr = `${monthNames[month]} ${day} ${tm.match.time}`;
        }
      }
-     
-     // Get date + time + transmission text for width calculation
-     let dateTimeTransmissionText = '';
-     if (dateFormatted) {
-       dateTimeTransmissionText += dateFormatted + ' ';
-     }
-     if (tm.match.time) {
-       dateTimeTransmissionText += tm.match.time + ' ';
-     }
-     if (tm.match.transmission) {
-       dateTimeTransmissionText += tm.match.transmission;
-     }
-     
-     // Calculate EXACT width needed - MINIMAL padding
-     const charWidth = 7.5;
-     const flagWidth = 18;
-     const flagCount = 2;
-     const vsText = 20;
-     
-     const teamContentWidth = (teamText.length * charWidth) + (flagCount * flagWidth) + vsText;
-     const timeContentWidth = (dateTimeTransmissionText.length * charWidth) + 5;
-     const neededWidth = Math.max(teamContentWidth, timeContentWidth, 150);
-     
-     return {
-       ...tm,
-       neededWidth: Math.min(neededWidth, 380),
-       dateFormatted: dateFormatted
-     };
-   });
-   
-   // Calculate how many cards can fit per row
-   let cardsPerRow = 4;
-   const avgWidth = matchesWithWidth.reduce((sum, m) => sum + m.neededWidth, 0) / matchesWithWidth.length;
-   const estimatedWidth = Math.max(avgWidth, 150);
-   
-   for (let i = 4; i >= 1; i--) {
-     const rowWidth = (estimatedWidth * i) + (gapSize * (i - 1));
-     if (rowWidth <= availableWidth) {
-       cardsPerRow = i;
-       break;
-     }
-   }
-   if (cardsPerRow === 0) cardsPerRow = 1;
-   
-   const numberOfRows = 2;
-   const cardHeight = 76;
-   const maxHeight = (cardHeight * numberOfRows) + (gapSize * (numberOfRows - 1)) + 10;
-   
-   let html = `
-     <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-       <h3 style="margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next 8 Matches</h3>
-       <div style="max-height: ${maxHeight}px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: ${gapSize}px; justify-content: center; align-content: flex-start; padding: 2px; scrollbar-width: thin; scrollbar-gutter: stable;">
-   `;
-   
-   matchesWithWidth.forEach((tm, idx) => {
-     const groupId = `group-${tm.group.replace(/ /g, '_')}`;
-     const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
-     
-     let transmissionHtml = '';
-     if (tm.match.transmission) {
-       if (tm.match.transmission.includes('LiveModeTV')) {
-         transmissionHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" style="color: #FFD700; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();">📺 ${tm.match.transmission}</a>`;
+
+     // Calendar link – date/time now gold, with tooltip if clickable
+     let calHtml = '';
+     if (dateTimeStr && homeTeam && visitorTeam) {
+       const calUrl = getGoogleCalendarUrl(tm.match.match, homeTeam, visitorTeam, tm.match.date, tm.match.time, tm.match.transmission);
+       if (calUrl) {
+         calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;white-space:nowrap;" title="Add to calendar">${dateTimeStr}</a>`;
        } else {
-         transmissionHtml = `<span style="color: white; font-size: 0.9em; white-space: nowrap;">📺 ${tm.match.transmission}</span>`;
+         calHtml = `<span style="color:#FFD700;white-space:nowrap;">${dateTimeStr}</span>`;
        }
      }
-     
-     // Build time display with date + time (no calendar symbol)
-     let dateHtml = '';
-     let timeHtml = '';
-     if (tm.match.date && tm.match.time) {
-       // Format: "Jun 20" and "23:00" separately
-       let displayDate = '';
-       let displayTime = tm.match.time;
-       if (tm.dateFormatted) {
-         displayDate = tm.dateFormatted;
-       }
-       
-       const homeTeamClean = tm.match.homeTeam || '';
-       const visitorTeamClean = tm.match.visitorTeam || '';
-       if (homeTeamClean && visitorTeamClean) {
-         const calUrl = getGoogleCalendarUrl(tm.match.match, homeTeamClean, visitorTeamClean, tm.match.date, tm.match.time, tm.match.transmission);
-         if (calUrl) {
-           dateHtml = `<a href="${calUrl}" target="_blank" style="color: #FFFFFF; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();" title="Click to add to Google Calendar">${displayDate}</a>`;
-           timeHtml = `<a href="${calUrl}" target="_blank" style="color: #FFD700; text-decoration: none; font-size: 0.9em; white-space: nowrap;" onclick="event.stopPropagation();" title="Click to add to Google Calendar">${displayTime}</a>`;
-         } else {
-           dateHtml = `<span style="color: #FFFFFF; font-size: 0.9em; white-space: nowrap;">${displayDate}</span>`;
-           timeHtml = `<span style="color: #FFD700; font-size: 0.9em; white-space: nowrap;">${displayTime}</span>`;
-         }
+
+     // Transmission – white normally, gold with tooltip when it's a LiveModeTV link
+     let transHtml = '';
+     if (tm.match.transmission) {
+       const transText = tm.match.transmission;
+       if (transText.includes('LiveModeTV')) {
+         transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
        } else {
-         dateHtml = `<span style="color: #FFFFFF; font-size: 0.9em; white-space: nowrap;">${displayDate}</span>`;
-         timeHtml = `<span style="color: #FFD700; font-size: 0.9em; white-space: nowrap;">${displayTime}</span>`;
+         transHtml = `<span style="color:white;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;">${transText}</span>`;
        }
      }
-     
-     const cardFlexBasis = tm.neededWidth;
-     
+
+     // Build card with a 4‑column grid
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
-          style="cursor: pointer; background: rgba(255,255,255,0.15); padding: 4px 0px !important; border-radius: 6px; flex: 0 0 ${cardFlexBasis}px; max-width: ${Math.min(cardFlexBasis, 380)}px; min-width: ${Math.max(cardFlexBasis, 200)}px; box-sizing: border-box; overflow: visible; display: flex; align-items: center; justify-content: center;">
-         <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%;">
-           <span style="font-weight: bold; font-size: 0.9em; text-align: center; line-height: 1.2; white-space: nowrap; width: 100%; display: block; color: #FFFFFF;">${tm.displayName}</span>
-           <div style="display: flex; flex-wrap: nowrap; gap: 4px; justify-content: center; font-size: 0.9em; align-items: center; white-space: nowrap; width: 100%;">
-             ${dateHtml}
-             ${timeHtml}
-             ${transmissionHtml ? transmissionHtml : ''}
-           </div>
+            style="cursor:pointer; background:rgba(255,255,255,0.15); border-radius:6px; padding:6px 8px; min-width:200px; max-width:300px; flex:1 0 auto; display:flex; flex-direction:column; align-items:center;">
+         <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 2px; align-items:center; justify-items:center; width:100%;">
+           <!-- Row 1: Home -->
+           <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
+           <div style="font-weight:bold; font-size:0.9em; color:#fff; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
+           <div style="font-size:0.9em; color:#FFD700;">📅</div>
+           <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center;">${calHtml}</div>
+
+           <!-- Row 2: Away -->
+           <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
+           <div style="font-weight:bold; font-size:0.9em; color:#fff; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
+           <div style="font-size:0.9em; color:#FFD700;">📺</div>
+           <div style="font-size:0.9em; width:100%; text-align:center;">${transHtml}</div>
          </div>
        </div>
      `;
    });
-   
+
    html += `</div></div>`;
    return html;
 }
+// ================== END NEW createNextMatchesSection ==================
 
 function updateTodayMatches() {
    const container = document.getElementById("today-matches-container");
@@ -2068,6 +2009,6 @@ window.addEventListener('load', function() {
     }, 2000);
   }
 });
- </script> 
-</body> 
+ </script>
+</body>
 </html>
