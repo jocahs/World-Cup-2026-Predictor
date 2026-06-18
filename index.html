@@ -770,7 +770,7 @@ function loadScoresEditor() {
      groupDiv.style.borderRadius = "6px";
      groupDiv.style.overflow = "hidden";
      groupDiv.innerHTML = `
-       <div class="admin-group-title" onclick="toggleAdminGroup('${matchesId}')">📋 ${group} ▼</div>
+       <div class="admin-group-title" onclick="toggleAdminGroup('${matchesId}')">${group} ▼</div>
        <div id="${matchesId}" class="admin-matches-container" style="padding: 6px 10px; display: none;"></div>
      `;
      const matchesDiv = groupDiv.querySelector(`#${matchesId}`);
@@ -1284,20 +1284,36 @@ function loadMatches() {
    for (let group of sortedGroups) {
      const groupDiv = document.createElement("div");
      groupDiv.className = "group-block";
-     groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">📋 ${group} ▼</div>`;
-     const matchesDiv = document.createElement("div");
+     groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">${group} ▼</div>`;
+     
+     // Create a wrapper for the group content (standings + matches)
+     const groupContent = document.createElement("div");
      const groupKey = group.replace(/ /g, '_');
-     matchesDiv.id = `group-${groupKey}`;
+     groupContent.id = `group-${groupKey}`;
      
      // Restore expanded/collapsed state
      if (expandedGroups[groupKey] === undefined) {
        expandedGroups[groupKey] = false;
      }
-     matchesDiv.style.display = expandedGroups[groupKey] ? "block" : "none";
+     groupContent.style.display = expandedGroups[groupKey] ? "block" : "none";
      
+     // Standings (displayed above matches)
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
-     if (standingsHtml) matchesDiv.innerHTML = standingsHtml;
+     if (standingsHtml) {
+       const standingsContainer = document.createElement("div");
+       standingsContainer.innerHTML = standingsHtml;
+       standingsContainer.style.marginBottom = "10px";
+       groupContent.appendChild(standingsContainer);
+     }
+     
+     // Flex container for match cards (horizontal wrapping)
+     const matchesWrapper = document.createElement("div");
+     matchesWrapper.style.display = "flex";
+     matchesWrapper.style.flexWrap = "wrap";
+     matchesWrapper.style.gap = "8px";
+     matchesWrapper.style.justifyContent = "center";
+     matchesWrapper.style.padding = "4px 8px 8px 8px";
      
      groupMatches[group].forEach((matchObj, idx) => {
        const matchId = `${group}_${idx}`;
@@ -1312,7 +1328,7 @@ function loadMatches() {
        const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
        
-       // Player picks (unchanged)
+       // Player picks
        const playerPicks = [];
        const playerSelect = document.getElementById("playerSelect");
        const playerName = document.getElementById("playerName");
@@ -1327,9 +1343,19 @@ function loadMatches() {
          }
        }
        
+       // Create match card as a flex item
        const matchDiv = document.createElement("div");
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
        matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
+       matchDiv.style.flex = "0 0 auto";
+       matchDiv.style.minWidth = "200px";
+       matchDiv.style.maxWidth = "300px";
+       matchDiv.style.margin = "0";
+       matchDiv.style.padding = "8px 10px";
+       matchDiv.style.borderRadius = "8px";
+       matchDiv.style.background = isCompleted ? "#e8f5e9" : "#ffffff";
+       matchDiv.style.border = "1px solid #e0e0e0";
+       matchDiv.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)";
        
        // ----- Build the grid layout -----
        const homeTeam = matchObj.homeTeam || '';
@@ -1345,10 +1371,10 @@ function loadMatches() {
        
        if (isCompleted) {
          // Completed match: show scores and result symbol, keep date/time without link
-         const resultSymbol = getResultSymbol(actualResult); // returns "🏠1", "🤝X", "✈️2"
-         let resultColor = '#4CAF50'; // home win (green)
-         if (actualResult === "X") resultColor = '#FF9800'; // draw (orange)
-         else if (actualResult === "2") resultColor = '#f44336'; // away win (red)
+         const resultSymbol = getResultSymbol(actualResult);
+         let resultColor = '#4CAF50';
+         if (actualResult === "X") resultColor = '#FF9800';
+         else if (actualResult === "2") resultColor = '#f44336';
          
          let homeScore = '';
          let awayScore = '';
@@ -1389,7 +1415,6 @@ function loadMatches() {
          `;
        } else {
          // Non-completed: show calendar and transmission
-         // Format date/time with link if available
          let dateTimeStr = '';
          let calHtml = '';
          if (matchObj.date && matchObj.time) {
@@ -1400,12 +1425,11 @@ function loadMatches() {
              const day = parseInt(dateParts[0]);
              dateTimeStr = `${monthNames[month]} ${day} ${matchObj.time}`;
            }
-           // Calendar link if possible
            const calUrl = getGoogleCalendarUrl(matchObj.match, homeTeam, visitorTeam, matchObj.date, matchObj.time, matchObj.transmission);
            if (calUrl) {
-             calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="font-weight: bold;text-decoration:none;white-space:nowrap;" title="Add to calendar">${dateTimeStr}</a>`;
+             calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;white-space:nowrap;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
            } else {
-             calHtml = `<span style=";white-space:nowrap;">${dateTimeStr}</span>`;
+             calHtml = `<span style="color:#FFD700;white-space:nowrap;font-weight:bold;">${dateTimeStr}</span>`;
            }
          }
          
@@ -1413,9 +1437,9 @@ function loadMatches() {
          if (showTransmission && matchObj.transmission) {
            const transText = matchObj.transmission;
            if (transText.includes('LiveModeTV')) {
-             transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;font-weight: bold;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
+             transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
            } else {
-             transHtml = `<span style="color:#000;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;">${transText}</span>`;
+             transHtml = `<span style="color:#000;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
            }
          }
          
@@ -1424,22 +1448,22 @@ function loadMatches() {
              <!-- Row 1: Home -->
              <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
-             <div style="font-size:0.9em; color:#FFD700;">📅</div>
-             <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center; color:#FFD700;">${calHtml}</div>
+             <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📅</div>
+             <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center; color:#FFD700; font-weight:bold;">${calHtml}</div>
              
              <!-- Row 2: Away -->
              <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
-             <div style="font-size:0.9em; color:#FFD700;">📺</div>
-             <div style="font-size:0.9em; width:100%; text-align:center; color:#FFD700;">${transHtml}</div>
+             <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📺</div>
+             <div style="font-size:0.9em; width:100%; text-align:center; color:#FFD700; font-weight:bold;">${transHtml}</div>
            </div>
          `;
        }
        
-       // ---- Picks and radios (unchanged) ----
+       // ---- Picks and radios ----
        let picksHtml = '';
        if (playerPicks.length > 0) {
-         picksHtml = '<div class="picks-row">';
+         picksHtml = '<div class="picks-row" style="margin-top:4px;padding-top:4px;border-top:1px dashed #ddd;">';
          for (let pp of playerPicks) {
            let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
            picksHtml += `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${pp.correct ? 'pick-correct' : 'pick-wrong'}">${pickSymbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
@@ -1449,20 +1473,21 @@ function loadMatches() {
        
        let radioHtml = '';
        if (!isCompleted && !isPast) {
-         radioHtml = `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Home Win (1)</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw (X)</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Visitor Win (2)</label></div>`;
+         radioHtml = `<div class="radio-group" style="margin-top:4px;"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Win</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Win</label></div>`;
        } else if (!isCompleted && isPast) {
-         radioHtml = `<div class="radio-group disabled"><span class="deadline-note" style="color:#f44336; font-size:0.8em;">⏰ Deadline passed · picks locked</span></div>`;
+         radioHtml = `<div class="radio-group disabled" style="margin-top:4px;"><span class="deadline-note" style="color:#f44336; font-size:0.8em;">⏰ Deadline passed</span></div>`;
        } else {
-         radioHtml = `<div class="radio-group disabled"></div>`;
+         radioHtml = `<div class="radio-group disabled" style="margin-top:4px;"></div>`;
        }
        
-       const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
+       const pickElementsHtml = `<div class="pick-elements" style="margin-top:2px;">${picksHtml}${radioHtml}</div>`;
        
        matchDiv.innerHTML = gridHtml + pickElementsHtml;
-       matchesDiv.appendChild(matchDiv);
+       matchesWrapper.appendChild(matchDiv);
      });
      
-     groupDiv.appendChild(matchesDiv);
+     groupContent.appendChild(matchesWrapper);
+     groupDiv.appendChild(groupContent);
      container.appendChild(groupDiv);
    }
    updateProgress();
