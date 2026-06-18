@@ -1346,6 +1346,10 @@ function loadMatches() {
        if (isCompleted) {
          // Completed match: show scores and result symbol, keep date/time without link
          const resultSymbol = getResultSymbol(actualResult); // returns "🏠1", "🤝X", "✈️2"
+         let resultColor = '#4CAF50'; // home win (green)
+         if (actualResult === "X") resultColor = '#FF9800'; // draw (orange)
+         else if (actualResult === "2") resultColor = '#f44336'; // away win (red)
+         
          let homeScore = '';
          let awayScore = '';
          if (actualScore) {
@@ -1374,13 +1378,13 @@ function loadMatches() {
              <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
              <div style="font-size:0.9em; font-weight:bold; color:#333;">${homeScore}</div>
-             <div style="font-size:0.9em; color:#666; white-space:nowrap; width:100%; text-align:center;">${displayDateTime}</div>
+             <div style="font-size:0.9em; color:#333; white-space:nowrap; width:100%; text-align:center;">${displayDateTime}</div>
              
              <!-- Row 2: Away -->
              <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
              <div style="font-size:0.9em; font-weight:bold; color:#333;">${awayScore}</div>
-             <div style="font-size:0.9em; font-weight:bold; color:#4CAF50; width:100%; text-align:center;">${resultSymbol}</div>
+             <div style="font-size:0.9em; font-weight:bold; color:${resultColor}; width:100%; text-align:center;">${resultSymbol}</div>
            </div>
          `;
        } else {
@@ -1399,20 +1403,19 @@ function loadMatches() {
            // Calendar link if possible
            const calUrl = getGoogleCalendarUrl(matchObj.match, homeTeam, visitorTeam, matchObj.date, matchObj.time, matchObj.transmission);
            if (calUrl) {
-             calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;white-space:nowrap;" title="Add to calendar">${dateTimeStr}</a>`;
+             calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="font-weight: bold;text-decoration:none;white-space:nowrap;" title="Add to calendar">${dateTimeStr}</a>`;
            } else {
              calHtml = `<span style="color:#FFD700;white-space:nowrap;">${dateTimeStr}</span>`;
            }
          }
          
-         // Transmission
          let transHtml = '';
          if (showTransmission && matchObj.transmission) {
            const transText = matchObj.transmission;
            if (transText.includes('LiveModeTV')) {
-             transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
+             transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;font-weight: bold;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
            } else {
-             transHtml = `<span style="color:white;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;">${transText}</span>`;
+             transHtml = `<span style="color:#000;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;">${transText}</span>`;
            }
          }
          
