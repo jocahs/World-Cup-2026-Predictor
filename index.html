@@ -1289,12 +1289,11 @@ function loadMatches() {
      const groupKey = group.replace(/ /g, '_');
      matchesDiv.id = `group-${groupKey}`;
      
-     // ----- NEW: restore expanded/collapsed state -----
+     // Restore expanded/collapsed state
      if (expandedGroups[groupKey] === undefined) {
-       expandedGroups[groupKey] = false; // default: collapsed
+       expandedGroups[groupKey] = false;
      }
      matchesDiv.style.display = expandedGroups[groupKey] ? "block" : "none";
-     // -------------------------------------------------
      
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
@@ -1310,10 +1309,10 @@ function loadMatches() {
        const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
        const now = new Date();
        const isPast = matchDateTime ? now >= matchDateTime : false;
-
        const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
        
+       // Player picks (unchanged)
        const playerPicks = [];
        const playerSelect = document.getElementById("playerSelect");
        const playerName = document.getElementById("playerName");
@@ -1332,44 +1331,109 @@ function loadMatches() {
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
        matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
        
-       let resultBadge = '';
-       if (actualResult && actualScore) {
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)} (${actualScore})</span>`;
-       } else if (actualResult) {
-         resultBadge = `<span class="match-result-badge ${getResultBadgeClass(actualResult)}">${getResultSymbol(actualResult)}</span>`;
-       } else if (isPast) {
-         resultBadge = `<span class="match-result-badge result-none">? - ?</span>`;
-       }
+       // ----- Build the grid layout -----
+       const homeTeam = matchObj.homeTeam || '';
+       const visitorTeam = matchObj.visitorTeam || '';
        
-       const formattedDateTime = formatDisplayDate(matchObj.date, matchObj.time);
+       // Flags
+       const homeFlagCode = getFlagCode(homeTeam);
+       const awayFlagCode = getFlagCode(visitorTeam);
+       const homeFlagHtml = homeFlagCode ? `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` : '';
+       const awayFlagHtml = awayFlagCode ? `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` : '';
        
-       let timeDisplay = '';
+       let gridHtml = '';
        
-       if (!isPast && matchObj.date && matchObj.time) {
-         const homeTeamClean = matchObj.homeTeam || '';
-         const visitorTeamClean = matchObj.visitorTeam || '';
-         if (homeTeamClean && visitorTeamClean) {
-           const calUrl = getGoogleCalendarUrl(matchObj.match, homeTeamClean, visitorTeamClean, matchObj.date, matchObj.time, matchObj.transmission);
-           if (calUrl) {
-             timeDisplay = `<a href="${calUrl}" target="_blank" class="calendar-link-time" onclick="event.stopPropagation()" title="Click to add to Google Calendar">📅 ${formattedDateTime}</a>`;
-           } else {
-             timeDisplay = `<span class="match-time">📅 ${formattedDateTime}</span>`;
+       if (isCompleted) {
+         // Completed match: show scores and result symbol, keep date/time without link
+         const resultSymbol = getResultSymbol(actualResult); // returns "🏠1", "🤝X", "✈️2"
+         let homeScore = '';
+         let awayScore = '';
+         if (actualScore) {
+           const parts = actualScore.split('-');
+           if (parts.length === 2) {
+             homeScore = parts[0].trim();
+             awayScore = parts[1].trim();
            }
-         } else {
-           timeDisplay = `<span class="match-time">📅 ${formattedDateTime}</span>`;
          }
+         
+         // Format date/time (no link)
+         let displayDateTime = '';
+         if (matchObj.date && matchObj.time) {
+           const dateParts = matchObj.date.split('/');
+           if (dateParts.length === 3) {
+             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+             const month = parseInt(dateParts[1]) - 1;
+             const day = parseInt(dateParts[0]);
+             displayDateTime = `${monthNames[month]} ${day} ${matchObj.time}`;
+           }
+         }
+         
+         gridHtml = `
+           <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 2px; align-items:center; justify-items:center; width:100%;">
+             <!-- Row 1: Home -->
+             <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
+             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
+             <div style="font-size:0.9em; font-weight:bold; color:#333;">${homeScore}</div>
+             <div style="font-size:0.9em; color:#666; white-space:nowrap; width:100%; text-align:center;">${displayDateTime}</div>
+             
+             <!-- Row 2: Away -->
+             <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
+             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
+             <div style="font-size:0.9em; font-weight:bold; color:#333;">${awayScore}</div>
+             <div style="font-size:0.9em; font-weight:bold; color:#4CAF50; width:100%; text-align:center;">${resultSymbol}</div>
+           </div>
+         `;
        } else {
-         timeDisplay = `<span class="match-time">📅 ${formattedDateTime}</span>`;
-       }
-       
-       if (showTransmission) {
-         if (matchObj.transmission && matchObj.transmission.includes('LiveModeTV')) {
-           timeDisplay += `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" class="transmission-link" onclick="event.stopPropagation()">📺 ${matchObj.transmission}</a>`;
-         } else if (matchObj.transmission) {
-           timeDisplay += `<span class="transmission-info">📺 ${matchObj.transmission}</span>`;
+         // Non-completed: show calendar and transmission
+         // Format date/time with link if available
+         let dateTimeStr = '';
+         let calHtml = '';
+         if (matchObj.date && matchObj.time) {
+           const dateParts = matchObj.date.split('/');
+           if (dateParts.length === 3) {
+             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+             const month = parseInt(dateParts[1]) - 1;
+             const day = parseInt(dateParts[0]);
+             dateTimeStr = `${monthNames[month]} ${day} ${matchObj.time}`;
+           }
+           // Calendar link if possible
+           const calUrl = getGoogleCalendarUrl(matchObj.match, homeTeam, visitorTeam, matchObj.date, matchObj.time, matchObj.transmission);
+           if (calUrl) {
+             calHtml = `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;white-space:nowrap;" title="Add to calendar">${dateTimeStr}</a>`;
+           } else {
+             calHtml = `<span style="color:#FFD700;white-space:nowrap;">${dateTimeStr}</span>`;
+           }
          }
+         
+         // Transmission
+         let transHtml = '';
+         if (showTransmission && matchObj.transmission) {
+           const transText = matchObj.transmission;
+           if (transText.includes('LiveModeTV')) {
+             transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#FFD700;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
+           } else {
+             transHtml = `<span style="color:white;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;">${transText}</span>`;
+           }
+         }
+         
+         gridHtml = `
+           <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 2px; align-items:center; justify-items:center; width:100%;">
+             <!-- Row 1: Home -->
+             <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
+             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
+             <div style="font-size:0.9em; color:#FFD700;">📅</div>
+             <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center; color:#FFD700;">${calHtml}</div>
+             
+             <!-- Row 2: Away -->
+             <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
+             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
+             <div style="font-size:0.9em; color:#FFD700;">📺</div>
+             <div style="font-size:0.9em; width:100%; text-align:center; color:#FFD700;">${transHtml}</div>
+           </div>
+         `;
        }
        
+       // ---- Picks and radios (unchanged) ----
        let picksHtml = '';
        if (playerPicks.length > 0) {
          picksHtml = '<div class="picks-row">';
@@ -1391,7 +1455,7 @@ function loadMatches() {
        
        const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
        
-       matchDiv.innerHTML = `<div class="match-header"><span class="match-name">${matchObj.displayMatch}</span>${timeDisplay}${resultBadge}</div>${pickElementsHtml}`;
+       matchDiv.innerHTML = gridHtml + pickElementsHtml;
        matchesDiv.appendChild(matchDiv);
      });
      
