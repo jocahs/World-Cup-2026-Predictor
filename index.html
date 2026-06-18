@@ -377,6 +377,8 @@
    .knockout-bracket-grid {
      grid-template-columns: 1fr !important;
    }
+   .group-standings table { font-size: 0.7em; }
+   .group-standings th, .group-standings td { padding: 4px 3px; }
  }
 
  </style>
@@ -498,13 +500,11 @@ function showFloatingNotification(message, isError = false) {
   notification.textContent = message;
   notification.className = 'floating-notification';
   
-  // Always use gold background, unless it's an error
   if (isError) {
     notification.classList.add('error');
   } else {
-    // Override the default green with gold
     notification.style.background = '#FFD700';
-    notification.style.color = '#333'; // Dark text for better contrast on gold
+    notification.style.color = '#333';
   }
   
   void notification.offsetWidth;
@@ -513,7 +513,6 @@ function showFloatingNotification(message, isError = false) {
   clearTimeout(notification._hideTimeout);
   notification._hideTimeout = setTimeout(() => {
     notification.classList.remove('show');
-    // Reset background after hiding
     notification.style.background = '';
     notification.style.color = '';
   }, 3000);
@@ -907,7 +906,6 @@ async function onPlayerNameEdit() {
         const name = playerName.value.trim();
         if (name !== "") {
             await loadMyPicks(name);
-            // panel stays visible – no hide call
         }
     }
     updateToggleButtonText();
@@ -917,7 +915,7 @@ async function selectPlayer() {
     const playerName = document.getElementById("playerSelect").value;
     if (playerName) {
         await loadMyPicks(playerName);
-        hidePlayerSelectionIfVisible(); // hide after loading picks
+        hidePlayerSelectionIfVisible();
     } else {
         clearAllPicks();
         document.getElementById("playerName").value = "";
@@ -1160,7 +1158,6 @@ async function loadAllData() {
    await loadMatchesOnly();
 }
 
-// ================== HELPER: Relative Date ==================
 function getRelativeDate(dateStr) {
     if (!dateStr) return null;
     
@@ -1184,7 +1181,6 @@ function getRelativeDate(dateStr) {
     if (diffDays === -1) return 'Yesterday';
     return null;
 }
-// ================== END HELPER ==================
 
 function getResultSymbol(result) {
    if (result === "1") return "🏠1";
@@ -1200,54 +1196,113 @@ function getResultBadgeClass(result) {
    return "result-none";
 }
 
+// ============================================================
+// UPDATED: calculateGroupStandings with Goals For & Against
+// ============================================================
 function calculateGroupStandings(groupName, matchesArray) {
    const standings = {};
+   
+   // First pass: initialize all teams
    matchesArray.forEach(match => {
-     if (!match.displayMatch) return;
-     const teams = match.displayMatch.split(" vs ");
-     if (teams.length === 2) {
-       const tempDiv = document.createElement('div');
-       tempDiv.innerHTML = teams[0];
-       const team1 = tempDiv.textContent || tempDiv.innerText || teams[0];
-       tempDiv.innerHTML = teams[1];
-       const team2 = tempDiv.textContent || tempDiv.innerText || teams[1];
-       if (!standings[team1]) standings[team1] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
-       if (!standings[team2]) standings[team2] = { played: 0, won: 0, draw: 0, lost: 0, points: 0 };
-     }
-   });
-   matchesArray.forEach(match => {
-     if (!match.displayMatch) return;
-     const teams = match.displayMatch.split(" vs ");
-     if (teams.length === 2) {
-       const tempDiv = document.createElement('div');
-       tempDiv.innerHTML = teams[0];
-       const team1 = tempDiv.textContent || tempDiv.innerText || teams[0];
-       tempDiv.innerHTML = teams[1];
-       const team2 = tempDiv.textContent || tempDiv.innerText || teams[1];
-       const actual = actualResults[match.match];
-       if (actual && actual.result) {
-         standings[team1].played++;
-         standings[team2].played++;
-         if (actual.result === "1") {
-           standings[team1].won++;
-           standings[team1].points += 3;
-           standings[team2].lost++;
-         } else if (actual.result === "2") {
-           standings[team2].won++;
-           standings[team2].points += 3;
-           standings[team1].lost++;
-         } else if (actual.result === "X") {
-           standings[team1].draw++;
-           standings[team1].points += 1;
-           standings[team2].draw++;
-           standings[team2].points += 1;
+     let team1 = match.homeTeam;
+     let team2 = match.visitorTeam;
+     
+     // Fallback: extract from displayMatch if homeTeam/visitorTeam missing
+     if (!team1 || !team2) {
+       if (match.displayMatch) {
+         const tempDiv = document.createElement('div');
+         tempDiv.innerHTML = match.displayMatch;
+         const teams = tempDiv.textContent.split(' vs ');
+         if (teams.length === 2) {
+           team1 = teams[0].trim();
+           team2 = teams[1].trim();
          }
        }
      }
+     
+     if (team1 && team2) {
+       if (!standings[team1]) {
+         standings[team1] = { played: 0, won: 0, draw: 0, lost: 0, points: 0, goalsFor: 0, goalsAgainst: 0 };
+       }
+       if (!standings[team2]) {
+         standings[team2] = { played: 0, won: 0, draw: 0, lost: 0, points: 0, goalsFor: 0, goalsAgainst: 0 };
+       }
+     }
    });
-   return Object.entries(standings).map(([name, stats]) => ({ name, ...stats })).sort((a, b) => b.points - a.points);
+   
+   // Second pass: process results
+   matchesArray.forEach(match => {
+     let team1 = match.homeTeam;
+     let team2 = match.visitorTeam;
+     
+     if (!team1 || !team2) {
+       if (match.displayMatch) {
+         const tempDiv = document.createElement('div');
+         tempDiv.innerHTML = match.displayMatch;
+         const teams = tempDiv.textContent.split(' vs ');
+         if (teams.length === 2) {
+           team1 = teams[0].trim();
+           team2 = teams[1].trim();
+         }
+       }
+     }
+     
+     if (!team1 || !team2) return;
+     if (!standings[team1] || !standings[team2]) return;
+     
+     const actual = actualResults[match.match];
+     if (actual && actual.result && actual.score) {
+       const scoreParts = actual.score.split('-');
+       const homeGoals = parseInt(scoreParts[0]) || 0;
+       const awayGoals = parseInt(scoreParts[1]) || 0;
+       
+       // Update goals
+       standings[team1].goalsFor += homeGoals;
+       standings[team1].goalsAgainst += awayGoals;
+       standings[team2].goalsFor += awayGoals;
+       standings[team2].goalsAgainst += homeGoals;
+       
+       // Update match results
+       standings[team1].played++;
+       standings[team2].played++;
+       
+       if (actual.result === "1") {
+         standings[team1].won++;
+         standings[team1].points += 3;
+         standings[team2].lost++;
+       } else if (actual.result === "2") {
+         standings[team2].won++;
+         standings[team2].points += 3;
+         standings[team1].lost++;
+       } else if (actual.result === "X") {
+         standings[team1].draw++;
+         standings[team1].points += 1;
+         standings[team2].draw++;
+         standings[team2].points += 1;
+       }
+     }
+   });
+   
+   return Object.entries(standings).map(([name, stats]) => ({
+     name,
+     played: stats.played,
+     won: stats.won,
+     draw: stats.draw,
+     lost: stats.lost,
+     points: stats.points,
+     goalsFor: stats.goalsFor,
+     goalsAgainst: stats.goalsAgainst,
+     goalDiff: stats.goalsFor - stats.goalsAgainst
+   })).sort((a, b) => {
+     if (b.points !== a.points) return b.points - a.points;
+     if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+     return b.goalsFor - a.goalsFor;
+   });
 }
 
+// ============================================================
+// UPDATED: createStandingsTable with GF, GA, GD columns
+// ============================================================
 function createStandingsTable(standings) {
    if (standings.length === 0) return '';
    
@@ -1261,6 +1316,9 @@ function createStandingsTable(standings) {
              <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">W</th>
              <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">D</th>
              <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">L</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">GF</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">GA</th>
+             <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">GD</th>
              <th style="border: 1px solid #3a4a5a; padding: 8px; text-align: center;">Pts</th>
            </tr>
          </thead>
@@ -1271,6 +1329,9 @@ function createStandingsTable(standings) {
      const flagCode = getFlagCode(team.name);
      const teamWithFlag = flagCode ? `<img src="https://flagcdn.com/20x15/${flagCode}.png" class="team-flag" alt="${team.name} flag"> ${team.name}` : team.name;
      
+     const gd = team.goalDiff;
+     const gdColor = gd > 0 ? '#2e7d32' : (gd < 0 ? '#c62828' : '#555');
+     
      html += `
        <tr>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: left;"><strong>${teamWithFlag}</strong></td>
@@ -1278,6 +1339,9 @@ function createStandingsTable(standings) {
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.won}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.draw}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.lost}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;">${team.goalsFor}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;">${team.goalsAgainst}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold; color: ${gdColor};">${gd >= 0 ? '+' : ''}${gd}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;"><strong>${team.points}</strong></td>
        </tr>
      `;
@@ -1302,18 +1366,16 @@ function loadMatches() {
      groupDiv.className = "group-block";
      groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">📋 ${group} ▼</div>`;
      
-     // Create a wrapper for the group content (standings + matches)
      const groupContent = document.createElement("div");
      const groupKey = group.replace(/ /g, '_');
      groupContent.id = `group-${groupKey}`;
      
-     // Restore expanded/collapsed state
      if (expandedGroups[groupKey] === undefined) {
        expandedGroups[groupKey] = false;
      }
      groupContent.style.display = expandedGroups[groupKey] ? "block" : "none";
      
-     // Standings (displayed above matches)
+     // Standings (displayed above matches) - now includes GF, GA, GD
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
      if (standingsHtml) {
@@ -1323,7 +1385,7 @@ function loadMatches() {
        groupContent.appendChild(standingsContainer);
      }
      
-     // Flex container for match cards (horizontal wrapping)
+     // Flex container for match cards
      const matchesWrapper = document.createElement("div");
      matchesWrapper.style.display = "flex";
      matchesWrapper.style.flexWrap = "wrap";
@@ -1344,7 +1406,6 @@ function loadMatches() {
        const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
        const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
        
-       // Player picks
        const playerPicks = [];
        const playerSelect = document.getElementById("playerSelect");
        const playerName = document.getElementById("playerName");
@@ -1359,12 +1420,10 @@ function loadMatches() {
          }
        }
        
-       // Create match card as a flex item
        const matchDiv = document.createElement("div");
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
        matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
        
-       // KEY CHANGE: Use flex: 1 0 auto to stretch and fill available space
        matchDiv.style.flex = "1 0 auto";
        matchDiv.style.minWidth = "200px";
        matchDiv.style.maxWidth = "300px";
@@ -1375,11 +1434,9 @@ function loadMatches() {
        matchDiv.style.border = "1px solid #e0e0e0";
        matchDiv.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)";
        
-       // ----- Build the grid layout -----
        const homeTeam = matchObj.homeTeam || '';
        const visitorTeam = matchObj.visitorTeam || '';
        
-       // Flags
        const homeFlagCode = getFlagCode(homeTeam);
        const awayFlagCode = getFlagCode(visitorTeam);
        const homeFlagHtml = homeFlagCode ? `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` : '';
@@ -1388,7 +1445,6 @@ function loadMatches() {
        let gridHtml = '';
        
        if (isCompleted) {
-         // Completed match: show scores and result symbol, keep date/time without link
          const resultSymbol = getResultSymbol(actualResult);
          let resultColor = '#4CAF50';
          if (actualResult === "X") resultColor = '#FF9800';
@@ -1404,7 +1460,6 @@ function loadMatches() {
            }
          }
          
-         // Format date/time (no link) - with relative date
          let displayDateTime = '';
          if (matchObj.date && matchObj.time) {
            const relativeDate = getRelativeDate(matchObj.date);
@@ -1423,13 +1478,11 @@ function loadMatches() {
          
          gridHtml = `
            <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 0px; align-items:center; justify-items:center; width:100%;">
-             <!-- Row 1: Home -->
              <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
              <div style="font-size:0.9em; font-weight:bold; color:#333;">${homeScore}</div>
              <div style="font-size:0.9em; color:#333; white-space:nowrap; width:100%; text-align:center;">${displayDateTime}</div>
              
-             <!-- Row 2: Away -->
              <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
              <div style="font-size:0.9em; font-weight:bold; color:#333;">${awayScore}</div>
@@ -1437,7 +1490,6 @@ function loadMatches() {
            </div>
          `;
        } else {
-         // Non-completed: show calendar and transmission - with relative date
          let dateTimeStr = '';
          let calHtml = '';
          if (matchObj.date && matchObj.time) {
@@ -1473,13 +1525,11 @@ function loadMatches() {
          
          gridHtml = `
            <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 0px; align-items:center; justify-items:center; width:100%;">
-             <!-- Row 1: Home -->
              <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
              <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📅</div>
              <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center; color:#FFD700; font-weight:bold;">${calHtml}</div>
              
-             <!-- Row 2: Away -->
              <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
              <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
              <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📺</div>
@@ -1488,7 +1538,6 @@ function loadMatches() {
          `;
        }
        
-       // ---- Picks and radios ----
        let picksHtml = '';
        if (playerPicks.length > 0) {
          picksHtml = '<div class="picks-row" style="margin-top:4px;padding-top:4px;border-top:1px dashed #ddd;">';
@@ -1608,7 +1657,6 @@ function getNextMatches() {
    return upcomingMatches.slice(0, 8);
 }
 
-// ================== createNextMatchesSection ==================
 function createNextMatchesSection() {
    const nextMatches = getNextMatches();
    if (nextMatches.length === 0) return '';
@@ -1626,13 +1674,11 @@ function createNextMatchesSection() {
      const homeTeam = tm.match.homeTeam || '';
      const visitorTeam = tm.match.visitorTeam || '';
 
-     // Flags
      const homeFlagCode = getFlagCode(homeTeam);
      const awayFlagCode = getFlagCode(visitorTeam);
      const homeFlagHtml = homeFlagCode ? `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` : '';
      const awayFlagHtml = awayFlagCode ? `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` : '';
 
-     // Format date/time with relative date
      let dateTimeStr = '';
      if (tm.match.date && tm.match.time) {
        const relativeDate = getRelativeDate(tm.match.date);
@@ -1649,7 +1695,6 @@ function createNextMatchesSection() {
        }
      }
 
-     // Calendar link – date/time with tooltip if clickable
      let calHtml = '';
      if (dateTimeStr && homeTeam && visitorTeam) {
        const calUrl = getGoogleCalendarUrl(tm.match.match, homeTeam, visitorTeam, tm.match.date, tm.match.time, tm.match.transmission);
@@ -1660,7 +1705,6 @@ function createNextMatchesSection() {
        }
      }
 
-     // Transmission – white normally, gold with tooltip when it's a LiveModeTV link
      let transHtml = '';
      if (tm.match.transmission) {
        const transText = tm.match.transmission;
@@ -1671,18 +1715,15 @@ function createNextMatchesSection() {
        }
      }
 
-     // Build card with a 4‑column grid
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
             style="cursor:pointer; background:rgba(255,255,255,0.15); border-radius:6px; padding:6px 8px; min-width:200px; max-width:300px; flex:1 0 auto; display:flex; flex-direction:column; align-items:center;">
          <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 2px; align-items:center; justify-items:center; width:100%;">
-           <!-- Row 1: Home -->
            <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
            <div style="font-weight:bold; font-size:0.9em; color:#fff; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
            <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📅</div>
            <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center;">${calHtml}</div>
 
-           <!-- Row 2: Away -->
            <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
            <div style="font-weight:bold; font-size:0.9em; color:#fff; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
            <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📺</div>
@@ -1695,7 +1736,6 @@ function createNextMatchesSection() {
    html += `</div></div>`;
    return html;
 }
-// ================== END createNextMatchesSection ==================
 
 function updateTodayMatches() {
    const container = document.getElementById("today-matches-container");
@@ -1710,7 +1750,6 @@ function updateTodayMatches() {
    }
 }
 
-// Debounced resize handler
 let resizeTimeout;
 window.addEventListener('resize', function() {
    clearTimeout(resizeTimeout);
@@ -1762,25 +1801,20 @@ function updateProgress() {
 
 // ============ ROUND OF 32 FUNCTIONS ============
 
-// Function to get group standings and determine qualifiers
 function getGroupQualifiers() {
   const groups = {};
   
-  // Get all group names from groupMatches
   const groupNames = Object.keys(groupMatches);
   
   groupNames.forEach(groupName => {
-    // Calculate standings for this group
     const standings = calculateGroupStandings(groupName, groupMatches[groupName]);
     
-    // Get the top 3 teams (winner, 2nd, third place)
     const qualifiers = {
       winner: standings[0]?.name || null,
       runnerUp: standings[1]?.name || null,
       third: standings[2]?.name || null
     };
     
-    // Store in groups object with the group letter
     const groupLetter = groupName.replace('Group ', '');
     groups[groupLetter] = qualifiers;
   });
@@ -1788,18 +1822,15 @@ function getGroupQualifiers() {
   return groups;
 }
 
-// Function to get third-place teams with their stats for sorting
 function getThirdPlaceTeamsWithStats(groups) {
   const thirdPlaceTeams = [];
   const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
   
   groupLetters.forEach(letter => {
     if (groups[letter] && groups[letter].third) {
-      // Find the group's matches to calculate stats for the third-place team
       const groupName = 'Group ' + letter;
       const matches = groupMatches[groupName] || [];
       
-      // Calculate the third-place team's stats
       let points = 0;
       let goalDiff = 0;
       let goalsFor = 0;
@@ -1811,7 +1842,6 @@ function getThirdPlaceTeamsWithStats(groups) {
           const homeScore = parseInt(scoreParts[0]);
           const awayScore = parseInt(scoreParts[1]);
           
-          // Extract team names from displayMatch
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = match.displayMatch;
           const teams = tempDiv.textContent.split(' vs ');
@@ -1820,7 +1850,6 @@ function getThirdPlaceTeamsWithStats(groups) {
             const team1 = teams[0].trim();
             const team2 = teams[1].trim();
             
-            // Determine which team is the third-place team
             if (team1 === groups[letter].third) {
               goalsFor += homeScore;
               goalDiff += (homeScore - awayScore);
@@ -1849,32 +1878,26 @@ function getThirdPlaceTeamsWithStats(groups) {
   return thirdPlaceTeams;
 }
 
-// Function to get the best third-place teams (sorted by points, goal diff, goals for)
 function getBestThirdPlaceTeams(groups) {
   const thirdPlaceTeams = getThirdPlaceTeamsWithStats(groups);
   
-  // Sort by points (descending), then goal difference (descending), then goals for (descending)
   thirdPlaceTeams.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
     return b.goalsFor - a.goalsFor;
   });
   
-  // Return only the top 8
   return thirdPlaceTeams.slice(0, 8);
 }
 
-// Function to generate Round of 32 matches
 function generateKnockoutMatches() {
   const groups = getGroupQualifiers();
   const thirdPlaceTeams = getBestThirdPlaceTeams(groups);
   
-  // Assign third place teams to their positions based on ranking
   const thirdPlaceAssignments = {};
   const thirdPlaceReasons = {};
   const thirdPlaceKeys = ['B/E/F/I', 'A/C/D/F', 'A/B/C/G', 'A/B/C/H', 'A/B/D/E', 'C/D/G/H', 'B/E/F/K', 'B/E/I/J', 'C/F/G/J', 'E/F/G/H', 'A/C/D/I', 'D/E/H/I'];
   
-  // Assign the 8 best third-place teams to the first 8 slots
   const sortedKeys = thirdPlaceKeys.slice(0, 8);
   thirdPlaceTeams.forEach((team, index) => {
     if (index < sortedKeys.length) {
@@ -1883,7 +1906,6 @@ function generateKnockoutMatches() {
     }
   });
   
-  // Round of 32 match pairings with reasons
   const knockoutMatches = [
     { id: 1, home: '1st Group D', homeReason: '1st Group D', away: '3rd Group B/E/F/I', awayReason: '' },
     { id: 2, home: '1st Group E', homeReason: '1st Group E', away: '3rd Group A/C/D/F', awayReason: '' },
@@ -1905,14 +1927,12 @@ function generateKnockoutMatches() {
     { id: 18, home: '2nd Group K', homeReason: '2nd Group K', away: '2nd Group L', awayReason: '2nd Group L' }
   ];
   
-  // Replace placeholders with actual team names
   return knockoutMatches.map(match => {
     let homeTeam = match.home;
     let awayTeam = match.away;
     let homeReason = match.homeReason;
     let awayReason = match.awayReason;
     
-    // Replace with actual team names if available
     if (homeTeam.includes('1st Group')) {
       const letter = homeTeam.replace('1st Group ', '');
       homeTeam = groups[letter]?.winner || homeTeam;
@@ -1921,7 +1941,6 @@ function generateKnockoutMatches() {
       homeTeam = groups[letter]?.runnerUp || homeTeam;
     }
     
-    // Handle third place teams
     if (awayTeam.includes('3rd Group')) {
       const key = awayTeam.replace('3rd Group ', '');
       awayTeam = thirdPlaceAssignments[key] || awayTeam;
@@ -1940,7 +1959,6 @@ function generateKnockoutMatches() {
   });
 }
 
-// Function to render the Round of 32 bracket
 function renderKnockoutBracket() {
   const matches = generateKnockoutMatches();
   const container = document.getElementById('knockout-matches');
@@ -1953,7 +1971,6 @@ function renderKnockoutBracket() {
       <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 100%; margin: 0 auto; overflow: hidden;">
   `;
   
-  // All matches in a single flow - sorted left to right
   matches.forEach((match, index) => {
     html += createMatchCard(match, index + 1);
   });
@@ -1964,7 +1981,6 @@ function renderKnockoutBracket() {
 
 
 function createMatchCard(match, matchNumber) {
-  // Helper to process a single team
   function processTeam(team, reason) {
     const isTBD = team === 'TBD' || team.includes('1st Group') || team.includes('2nd Group') || team.includes('3rd Group');
     const flag = getFlagCode(team);
@@ -2005,13 +2021,11 @@ function createMatchCard(match, matchNumber) {
 // ============ END ROUND OF 32 FUNCTIONS ============
 
 function initTabs() {
-  // Initially show group matches with active class
   const groupContainer = document.getElementById("group-matches");
   if (groupContainer) {
     groupContainer.classList.add("active");
   }
   
-  // Set initial active state for group tab
   const groupTab = document.querySelector('.stage-tab[data-stage="group"]');
   if (groupTab) {
     groupTab.classList.add("active");
@@ -2021,31 +2035,25 @@ function initTabs() {
     tab.addEventListener('click', () => {
       const stage = tab.dataset.stage;
       
-      // Remove active class from all tabs
       document.querySelectorAll('.stage-tab').forEach(t => {
         t.classList.remove('active');
       });
       
-      // Add active class to clicked tab
       tab.classList.add('active');
       
-      // Hide all containers
       document.querySelectorAll('.matches-container').forEach(c => {
         c.classList.remove('active');
       });
       
       if (stage === 'group') {
-        // Show group container
         const container = document.getElementById('group-matches');
         if (container) {
           container.classList.add('active');
         }
       } else if (stage === 'knockout') {
-        // Show Round of 32 container
         const container = document.getElementById('knockout-matches');
         if (container) {
           container.classList.add('active');
-          // Render the bracket
           renderKnockoutBracket();
         }
       }
@@ -2091,24 +2099,18 @@ function togglePlayerSelection() {
   
   if (!playerSelection) return;
   
-  // Check if there's a player selected or name entered
   const hasPlayer = playerSelect && playerSelect.value !== "";
   const hasName = playerName && playerName.value.trim() !== "";
   const hasPlayerSelected = hasPlayer || hasName;
   
   const isVisible = playerSelection.classList.contains("visible");
   
-  // If the player selection is NOT visible, show it and set button to "Hide player selection"
   if (!isVisible) {
-    // Show the player selection
     playerSelection.classList.add("visible");
-    // Always show "Hide player selection" after showing
     toggleBtn.textContent = "Hide player selection";
   } else {
-    // Player selection IS visible - hide it
     playerSelection.classList.remove("visible");
     
-    // After hiding, determine the button text
     if (hasPlayerSelected) {
       toggleBtn.textContent = "Show player selection";
     } else {
@@ -2120,11 +2122,10 @@ function togglePlayerSelection() {
 function hidePlayerSelectionIfVisible() {
     const playerSelection = document.getElementById("player-selection");
     if (playerSelection && playerSelection.classList.contains("visible")) {
-        togglePlayerSelection(); // toggles off (hides it)
+        togglePlayerSelection();
     }
 }
 
-// Add CSS animation if not already present
 const style = document.createElement('style');
 style.textContent = `
   @keyframes fadeOut {
@@ -2143,7 +2144,6 @@ if ('serviceWorker' in navigator) {
 initTabs();
 loadAllData();
 
-// Hide splash screen when page is ready
 window.addEventListener('load', function() {
   const splash = document.getElementById('splash-screen');
   if (splash) {
