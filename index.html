@@ -14,16 +14,16 @@
  <link rel="apple-touch-startup-image" href="icon-1125x2436.png">
 
  <style>
- body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 20px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
- .container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+ body { font-family: Arial, sans-serif; max-width: 1400px; margin: auto; padding: 5px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
+ .container { background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
  h1 { color: #1a1a1a; text-align: center; }
- .stage-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+ .stage-tabs { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; }
  .stage-tab { padding: 10px 10px; background: #e0e0e0; cursor: pointer; border-radius: 5px; transition: 0.3s; }
  .stage-tab.active { background: #4CAF50; color: white; }
  
  .matches-container { display: none; }
  .matches-container.active { display: block; }
- .group-block { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #2196F3; }
+ .group-block { margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #2196F3; }
  .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; text-align: center;}
  .group-title:hover { background: #0b7dda; }
  
@@ -89,20 +89,103 @@
    background: #f5f5f5;
  }
  
+/* ----- match card ----- */
 .match-card {
-   background: #f9f9f9;
-   border-bottom: 1px solid #e0e0e0;
-   padding: 12px 15px;
-   margin-bottom: 8px;
-   border-radius: 8px;
-   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-.match-card:last-child {
-   border-bottom: none;
+  flex: 1 0 auto;
+  min-width: 200px;
+  max-width: 400px;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 .match-card.completed {
-   background: #e8f5e9;
-   border-left: 4px solid #4CAF50;
+  background: #e8f5e9;
+  border-left: 4px solid #4CAF50;
+}
+
+/* the inner grid that holds teams, flags, scores, date/time */
+.match-grid {
+  display: grid;
+  grid-template-columns: 28px 1fr 28px 1fr;
+  gap: 4px 2px;
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+.match-grid .team-flag {
+  width: 20px;
+  height: 15px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  display: block;
+}
+.match-grid .team-name {
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #333;
+  max-width: 13ch;
+  word-break: break-word;
+  text-align: center;
+  line-height: 1.2;
+  width: 100%;
+}
+.match-grid .score {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #333;
+}
+.match-grid .datetime,
+.match-grid .result-symbol {
+  font-size: 0.9em;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+}
+.match-grid .datetime a {
+  color: #D4A017;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.match-grid .transmission {
+  font-size: 0.85em;
+}
+
+.match-grid .transmission a {
+  color: #0000E3;
+  text-decoration: none;
+  font-weight: bold;
+  word-break: break-word;
+  max-width: 13ch;
+  display: inline-block;
+  text-align: center;
+}
+.match-grid .transmission span {
+  color: #000;
+  word-break: break-word;
+  max-width: 13ch;
+  display: inline-block;
+  text-align: center;
+  font-weight: bold;
+}
+.match-grid .icon-cal,
+.match-grid .icon-tv {
+  font-size: 0.9em;
+  color: #FFD700;
+  font-weight: bold;
+}
+
+/* wrapper for match cards inside a group */
+.match-cards-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 4px 8px 8px 8px;
 }
 
  .match-header {
@@ -403,6 +486,44 @@
    }
    .group-standings table { font-size: 0.7em; }
    .group-standings th, .group-standings td { padding: 4px 3px; }
+ }
+
+ /* ----- responsive: small screens (fonts stay the same) ----- */
+ @media (max-width: 480px) {
+   .match-card {
+     flex: 1 0 100% !important;    /* force full width */
+     min-width: 0 !important;
+     max-width: 100% !important;
+     padding: 6px 4px !important;
+   }
+   .match-grid {
+     grid-template-columns: 20px 1fr 20px 1fr !important;
+     gap: 2px 0 !important;
+   }
+   /* Flags remain the same size – no shrinking */
+   .match-grid .team-flag {
+     width: 20px !important;
+     height: 15px !important;
+   }
+   /* No font-size overrides – everything keeps its original size */
+   .picks-row {
+     gap: 6px !important;
+     justify-content: flex-start;
+   }
+   .player-pick {
+     white-space: normal !important;
+     word-break: break-word;
+     padding: 4px 8px !important;
+   }
+   .radio-group {
+     gap: 8px !important;
+     flex-wrap: wrap !important;
+   }
+   .radio-group input[type="radio"] {
+     width: 18px !important;
+     height: 18px !important;
+     transform: scale(1) !important;
+   }
  }
 
  </style>
@@ -1464,13 +1585,9 @@ function loadMatches() {
        groupContent.appendChild(standingsContainer);
      }
      
-     // Flex container for match cards
+     // Flex container for match cards (using class)
      const matchesWrapper = document.createElement("div");
-     matchesWrapper.style.display = "flex";
-     matchesWrapper.style.flexWrap = "wrap";
-     matchesWrapper.style.gap = "8px";
-     matchesWrapper.style.justifyContent = "center";
-     matchesWrapper.style.padding = "4px 8px 8px 8px";
+     matchesWrapper.className = "match-cards-wrapper";
      
      groupMatches[group].forEach((matchObj, idx) => {
        const matchId = `${group}_${idx}`;
@@ -1503,23 +1620,13 @@ function loadMatches() {
        matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
        matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
        
-       matchDiv.style.flex = "1 0 auto";
-       matchDiv.style.minWidth = "200px";
-       matchDiv.style.maxWidth = "400px";
-       matchDiv.style.margin = "0";
-       matchDiv.style.padding = "8px 10px";
-       matchDiv.style.borderRadius = "8px";
-       matchDiv.style.background = isCompleted ? "#e8f5e9" : "#ffffff";
-       matchDiv.style.border = "1px solid #e0e0e0";
-       matchDiv.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)";
-       
        const homeTeam = matchObj.homeTeam || '';
        const visitorTeam = matchObj.visitorTeam || '';
        
        const homeFlagCode = getFlagCode(homeTeam);
        const awayFlagCode = getFlagCode(visitorTeam);
-       const homeFlagHtml = homeFlagCode ? `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` : '';
-       const awayFlagHtml = awayFlagCode ? `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` : '';
+       const homeFlagHtml = homeFlagCode ? `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` : '';
+       const awayFlagHtml = awayFlagCode ? `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` : '';
        
        let gridHtml = '';
        
@@ -1556,16 +1663,16 @@ function loadMatches() {
          }
          
          gridHtml = `
-           <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 0px; align-items:center; justify-items:center; width:100%;">
-             <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
-             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
-             <div style="font-size:0.9em; font-weight:bold; color:#333;">${homeScore}</div>
-             <div style="font-size:0.9em; color:#333; white-space:nowrap; width:100%; text-align:center;">${displayDateTime}</div>
+           <div class="match-grid">
+             <div class="team-flag">${homeFlagHtml}</div>
+             <div class="team-name">${homeTeam}</div>
+             <div class="score">${homeScore}</div>
+             <div class="datetime">${displayDateTime}</div>
              
-             <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
-             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
-             <div style="font-size:0.9em; font-weight:bold; color:#333;">${awayScore}</div>
-             <div style="font-size:0.9em; font-weight:bold; color:${resultColor}; width:100%; text-align:center;">${resultSymbol}</div>
+             <div class="team-flag">${awayFlagHtml}</div>
+             <div class="team-name">${visitorTeam}</div>
+             <div class="score">${awayScore}</div>
+             <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
            </div>
          `;
        } else {
@@ -1603,23 +1710,23 @@ function loadMatches() {
          }
          
          gridHtml = `
-           <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 0px; align-items:center; justify-items:center; width:100%;">
-             <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
-             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
-             <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📅</div>
-             <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center; color:#FFD700; font-weight:bold;">${calHtml}</div>
+           <div class="match-grid">
+             <div class="team-flag">${homeFlagHtml}</div>
+             <div class="team-name">${homeTeam}</div>
+             <div class="icon-cal">📅</div>
+             <div class="datetime">${calHtml}</div>
              
-             <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
-             <div style="font-weight:bold; font-size:0.9em; color:#333; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
-             <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📺</div>
-             <div style="font-size:0.9em; width:100%; text-align:center; color:#FFD700; font-weight:bold;">${transHtml}</div>
+             <div class="team-flag">${awayFlagHtml}</div>
+             <div class="team-name">${visitorTeam}</div>
+             <div class="icon-tv">📺</div>
+             <div class="transmission">${transHtml}</div>
            </div>
          `;
        }
        
        let picksHtml = '';
        if (playerPicks.length > 0) {
-         picksHtml = '<div class="picks-row" style="margin-top:4px;padding-top:4px;border-top:1px dashed #ddd;">';
+         picksHtml = '<div class="picks-row">';
          for (let pp of playerPicks) {
            let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
            picksHtml += `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${pp.correct ? 'pick-correct' : 'pick-wrong'}">${pickSymbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
@@ -1629,14 +1736,14 @@ function loadMatches() {
        
        let radioHtml = '';
        if (!isCompleted && !isPast) {
-         radioHtml = `<div class="radio-group" style="margin-top:4px;"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Win</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Win</label></div>`;
+         radioHtml = `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="markUnsaved('${matchId}')"> 🏠 Win</label><label><input type="radio" name="${matchId}" value="X" onchange="markUnsaved('${matchId}')"> 🤝 Draw</label><label><input type="radio" name="${matchId}" value="2" onchange="markUnsaved('${matchId}')"> ✈️ Win</label></div>`;
        } else if (!isCompleted && isPast) {
-         radioHtml = `<div class="radio-group disabled" style="margin-top:4px;"><span class="deadline-note" style="color:#f44336; font-size:0.8em;">⏰ Deadline passed</span></div>`;
+         radioHtml = `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
        } else {
-         radioHtml = `<div class="radio-group disabled" style="margin-top:4px;"></div>`;
+         radioHtml = `<div class="radio-group disabled"></div>`;
        }
        
-       const pickElementsHtml = `<div class="pick-elements" style="margin-top:2px;">${picksHtml}${radioHtml}</div>`;
+       const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
        
        matchDiv.innerHTML = gridHtml + pickElementsHtml;
        matchesWrapper.appendChild(matchDiv);
