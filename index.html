@@ -24,9 +24,33 @@
  .matches-container { display: none; }
  .matches-container.active { display: block; }
  .group-block { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #2196F3; }
- .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
+ .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; text-align: center;}
  .group-title:hover { background: #0b7dda; }
  
+/* Make the group container a flex row with wrapping */
+.matches-container.active {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;               /* spacing between groups */
+    justify-content: center; /* center groups when space permits */
+}
+
+/* Each collapsed group block – fixed width, sits in a row */
+.group-block {
+    flex: 1 1 auto;          /* don't grow/shrink, size to content */
+    width: 10px;            /* adjust to your preference – fits title and small cards */
+    min-width: 125px;
+    max-width: 100%;
+    margin-bottom: 0;        /* gap handles spacing */
+}
+
+/* When expanded – full width, forces its own row */
+.group-block.expanded {
+    flex: 1 0 100%;          /* grow to take full width */
+    width: 100%;
+    max-width: 100%;
+}
+
  .group-standings {
    background: #2c3e50;
    margin: 10px 15px;
@@ -420,19 +444,19 @@
   </div>
 
   <div class="stage-tabs">
-    <div class="stage-tab active" data-stage="group">🏆 Group Stage</div>
-    <div class="stage-tab" data-stage="knockout">🏆 Knockout</div>
+    <!-- <div class="stage-tab active" data-stage="group">🏆 Group Stage</div>
+    <div class="stage-tab" data-stage="knockout">🏆 Knockout</div> -->
   </div>
 
   <div id="group-matches" class="matches-container"></div>
   <div id="knockout-matches" class="matches-container"></div>
   
-   <div style="margin: -10px auto; text-align: center;">
+   <div style="margin: 5px auto; text-align: center;">
      <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
       <button onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
     </div>
 
-<div class="container" style="text-align: center; margin-top: 10px; padding: 10px;">
+<div class="container" style="text-align: center; margin-top: 5px; padding: 10px;">
   
  <div onclick="shareApp()" style="cursor: pointer; display: inline-block; position: relative; -webkit-touch-callout: none;">
       <p style="margin: 5px 0 10px; color: #666; font-size: 0.9em;">Scan to open this page or click to share</p>
@@ -444,7 +468,7 @@
   </div>
   
   <p style="margin: 5px 0; color: #666; font-size: 0.9em;">
-  <a href="mailto:jocahs.jocahs@gmail.com" style="color: #666; text-decoration: none; transition: color 0.3s; padding: 8px 12px; display: inline-block; position: relative;"
+  <a href="mailto:jocahs.jocahs@gmail.com" style="color: #666; text-decoration: none; transition: color 0.3s; padding: 2px 12px; display: inline-block; position: relative;"
      onmouseover="this.style.color='#4CAF50'; document.getElementById('emailTooltip').style.display='block';"
      onmouseout="this.style.color='#666'; document.getElementById('emailTooltip').style.display='none';">
     @ 2026 João Silva
@@ -759,7 +783,7 @@ function loadScoresEditor() {
      groupDiv.style.borderRadius = "6px";
      groupDiv.style.overflow = "hidden";
      groupDiv.innerHTML = `
-       <div class="admin-group-title" onclick="toggleAdminGroup('${matchesId}')">${group} ▼</div>
+       <div class="admin-group-title" onclick="toggleAdminGroup('${matchesId}')">▼ ${group}</div>
        <div id="${matchesId}" class="admin-matches-container" style="padding: 6px 10px; display: none;"></div>
      `;
      const matchesDiv = groupDiv.querySelector(`#${matchesId}`);
@@ -827,37 +851,88 @@ function toggleAdminGroup(groupId) {
 
 async function saveAllScores() {
    const scoreUpdates = [];
+   const now = new Date();
+
    for (let group in groupMatches) {
      for (let i = 0; i < groupMatches[group].length; i++) {
        const cleanId = `${group.replace(/ /g, '_')}_${i}`;
        const matchName = groupMatches[group][i].match;
-       const homeScore = document.getElementById(`home-${cleanId}`)?.value;
-       const awayScore = document.getElementById(`away-${cleanId}`)?.value;
-       if (homeScore !== undefined && awayScore !== undefined && (homeScore !== "" || awayScore !== "")) {
-         const home = parseInt(homeScore) || 0;
-         const away = parseInt(awayScore) || 0;
-         let result = "";
-         if (home > away) result = "1";
-         else if (home < away) result = "2";
-         else if (home === away && home !== 0) result = "X";
-         scoreUpdates.push({ match: matchName, homeScore: home, awayScore: away, result: result });
+
+       // Get current scores from inputs (empty → treat as 0)
+       const homeInput = document.getElementById(`home-${cleanId}`);
+       const awayInput = document.getElementById(`away-${cleanId}`);
+       if (!homeInput || !awayInput) continue;
+
+       const homeScoreVal = homeInput.value.trim();
+       const awayScoreVal = awayInput.value.trim();
+       const homeScore = homeScoreVal === '' ? 0 : parseInt(homeScoreVal) || 0;
+       const awayScore = awayScoreVal === '' ? 0 : parseInt(awayScoreVal) || 0;
+
+       // Determine result from scores
+       let result = "";
+       if (homeScore > awayScore) result = "1";
+       else if (homeScore < awayScore) result = "2";
+       else if (homeScore === awayScore && homeScore !== 0) result = "X";
+       // else result remains "" (no score or 0-0)
+
+       // Get existing result from actualResults
+       const existing = actualResults[matchName] || {};
+       const existingResult = existing.result || "";
+       const existingScore = existing.score || "";
+
+       // Parse existing home/away scores from the stored score string "home-away"
+       let existingHome = 0, existingAway = 0;
+       if (existingScore) {
+         const parts = existingScore.split('-');
+         if (parts.length === 2) {
+           existingHome = parseInt(parts[0]) || 0;
+           existingAway = parseInt(parts[1]) || 0;
+         }
+       }
+
+       // Check if anything changed (result or scores)
+       const resultChanged = result !== existingResult;
+       const homeChanged = homeScore !== existingHome;
+       const awayChanged = awayScore !== existingAway;
+
+       // Only push if changed
+       if (resultChanged || homeChanged || awayChanged) {
+         scoreUpdates.push({
+           match: matchName,
+           homeScore: homeScore,
+           awayScore: awayScore,
+           result: result
+         });
        }
      }
    }
+
    if (scoreUpdates.length === 0) {
-     showFloatingNotification("No scores to save!", true);
+     showFloatingNotification("No scores changed!", false);
      return;
    }
-   
+
    showLoading("Saving scores...");
-   
+
    try {
      const params = new URLSearchParams();
      params.append("action", "saveScores");
      params.append("data", JSON.stringify(scoreUpdates));
      await fetch(`${WEBAPP_URL}?${params.toString()}`);
-     showFloatingNotification(`✅ ${scoreUpdates.length} match scores saved!`);
-     closeAdminMode();
+
+     // Update local actualResults with new scores so that the UI updates without a full reload
+     scoreUpdates.forEach(update => {
+       actualResults[update.match] = {
+         result: update.result,
+         score: `${update.homeScore}-${update.awayScore}`
+       };
+     });
+
+     showFloatingNotification(`✅ ${scoreUpdates.length} match score(s) saved!`);
+
+     // Reload matches and leaderboard (this also updates group standings)
+     closeAdminMode(); // this calls loadMatchesOnly() which reloads data
+
    } catch(e) {
      showFloatingNotification("Error saving scores: " + e.message, true);
      hideLoading();
@@ -1364,7 +1439,7 @@ function loadMatches() {
    for (let group of sortedGroups) {
      const groupDiv = document.createElement("div");
      groupDiv.className = "group-block";
-     groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">📋 ${group} ▼</div>`;
+     groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">▼ ${group}</div>`;
      
      const groupContent = document.createElement("div");
      const groupKey = group.replace(/ /g, '_');
@@ -1581,10 +1656,6 @@ function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
        if (parent.classList && parent.classList.contains('matches-container')) {
          if (parent.id === 'group-matches') targetStage = 'group';
          else if (parent.id === 'knockout-matches') targetStage = 'knockout';
-         else if (parent.id === 'round16-matches') targetStage = 'round16';
-         else if (parent.id === 'quarter-matches') targetStage = 'quarter';
-         else if (parent.id === 'semi-matches') targetStage = 'semi';
-         else if (parent.id === 'final-matches') targetStage = 'final';
          break;
        }
        parent = parent.parentElement;
@@ -1768,6 +1839,12 @@ function toggleGroup(id) {
       const isHidden = el.style.display === "none" || el.style.display === "";
       el.style.display = isHidden ? "block" : "none";
       expandedGroups[id] = el.style.display === "block";
+
+      // Toggle the 'expanded' class on the parent group block
+      const groupDiv = el.closest('.group-block');
+      if (groupDiv) {
+         groupDiv.classList.toggle('expanded', el.style.display === "block");
+      }
    }
 }
 
