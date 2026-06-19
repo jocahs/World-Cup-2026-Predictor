@@ -1450,7 +1450,11 @@ function loadMatches() {
      }
      groupContent.style.display = expandedGroups[groupKey] ? "block" : "none";
      
-     // Standings (displayed above matches) - now includes GF, GA, GD
+    if (expandedGroups[groupKey]) {
+      groupDiv.classList.add('expanded');
+    }
+
+     // Standings (displayed above matches)
      const standings = calculateGroupStandings(group, groupMatches[group]);
      const standingsHtml = createStandingsTable(standings);
      if (standingsHtml) {
