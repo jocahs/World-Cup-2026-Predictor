@@ -1501,7 +1501,7 @@ function loadMatches() {
        
        matchDiv.style.flex = "1 0 auto";
        matchDiv.style.minWidth = "200px";
-       matchDiv.style.maxWidth = "300px";
+       matchDiv.style.maxWidth = "400px";
        matchDiv.style.margin = "0";
        matchDiv.style.padding = "8px 10px";
        matchDiv.style.borderRadius = "8px";
@@ -1647,56 +1647,70 @@ function loadMatches() {
 }
 
 function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
-   let targetStage = 'group';
-   
-   const groupElement = document.getElementById(groupId);
-   if (groupElement) {
-     let parent = groupElement.parentElement;
-     while (parent) {
-       if (parent.classList && parent.classList.contains('matches-container')) {
-         if (parent.id === 'group-matches') targetStage = 'group';
-         else if (parent.id === 'knockout-matches') targetStage = 'knockout';
-         break;
-       }
-       parent = parent.parentElement;
-     }
-   }
-   
-   document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
-   document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
-   
-   const tab = document.querySelector(`.stage-tab[data-stage="${targetStage}"]`);
-   if (tab) tab.classList.add('active');
-   
-   const container = document.getElementById(`${targetStage}-matches`);
-   if (container) container.classList.add('active');
-   
-   setTimeout(() => {
-     const groupDiv = document.getElementById(groupId);
-     if (groupDiv && groupDiv.style.display === "none") {
-       groupDiv.style.display = "block";
-     }
-     
-     const groupBlock = groupDiv ? groupDiv.closest('.group-block') : null;
-     if (groupBlock) {
-       groupBlock.style.display = 'block';
-     }
-     
-     const matchElement = document.getElementById(matchElementId);
-     if (matchElement) {
-       matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
-       matchElement.style.transition = "background 0.3s";
-       matchElement.style.background = "#fff3cd";
-       setTimeout(() => {
-         matchElement.style.background = "";
-       }, 3000);
-     } else {
-       const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest('.group-block');
-       if (groupBlock) {
-         groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
-       }
-     }
-   }, 100);
+  let targetStage = 'group';
+  
+  // Switch to the correct stage (group or knockout)
+  const groupElement = document.getElementById(groupId);
+  if (groupElement) {
+    let parent = groupElement.parentElement;
+    while (parent) {
+      if (parent.classList && parent.classList.contains('matches-container')) {
+        if (parent.id === 'group-matches') targetStage = 'group';
+        else if (parent.id === 'knockout-matches') targetStage = 'knockout';
+        break;
+      }
+      parent = parent.parentElement;
+    }
+  }
+  
+  // Activate the correct tab and container
+  document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
+  
+  const tab = document.querySelector(`.stage-tab[data-stage="${targetStage}"]`);
+  if (tab) tab.classList.add('active');
+  
+  const container = document.getElementById(`${targetStage}-matches`);
+  if (container) container.classList.add('active');
+  
+  // Expand the group and scroll to the match
+  setTimeout(() => {
+    // Get the group content div (id = group-<key>)
+    const groupDiv = document.getElementById(groupId);
+    if (groupDiv) {
+      // Ensure the group content is visible
+      groupDiv.style.display = 'block';
+      
+      // Extract the group key (e.g., "Group_A" from "group-Group_A")
+      const groupKey = groupId.replace('group-', '');
+      expandedGroups[groupKey] = true;
+      
+      // Get the parent group-block and add the 'expanded' class so it takes full width
+      const groupBlock = groupDiv.closest('.group-block');
+      if (groupBlock) {
+        groupBlock.classList.add('expanded');
+        // Do NOT set groupBlock.style.display = 'block' – that breaks flex layout.
+        // The 'expanded' class will set flex: 1 0 100% via CSS.
+      }
+    }
+    
+    // Now scroll to the actual match card
+    const matchElement = document.getElementById(matchElementId);
+    if (matchElement) {
+      matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      matchElement.style.transition = "background 0.3s";
+      matchElement.style.background = "#fff3cd";
+      setTimeout(() => {
+        matchElement.style.background = "";
+      }, 3000);
+    } else {
+      // Fallback: try to scroll to the group title if match card not found
+      const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest('.group-block');
+      if (groupBlock) {
+        groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, 100);
 }
 
 function getNextMatches() {
