@@ -1537,7 +1537,7 @@ function createStandingsTable(standings) {
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${team.lost}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;">${team.goalsFor}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;">${team.goalsAgainst}</td>
-         <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold; color: ${gdColor};">${gd >= 0 ? '+' : ''}${gd}</td>
+         <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold; color: ${gdColor};">${gd > 0 ? '+' : ''}${gd}</td>
          <td style="border: 1px solid #ddd; padding: 6px; text-align: center;"><strong>${team.points}</strong></td>
        </tr>
      `;
