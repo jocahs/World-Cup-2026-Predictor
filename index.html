@@ -15,7 +15,7 @@
 
 
  <style>
- body { font-family: Arial, sans-serif; max-width: "auto"; margin: 20px; padding: 5px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
+ body { font-family: Arial, sans-serif; max-width: "auto"; margin: 10px; padding: 0px; padding-right: 10px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
  .container { background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
  h1 { color: #1a1a1a; text-align: center; }
  .stage-tabs { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 100%;}
@@ -32,6 +32,7 @@
 .matches-container.active {
     display: flex;
     flex-wrap: wrap;
+    padding: 10px;
     gap: 5px;
     justify-content: center;
 }
@@ -486,8 +487,7 @@
    .team-flag { width: 18px; height: 12px; }
    .group-standings table { font-size: 0.7em; }
    .group-standings th, .group-standings td { padding: 4px 3px; }
-   .jQBracket .match { min-width: 120px; }
-   .jQBracket .team { font-size: 0.75em; }
+
  }
 
  @media (max-width: 480px) {
@@ -523,8 +523,6 @@
      height: 18px !important;
      transform: scale(1) !important;
    }
-   .jQBracket .match { min-width: 100px; }
-   .jQBracket .team { font-size: 0.65em; }
  }
 
 /* Ensure vertical scrollbar never overlaps content */
@@ -532,7 +530,6 @@ html {
   overflow-y: scroll;
 }
 body {
-  padding-right: 0px;
   box-sizing: border-box;
 }
 
@@ -594,10 +591,10 @@ body {
   <div id="group-matches" class="matches-container"></div>
   <div id="knockout-matches" class="matches-container"></div>
   
-   <div style="margin: 5px auto; text-align: center;">
-     <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
-      <button onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
-    </div>
+  <div style="margin: 5px auto; text-align: center;">
+  <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
+  <button onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
+  </div>
 
 <div class="container" style="text-align: center; margin-top: 5px; padding: 10px;">
   
