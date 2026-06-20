@@ -111,12 +111,16 @@
 /* the inner grid that holds teams, flags, scores, date/time */
 .match-grid {
   display: grid;
-  grid-template-columns: 28px 1fr 28px 1fr;
+  grid-template-columns: 28px 1fr 25px 1fr;
   gap: 4px 2px;
   align-items: center;
   justify-items: center;
   width: 100%;
   box-sizing: border-box;
+  
+  align-content: center;   /* ✅ add this */
+  height: 100%;            /* ✅ ensures vertical centering works */
+
 }
 .match-grid .team-flag {
   width: 20px;
@@ -304,14 +308,14 @@
 .radio-group {
    margin-top: 6px;
    display: flex;
-   gap: 20px;
+   gap: 10px;
    flex-wrap: wrap;
 }
 .radio-group label {
    cursor: pointer;
    display: inline-flex;
    align-items: center;
-   gap: 6px;
+   gap: 3px;
    font-size: 1em;
 }
 .radio-group input[type="radio"] {
@@ -593,8 +597,9 @@ body {
   
   <div style="margin: 5px auto; text-align: center;">
   <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
-  <button onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
+  <button id="adminLoginBtn" onclick="showAdminLogin()" style="background: #f44336; padding: 10px 10px; color: white;">🔐 Edit Scores (Admin)</button>
   </div>
+  <div id="admin-toolbar" style="display:none; margin: 10px auto; text-align: center;"></div>
 
 <div class="container" style="text-align: center; margin-top: 5px; padding: 10px;">
   
@@ -630,23 +635,11 @@ body {
   </style>
 </div>
 
- <div id="admin-section" style="display: none;">
-   <div class="container">
-     <h3>🔧 Edit Match Scores</h3>
-     <p>Enter the final scores for each match.</p>
-     <div id="scores-editor"></div>
-     <div style="margin-top: 10px; text-align: center;">
-       <button onclick="saveAllScores()" class="btn-orange">💾 Save Scores</button>
-       <button onclick="closeAdminMode()" class="btn-red">Exit Edit Mode</button>
-     </div>
-   </div>
- </div>
-
  <!-- Floating Notification -->
  <div id="floatingNotification" class="floating-notification"></div>
 
  <script>
- const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzfhEjhtGd0d-cBs-fHabq1SWqVWw4CGdlrxTXmLedid9vd8PaJ7VPa_XDIkqCX1L2s/exec";
+ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyorko3As3Zu3R932doOZNAOScM3u-2gbhJDVLnlBsfS12bmD8cRhdSekkBnrmi5zIk/exec";
 const ADMIN_PASSWORD = "wc2026";
 
 let actualResults = {};
@@ -779,6 +772,44 @@ function formatDisplayDate(dateStr, timeStr) {
    return `${monthNames[month - 1]} ${day} ${timeStr}`;
 }
 
+function getMatchInputId(matchName) {
+  return matchName.replace(/[^a-zA-Z0-9]/g, '_');
+}
+
+function getMatchScoreInputHtml(matchObj, scoreValue, side) {
+  const inputId = `${side}-${getMatchInputId(matchObj.match)}`;
+  const value = scoreValue !== undefined && scoreValue !== null ? scoreValue : '';
+  if (isAdminMode) {
+    return `<input type="text" id="${inputId}" class="score-input" value="${value}" maxlength="2" inputmode="numeric"
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)"
+                  onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();"
+                  style="width: 15px; padding: 6px 8px; font-size: 0.95em; border-radius: 6px; border: 1px solid #ccc; text-align: center;">`;
+}
+  return `<div class="score">${value}</div>`;
+}
+
+function updateAdminToolbar() {
+  const toolbar = document.getElementById('admin-toolbar');
+  const loginBtn = document.getElementById('adminLoginBtn');
+  
+  if (!isAdminMode) {
+    // Hide admin toolbar, show the login button
+    if (toolbar) toolbar.style.display = 'none';
+    if (loginBtn) loginBtn.style.display = 'inline-block';
+    return;
+  }
+  
+  // Admin mode active: show toolbar, hide login button
+  if (toolbar) {
+    toolbar.style.display = 'block';
+    toolbar.innerHTML = `
+      <button onclick="saveAllScores()" class="btn-orange">💾 Save Scores</button>
+      <button onclick="closeAdminMode()" class="btn-red">Exit Admin Mode</button>
+    `;
+  }
+  if (loginBtn) loginBtn.style.display = 'none';
+}
+
 function isWithinThreeHoursAfter(matchDateTime) {
    if (!matchDateTime) return false;
    const now = new Date();
@@ -818,12 +849,8 @@ function showAdminLogin() {
    const password = prompt("Enter admin password to edit scores:");
    if (password === ADMIN_PASSWORD) {
      isAdminMode = true;
-     const adminSection = document.getElementById("admin-section");
-     if (adminSection) {
-       adminSection.style.display = "block";
-       loadScoresEditor();
-       adminSection.scrollIntoView({ behavior: "smooth" });
-     }
+     updateAdminToolbar();
+     loadMatchesOnly();
    } else if (password) {
      showFloatingNotification("Wrong password!", true);
    }
@@ -831,7 +858,7 @@ function showAdminLogin() {
  
  function closeAdminMode() {
    isAdminMode = false;
-   document.getElementById("admin-section").style.display = "none";
+   updateAdminToolbar();
    loadMatchesOnly();
  }
  
@@ -962,9 +989,9 @@ function loadScoresEditor() {
        matchDiv.innerHTML = `
          <strong style="font-size: 0.8em; min-width: 120px;">${matchObj.match}</strong>
          <span style="font-size: 0.75em;">🏠</span>
-         <input type="number" id="home-${cleanId}" value="${homeScore}" style="width: 25px; padding: 4px; text-align: center; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc;" min="0" max="20">
+         ${getMatchScoreInputHtml(matchObj, homeScore, 'home')}
          <span style="font-size: 0.75em;">✈️</span>
-         <input type="number" id="away-${cleanId}" value="${awayScore}" style="width: 25px; padding: 4px; text-align: center; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc;" min="0" max="20">
+         ${getMatchScoreInputHtml(matchObj, awayScore, 'away')}
          <span id="result-preview-${cleanId}" style="font-weight: bold; font-size: 0.75em; margin-left: 2px;"></span>
        `;
        matchesDiv.appendChild(matchDiv);
@@ -1016,9 +1043,8 @@ async function saveAllScores() {
 
    for (let i = 0; i < allMatches.length; i++) {
      const matchObj = allMatches[i];
-     const group = matchObj.group || "Other";
-     const cleanId = `${group.replace(/ /g, '_')}_${i}`;
      const matchName = matchObj.match;
+     const cleanId = getMatchInputId(matchName);
 
      const homeInput = document.getElementById(`home-${cleanId}`);
      const awayInput = document.getElementById(`away-${cleanId}`);
@@ -1352,6 +1378,7 @@ async function loadMatchesOnly() {
        });
      }
      
+     resolveKnockoutTeams();
      allPicks = data.picks || [];
      
      const playerSet = new Set();
@@ -1449,6 +1476,116 @@ function getResultBadgeClass(result) {
    if (result === "2") return "result-away";
    return "result-none";
 }
+
+function resolveKnockoutTeams() {
+   const groupStandings = {};
+   Object.keys(groupMatches).forEach(groupName => {
+     groupStandings[groupName] = calculateGroupStandings(groupName, groupMatches[groupName]);
+   });
+
+   const findMatch = (matchName) => {
+     let found = knockoutMatches.find(m => m.match === matchName);
+     if (found) return found;
+     for (let group in groupMatches) {
+       const gm = groupMatches[group].find(m => m.match === matchName);
+       if (gm) return gm;
+     }
+     return null;
+   };
+
+   const getMatchOutcome = (matchName) => {
+     const match = findMatch(matchName);
+     if (!match) return null;
+     const actual = actualResults[matchName];
+     if (!actual || !actual.result || !actual.score) return null;
+     const parts = actual.score.split('-');
+     if (parts.length !== 2) return null;
+     const homeGoals = parseInt(parts[0]) || 0;
+     const awayGoals = parseInt(parts[1]) || 0;
+
+     if (actual.result === '1' || homeGoals > awayGoals) {
+       return { winner: match.homeTeam, loser: match.visitorTeam };
+     }
+     if (actual.result === '2' || awayGoals > homeGoals) {
+       return { winner: match.visitorTeam, loser: match.homeTeam };
+     }
+     return null;
+   };
+
+   const resolvePlaceholder = (teamPlaceholder, visited = new Set()) => {
+     if (!teamPlaceholder || typeof teamPlaceholder !== 'string') return teamPlaceholder;
+     const normalized = teamPlaceholder.trim();
+     if (visited.has(normalized)) return teamPlaceholder;
+     visited.add(normalized);
+
+     const matchRef = normalized.match(/^(?:Winner|Loser|Winner of|Loser of)\s*(?:Match\s*)?(\d+)$/i);
+     if (matchRef) {
+       const matchName = `Match ${matchRef[1]}`;
+       const outcome = getMatchOutcome(matchName);
+       if (outcome) {
+         if (/^Winner/i.test(normalized)) return resolvePlaceholder(outcome.winner, visited);
+         if (/^Loser/i.test(normalized)) return resolvePlaceholder(outcome.loser, visited);
+       }
+       return teamPlaceholder;
+     }
+
+     let groupMatch = normalized.match(/^(?:Winner|Winner of|Loser|Loser of|Runner[- ]?up|1st|2nd|3rd|4th)\s*(?:of\s*)?(?:Group\s*)?([A-Z0-9]+)$/i);
+     if (groupMatch) {
+       const position = normalized.match(/^(Winner|Winner of|Loser|Loser of|Runner[- ]?up|1st|2nd|3rd|4th)/i)?.[1];
+       const groupName = groupMatch[1];
+       const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] || groupStandings[groupName.toUpperCase()];
+       if (standings && standings.length > 0) {
+         if (/^Winner/i.test(position) || /^1st/i.test(position)) {
+           return resolvePlaceholder(standings[0].name, visited);
+         }
+         if (/^(Loser|Runner[- ]?up|2nd)/i.test(position)) {
+           return resolvePlaceholder(standings[1]?.name || standings[0]?.name, visited);
+         }
+         if (/^3rd/i.test(position)) {
+           return resolvePlaceholder(standings[2]?.name || standings[1]?.name, visited);
+         }
+         if (/^4th/i.test(position)) {
+           return resolvePlaceholder(standings[3]?.name || standings[2]?.name, visited);
+         }
+       }
+       return teamPlaceholder;
+     }
+
+     groupMatch = normalized.match(/^(?:Group\s*)?([A-Z0-9]+)\s*(Winner|Runner[- ]?up|Loser|1st|2nd|3rd|4th)$/i);
+     if (groupMatch) {
+       const groupName = groupMatch[1];
+       const position = groupMatch[2];
+       const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] || groupStandings[groupName.toUpperCase()];
+       if (standings && standings.length > 0) {
+         if (/^Winner/i.test(position) || /^1st/i.test(position)) {
+           return resolvePlaceholder(standings[0].name, visited);
+         }
+         if (/^(Runner[- ]?up|Loser|2nd)/i.test(position)) {
+           return resolvePlaceholder(standings[1]?.name || standings[0]?.name, visited);
+         }
+         if (/^3rd/i.test(position)) {
+           return resolvePlaceholder(standings[2]?.name || standings[1]?.name, visited);
+         }
+         if (/^4th/i.test(position)) {
+           return resolvePlaceholder(standings[3]?.name || standings[2]?.name, visited);
+         }
+       }
+       return teamPlaceholder;
+     }
+
+     return teamPlaceholder;
+   };
+
+   knockoutMatches.forEach(match => {
+     const resolvedHome = resolvePlaceholder(match.homeTeam);
+     const resolvedAway = resolvePlaceholder(match.visitorTeam);
+     if (resolvedHome !== match.homeTeam || resolvedAway !== match.visitorTeam) {
+       match.homeTeam = resolvedHome;
+       match.visitorTeam = resolvedAway;
+       match.displayMatch = createMatchNameWithFlags(resolvedHome, resolvedAway);
+     }
+   });
+ }
 
 function calculateGroupStandings(groupName, matchesArray) {
    const standings = {};
@@ -1640,6 +1777,8 @@ function loadMatches() {
        const actualResult = actual ? actual.result : null;
        const actualScore = actual ? actual.score : null;
        const isCompleted = actualResult !== null;
+       let homeScore = '';
+       let awayScore = '';
        
        const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
        const now = new Date();
@@ -1691,6 +1830,9 @@ function loadMatches() {
            }
          }
          
+         const scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
+         const scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
+         
          let displayDateTime = '';
          if (matchObj.date && matchObj.time) {
            const relativeDate = getRelativeDate(matchObj.date);
@@ -1711,12 +1853,12 @@ function loadMatches() {
            <div class="match-grid">
              <div class="team-flag">${homeFlagHtml}</div>
              <div class="team-name">${homeTeam}</div>
-             <div class="score">${homeScore}</div>
+             ${scoreLeftHtml}
              <div class="datetime">${displayDateTime}</div>
              
              <div class="team-flag">${awayFlagHtml}</div>
              <div class="team-name">${visitorTeam}</div>
-             <div class="score">${awayScore}</div>
+             ${scoreRightHtml}
              <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
            </div>
          `;
@@ -1754,16 +1896,19 @@ function loadMatches() {
            }
          }
          
+         const scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
+         const scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
+
          gridHtml = `
            <div class="match-grid">
              <div class="team-flag">${homeFlagHtml}</div>
              <div class="team-name">${homeTeam}</div>
-             <div class="icon-cal">📅</div>
+             ${scoreLeftHtml}
              <div class="datetime">${calHtml}</div>
              
              <div class="team-flag">${awayFlagHtml}</div>
              <div class="team-name">${visitorTeam}</div>
-             <div class="icon-tv">📺</div>
+             ${scoreRightHtml}
              <div class="transmission">${transHtml}</div>
            </div>
          `;
@@ -2108,6 +2253,20 @@ function createKnockoutCard(matchObj) {
   const awayFlagHtml = awayFlagCode ? `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` : '';
 
   let gridHtml = '';
+  let homeScore = '';
+  let awayScore = '';
+  const matchNumberMatch = matchObj.match.match(/\d+/);
+  const matchNumberLabel = matchNumberMatch ? `<div class="match-number" style="text-align:center;font-size: 0.85em; color:#4CAF50; font-weight:bold; margin-bottom: 8px;">Match ${matchNumberMatch[0]}</div>` : '';
+  let scoreLeftHtml = '';
+  let scoreRightHtml = '';
+
+  if (actualScore) {
+    const parts = actualScore.split('-');
+    if (parts.length === 2) {
+      homeScore = parts[0].trim();
+      awayScore = parts[1].trim();
+    }
+  }
 
   if (isCompleted) {
     const resultSymbol = getResultSymbol(actualResult);
@@ -2115,15 +2274,8 @@ function createKnockoutCard(matchObj) {
     if (actualResult === "X") resultColor = '#FF9800';
     else if (actualResult === "2") resultColor = '#f44336';
 
-    let homeScore = '';
-    let awayScore = '';
-    if (actualScore) {
-      const parts = actualScore.split('-');
-      if (parts.length === 2) {
-        homeScore = parts[0].trim();
-        awayScore = parts[1].trim();
-      }
-    }
+    scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
+    scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
 
     let displayDateTime = '';
     if (matchObj.date && matchObj.time) {
@@ -2145,12 +2297,12 @@ function createKnockoutCard(matchObj) {
       <div class="match-grid">
         <div class="team-flag">${homeFlagHtml}</div>
         <div class="team-name">${homeTeam}</div>
-        <div class="score">${homeScore}</div>
+        ${scoreLeftHtml}
         <div class="datetime">${displayDateTime}</div>
         
         <div class="team-flag">${awayFlagHtml}</div>
         <div class="team-name">${visitorTeam}</div>
-        <div class="score">${awayScore}</div>
+        ${scoreRightHtml}
         <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
       </div>
     `;
@@ -2188,16 +2340,19 @@ function createKnockoutCard(matchObj) {
       }
     }
 
+    scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
+    scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
+
     gridHtml = `
       <div class="match-grid">
         <div class="team-flag">${homeFlagHtml}</div>
         <div class="team-name">${homeTeam}</div>
-        <div class="icon-cal">📅</div>
+        ${scoreLeftHtml}
         <div class="datetime">${calHtml}</div>
         
         <div class="team-flag">${awayFlagHtml}</div>
         <div class="team-name">${visitorTeam}</div>
-        <div class="icon-tv">📺</div>
+        ${scoreRightHtml}
         <div class="transmission">${transHtml}</div>
       </div>
     `;
@@ -2230,7 +2385,7 @@ function createKnockoutCard(matchObj) {
   const matchDiv = document.createElement("div");
   matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
   matchDiv.id = `match-knockout-${matchObj.match.replace(/ /g, '_')}`;
-  matchDiv.innerHTML = gridHtml + pickElementsHtml;
+  matchDiv.innerHTML = matchNumberLabel + gridHtml + pickElementsHtml;
   
   return matchDiv.outerHTML;
 }
