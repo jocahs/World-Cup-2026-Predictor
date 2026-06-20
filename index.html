@@ -15,7 +15,7 @@
 
 
  <style>
- body { font-family: Arial, sans-serif; max-width: "auto"; margin: auto; padding: 5px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
+ body { font-family: Arial, sans-serif; max-width: "auto"; margin: 20px; padding: 5px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
  .container { background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
  h1 { color: #1a1a1a; text-align: center; }
  .stage-tabs { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 100%;}
@@ -532,12 +532,13 @@ html {
   overflow-y: scroll;
 }
 body {
-  padding-right: 20px;
+  padding-right: 0px;
   box-sizing: border-box;
 }
 
 /* Hide scrollbar on the knockout columns container */
 #knockout-matches .scrollable-container {
+  -webkit-overflow-scrolling: touch;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none; /* Firefox */
@@ -1809,42 +1810,6 @@ function renderKnockoutBracket() {
   if (!container) return;
   container.innerHTML = "";
 
-const styleTag = document.createElement('style');
-styleTag.textContent = `
-  #knockout-scrollbar {
-    height: 22px !important;
-    background: #e0e0e0;
-    border-radius: 6px;
-    overflow-x: scroll !important;  /* always show track */
-    overflow-y: hidden !important;
-  }
-  #knockout-scrollbar::-webkit-scrollbar {
-    height: 22px;
-    background: #d0d0d0;
-    border-radius: 6px;
-  }
-  #knockout-scrollbar::-webkit-scrollbar-track {
-    background: #d0d0d0;
-    border-radius: 6px;
-    border: 1px solid #bbb;
-  }
-  #knockout-scrollbar::-webkit-scrollbar-thumb {
-    background: #f44336;
-    border-radius: 6px;
-    border: 3px solid #d0d0d0;
-    box-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
-  }
-  #knockout-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #d32f2f;
-    box-shadow: 0 0 12px rgba(244, 67, 54, 0.8);
-  }
-  #knockout-scrollbar {
-    scrollbar-width: thick;
-    scrollbar-color: #f44336 #d0d0d0;
-  }
-`;
-container.appendChild(styleTag);
-
   if (!knockoutMatches || knockoutMatches.length === 0) {
     container.innerHTML = "<p style='text-align:center; padding:20px;'>No knockout matches loaded.</p>";
     return;
@@ -1948,10 +1913,10 @@ container.appendChild(styleTag);
 
   // ----- Build the HTML with the top scrollbar -----
   let html = `
-    <div style="padding: 10px; background: white; border-radius: 8px; max-width: 100%;">
-      <h3 style="text-align:center; margin-top:0;margin-bottom:5px;">🏆 Knockout stage</h3>
+    <div style="padding: 10px; margin: 10px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+      <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
       <!-- Horizontal scrollbar (visible, sits below title) -->
-      <div id="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; margin: 5px; background: #e0e0e0; border-radius: 6px; width: 100%; box-sizing: border-box;">
+      <div id="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; margin: 5px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
         <div style="height: 1px;"></div>
       </div>
       <!-- Columns container (scrollable but with hidden scrollbar) -->
@@ -1998,13 +1963,47 @@ container.appendChild(styleTag);
   html += `</div></div>`;
   container.innerHTML = html;
 
+  const styleTag = document.createElement('style');
+  styleTag.textContent = `
+    /* Main scrollbar container */
+  #knockout-scrollbar {
+    height: 22px;
+    background: transparent; /* ✅ important */
+    overflow-x: auto;
+  }
+
+  /* Scrollbar itself */
+  #knockout-scrollbar::-webkit-scrollbar {
+    height: 22px;
+  }
+
+  /* Track (the bar background) */
+  #knockout-scrollbar::-webkit-scrollbar-track {
+    background: #EB3324;    /* ✅ dark track */
+    border-radius: 6px;
+  }
+
+  /* Thumb (the moving part) */
+  #knockout-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #FFD700, #FFC107); /* ✅ gold */
+    border-radius: 6px;
+    border: 2px solid #EB3324;  /* ✅ creates padding effect */
+  }
+
+  /* Hover effect */
+  #knockout-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #FFC107, #FFB300);
+  }
+  `;
+  container.appendChild(styleTag);
+
   // ----- Sync scrollbar with columns container -----
   const scrollable = container.querySelector('.scrollable-container');
   const scrollbar = document.getElementById('knockout-scrollbar');
   if (scrollable && scrollbar) {
     // Set the scrollbar track width to match the scrollable container's visible width
     const visibleWidth = scrollable.clientWidth;
-    scrollbar.style.width = visibleWidth + 'px';
+    
 
     // Set the inner div width to match the scrollable content width
     const contentWidth = scrollable.scrollWidth;
