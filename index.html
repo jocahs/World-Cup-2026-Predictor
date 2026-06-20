@@ -18,7 +18,7 @@
  body { font-family: Arial, sans-serif; max-width: "auto"; margin: 10px; padding: 0px; padding-right: 10px; background: #f0f2f5; -webkit-tap-highlight-color: transparent; }
  .container { background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
  h1 { color: #1a1a1a; text-align: center; }
- .stage-tabs { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 100%;}
+ .stage-tabs { display: flex; gap: 10px; margin-bottom: 0px; flex-wrap: wrap; justify-content: center; max-width: 100%;}
  .stage-tab { padding: 10px 10px; background: #e0e0e0; cursor: pointer; border-radius: 5px; transition: 0.3s; }
  .stage-tab.active { background: #4CAF50; color: white; }
  
@@ -1910,10 +1910,10 @@ function renderKnockoutBracket() {
 
   // ----- Build the HTML with the top scrollbar -----
   let html = `
-    <div style="padding: 10px; margin: 10px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+    <div style="padding: 10px; margin: 10px;  margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
       <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
       <!-- Horizontal scrollbar (visible, sits below title) -->
-      <div id="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; margin: 5px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
+      <div id="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; margin: 5px; margin-left: 0px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
         <div style="height: 1px;"></div>
       </div>
       <!-- Columns container (scrollable but with hidden scrollbar) -->
