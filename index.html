@@ -1984,8 +1984,8 @@ function renderKnockoutBracket() {
     const matches = col.matches;
     const color = bgColors[colIdx % bgColors.length];
 
-    html += `<div style="display: flex; flex-direction: column; gap: 5px; min-width: 200px; flex: 0 0 auto; background: ${color}; padding: 8px; border-radius: 8px;">`;
-    html += `<div style="font-weight: bold; text-align: center; padding: 8px; background: ${colIdx === 0 ? '#2196F3' : (colIdx === 1 ? '#9C27B0' : (colIdx === 2 ? '#FF9800' : (colIdx === 3 ? '#4CAF50' : (colIdx === 4 ? '#f44336' : '#607D8B'))))}; color: white; border-radius: 6px; font-size: 1em;">${colName}</div>`;
+    html += `<div style="display: flex; flex-direction: column; gap: 5px; min-width: 200px; flex: 0 0 auto; padding: 8px 2px;border-radius: 8px;">`;
+    html += `<div style="font-weight: bold; text-align: center; padding: 8px; background: ${colIdx === 0 ? '#2196F3' : (colIdx === 1 ? '#9C27B0' : (colIdx === 2 ? '#FF9800' : (colIdx === 3 ? '#0000FF' : (colIdx === 4 ? '#f44336' : '#607D8B'))))}; color: white; border-radius: 6px; font-size: 1em;">${colName}</div>`;
 
     matches.forEach((m, idx) => {
       html += createKnockoutCard(m);
