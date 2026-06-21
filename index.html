@@ -25,14 +25,14 @@
  .matches-container { display: none; }
  .matches-container.active { display: block; }
  .group-block { margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #2196F3; }
- .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; text-align: center;}
+ .group-title { background: #2196F3; color: white; padding: 10px; font-weight: bold; cursor: pointer; font-size: 1.1em; text-align: center;}
  .group-title:hover { background: #0b7dda; }
  
 /* Make the group container a flex row with wrapping */
 .matches-container.active {
     display: flex;
     flex-wrap: wrap;
-    padding: 10px;
+    padding: 5px;
     gap: 5px;
     justify-content: center;
 }
@@ -43,7 +43,7 @@
     width: 10px;
     min-width: 125px;
     max-width: 100%;
-    margin-bottom: 0;
+    margin: 0;
 }
 
 /* When expanded – full width, forces its own row */
@@ -55,7 +55,8 @@
 
  .group-standings {
    background: #2c3e50;
-   margin: 10px 10px;
+   margin: 0px 5px;
+   margin-bottom: 0px;
    border-radius: 8px;
    overflow-x: auto;
  }
@@ -388,7 +389,7 @@
   color: white !important;
 }
 
- button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
+ button { /*margin: 10px 5px;*/ padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
  .btn-blue { background: #2196F3; }
  .btn-orange { background: #FF9800; }
  .btn-red { background: #f44336; }
@@ -588,7 +589,7 @@ body {
   </div>
 
   <div class="stage-tabs">
-    <div class="stage-tab active" data-stage="group">🏆 Group Stage</div>
+    <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
     <div class="stage-tab" data-stage="knockout">🏆 Knockout</div>
   </div>
 
@@ -1639,7 +1640,7 @@ function loadMatches() {
      if (standingsHtml) {
        const standingsContainer = document.createElement("div");
        standingsContainer.innerHTML = standingsHtml;
-       standingsContainer.style.marginBottom = "10px";
+       standingsContainer.style.marginBottom = "5px";
        groupContent.appendChild(standingsContainer);
      }
      
@@ -1833,7 +1834,6 @@ function renderKnockoutBracket() {
   }
 
   const roundOrder = ["Round of 32", "Round of 16", "Quarter-finals", "Semi-finals", "3rd Place Final", "Final"];
-
   const roundsMap = {};
 
   knockoutMatches.forEach(m => {
@@ -1871,7 +1871,6 @@ function renderKnockoutBracket() {
     <div style="padding: 10px; margin: 10px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
       <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
 
-      <!-- ORIGINAL TOP SCROLLBAR (UNCHANGED) -->
       <div id="knockout-scrollbar" class="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
         <div style="height: 1px;"></div>
       </div>
@@ -1888,7 +1887,9 @@ function renderKnockoutBracket() {
 
     matches.forEach((m, idx) => {
       html += createKnockoutCard(m);
-      if (colIdx === 0 && idx % 2 === 1) {
+
+      // keep your current "remove last gap" behavior
+      if (colIdx === 0 && idx % 2 === 1 && idx !== matches.length - 1) {
         html += `<div style="height: 5px;"></div>`;
       }
     });
@@ -1899,17 +1900,16 @@ function renderKnockoutBracket() {
   html += `</div></div>`;
   container.innerHTML = html;
 
-  // ✅ ADD BOTTOM SCROLLBAR (clone of existing, no style change)
   const scrollable = container.querySelector('.scrollable-container');
   const topBar = document.getElementById('knockout-scrollbar');
-
   if (!scrollable || !topBar) return;
 
-  const bottomBar = topBar.cloneNode(true);           // clone existing
-  bottomBar.id = "knockout-scrollbar-bottom";         // new id only
-  scrollable.parentNode.appendChild(bottomBar);       // place below content
+  // added: clone the existing top scrollbar to create the bottom scrollbar
+  const bottomBar = topBar.cloneNode(true);
+  bottomBar.id = "knockout-scrollbar-bottom";
+  scrollable.parentNode.appendChild(bottomBar);
 
-  // ✅ width sync (required for both bars)
+  // added: sync inner widths for both custom scrollbars
   const width = scrollable.scrollWidth;
   if (topBar.firstElementChild) {
     topBar.firstElementChild.style.width = width + "px";
@@ -1918,7 +1918,7 @@ function renderKnockoutBracket() {
     bottomBar.firstElementChild.style.width = width + "px";
   }
 
-  // ✅ scroll sync (top ↔ bottom ↔ content)
+  // added: sync top scrollbar, bottom scrollbar, and content scroll
   topBar.addEventListener('scroll', () => {
     scrollable.scrollLeft = topBar.scrollLeft;
     bottomBar.scrollLeft = topBar.scrollLeft;
@@ -1934,7 +1934,7 @@ function renderKnockoutBracket() {
     bottomBar.scrollLeft = scrollable.scrollLeft;
   });
 
-  // ✅ KEEP YOUR EXISTING STYLE (unchanged, just ensure only one instance)
+  // keep existing custom scrollbar style, applied once
   if (!document.getElementById("knockout-scroll-style")) {
     const styleTag = document.createElement('style');
     styleTag.id = "knockout-scroll-style";
@@ -1963,12 +1963,94 @@ function renderKnockoutBracket() {
     document.head.appendChild(styleTag);
   }
 
+  // RESTORE ALIGNMENT AFTER HTML IS RENDERED
+  setTimeout(() => {
+    const container = document.getElementById("knockout-matches");
+    if (!container) return;
+
+    const columns = container.querySelectorAll(".scrollable-container > div");
+    if (!columns || columns.length < 2) return;
+
+    const r32Col = columns[0];
+    const r16Col = columns[1];
+
+    if (!r32Col || !r16Col) return;
+
+    const r32Cards = r32Col.querySelectorAll(".match-card");
+    const r16Cards = r16Col.querySelectorAll(".match-card");
+
+    if (r32Cards.length < 2 || r16Cards.length === 0) return;
+
+    function getCenter(el) {
+      const rect = el.getBoundingClientRect();
+      return rect.top + rect.height / 2;
+    }
+
+    // Align Round of 16 to midpoints of Round of 32 pairs
+    r16Cards.forEach((card, i) => {
+      const idxA = 2 * i;
+      const idxB = 2 * i + 1;
+
+      if (!r32Cards[idxA] || !r32Cards[idxB]) return;
+
+      const centerA = getCenter(r32Cards[idxA]);
+      const centerB = getCenter(r32Cards[idxB]);
+      const targetCenter = (centerA + centerB) / 2;
+      const currentCenter = getCenter(card);
+      const delta = targetCenter - currentCenter;
+
+      card.style.marginTop = delta + "px";
+    });
+
+    // Align later rounds recursively to the midpoints of their parent round
+    function alignColumn(parentCol, childCol) {
+      const parents = parentCol.querySelectorAll(".match-card");
+      const children = childCol.querySelectorAll(".match-card");
+
+      children.forEach((card, i) => {
+        const idxA = 2 * i;
+        const idxB = 2 * i + 1;
+
+        if (!parents[idxA] || !parents[idxB]) return;
+
+        const centerA = getCenter(parents[idxA]);
+        const centerB = getCenter(parents[idxB]);
+        const targetCenter = (centerA + centerB) / 2;
+        const currentCenter = getCenter(card);
+        const delta = targetCenter - currentCenter;
+
+        card.style.marginTop = delta + "px";
+      });
+    }
+
+    for (let i = 2; i < columns.length; i++) {
+      alignColumn(columns[i - 1], columns[i]);
+    }
+
+    // Force Final to align vertically with 3rd Place Final
+    const thirdPlaceCol = columns[4];
+    const finalCol = columns[5];
+
+    if (thirdPlaceCol && finalCol) {
+      const thirdCard = thirdPlaceCol.querySelector(".match-card");
+      const finalCard = finalCol.querySelector(".match-card");
+
+      if (thirdCard && finalCard) {
+        const targetCenter = getCenter(thirdCard);
+        const currentCenter = getCenter(finalCard);
+        const delta = targetCenter - currentCenter;
+
+        finalCard.style.marginTop = delta + "px";
+      }
+    }
+  }, 0);
+
   updatePlayerControlsVisibility();
   updateProgress();
 }
 
 // Fallback function to show matches as a simple list if bracket fails
-function showFallbackKnockout(container) {
+/*function showFallbackKnockout(container) {
   const roundOrder = ["Round of 32", "Round of 16", "Quarter-finals", "Semi-finals", "3rd Place Final", "Final"];
   const roundsMap = {};
   knockoutMatches.forEach(m => {
@@ -2000,7 +2082,7 @@ function showFallbackKnockout(container) {
   html += `</div>`;
   container.innerHTML = html;
 }
-
+*/
 // Helper function to create a match card for the bracket
 function createKnockoutCard(matchObj) {
   const actual = actualResults[matchObj.match];
@@ -2443,7 +2525,7 @@ function updateProgress() {
 }
 
 function initTabs() {
-  const groupContainer = document.getElementById("group-matches");
+  /*const groupContainer = document.getElementById("group-matches");
   if (groupContainer) {
     groupContainer.classList.add("active");
   }
@@ -2452,7 +2534,7 @@ function initTabs() {
   if (groupTab) {
     groupTab.classList.add("active");
   }
-  
+  */
   document.querySelectorAll('.stage-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const stage = tab.dataset.stage;
