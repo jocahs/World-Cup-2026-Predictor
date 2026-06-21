@@ -25,14 +25,14 @@
  .matches-container { display: none; }
  .matches-container.active { display: block; }
  .group-block { margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #2196F3; }
- .group-title { background: #2196F3; color: white; padding: 10px 15px; font-weight: bold; cursor: pointer; font-size: 1.1em; text-align: center;}
+ .group-title { background: #2196F3; color: white; padding: 10px; font-weight: bold; cursor: pointer; font-size: 1.1em; text-align: center;}
  .group-title:hover { background: #0b7dda; }
  
 /* Make the group container a flex row with wrapping */
 .matches-container.active {
     display: flex;
     flex-wrap: wrap;
-    padding: 10px;
+    padding: 5px;
     gap: 5px;
     justify-content: center;
 }
@@ -43,7 +43,7 @@
     width: 10px;
     min-width: 125px;
     max-width: 100%;
-    margin-bottom: 0;
+    margin: 0;
 }
 
 /* When expanded – full width, forces its own row */
@@ -55,7 +55,8 @@
 
  .group-standings {
    background: #2c3e50;
-   margin: 10px 10px;
+   margin: 0px 5px;
+   margin-bottom: 0px;
    border-radius: 8px;
    overflow-x: auto;
  }
@@ -388,7 +389,7 @@
   color: white !important;
 }
 
- button { margin: 10px 5px; padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
+ button { /*margin: 10px 5px;*/ padding: 12px 24px; font-size: 1em; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
  .btn-blue { background: #2196F3; }
  .btn-orange { background: #FF9800; }
  .btn-red { background: #f44336; }
@@ -549,6 +550,60 @@ body {
   display: none; /* Chrome/Safari/Opera */
 }
 
+.custom-dropdown {
+  position: relative;
+  display: inline-block;
+  width: 200px;
+  text-align: left;
+}
+
+.dropdown-selected {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  text-align: center;
+}
+
+.dropdown-item.selected {
+  background: #FFD700;
+  color: #000;
+  font-weight: bold;
+}
+
+.dropdown-selected.active {
+  background-color: #000;  
+  background: #FFD700;
+  font-weight: bold;
+  border-color: #FFD700;
+}
+
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;       /* ✅ fixes your issue */
+  overflow-y: auto;        /* ✅ scroll INSIDE dropdown */
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  z-index: 9999;
+  display: none;
+}
+
+.dropdown-item {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f0f0f0;
+}
+
  </style>
 </head>
 <body>
@@ -574,7 +629,7 @@ body {
        <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
          <option value="">-- Select player --</option>
        </select>
-         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 0;" oninput="onPlayerNameEdit()">
+         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 5px;" oninput="onPlayerNameEdit()">
        <p style="line-height: 1.5; margin: 0px 20px;">Then select a stage to view the matches and pick your predictions!</p>
   </div>
   </div>
@@ -588,9 +643,16 @@ body {
   </div>
 
   <div class="stage-tabs">
-    <div class="stage-tab active" data-stage="group">🏆 Group Stage</div>
+    <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
     <div class="stage-tab" data-stage="knockout">🏆 Knockout</div>
   </div>
+
+<div id="country-selector-container" style="text-align:center; margin:10px 0; display:none;">
+  <div id="customDropdown" class="custom-dropdown">
+    <div id="dropdownSelected" class="dropdown-selected">🌍 Select a country</div>
+    <div id="dropdownList" class="dropdown-list"></div>
+  </div>
+</div>
 
   <div id="group-matches" class="matches-container"></div>
   <div id="knockout-matches" class="matches-container"></div>
@@ -757,13 +819,10 @@ function getMatchInputId(matchName) {
 
 function getMatchScoreInputHtml(matchObj, scoreValue, side) {
   const inputId = `${side}-${getMatchInputId(matchObj.match)}`;
-  const value = scoreValue !== undefined && scoreValue !== null ? scoreValue : '';
+  const value = (scoreValue !== undefined && scoreValue !== null) ? scoreValue : '';
   if (isAdminMode) {
-    return `<input type="text" id="${inputId}" class="score-input" value="${value}" maxlength="2" inputmode="numeric"
-                  oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)"
-                  onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();"
-                  style="width: 15px; padding: 6px 8px; font-size: 0.95em; border-radius: 6px; border: 1px solid #ccc; text-align: center;">`;
-}
+    return `<input type="text" id="${inputId}" class="score-input" value="${value}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width: 15px; padding: 6px 8px; font-size: 0.95em; border-radius: 6px; border: 1px solid #ccc; text-align: center;">`;
+  }
   return `<div class="score">${value}</div>`;
 }
 
@@ -1354,9 +1413,18 @@ function getResultSymbol(result) {
 
 function resolveKnockoutTeams() {
    const groupStandings = {};
-   Object.keys(groupMatches).forEach(groupName => {
-     groupStandings[groupName] = calculateGroupStandings(groupName, groupMatches[groupName]);
-   });
+   
+  
+Object.keys(groupMatches).forEach(group => {
+  const standings = calculateGroupStandings(group, groupMatches[group]);
+  groupStandings[group] = standings;
+
+  // Optional (handles "A" vs "Group A" formats safely)
+  const shortName = group.replace("Group ", "").trim();
+  groupStandings[shortName] = standings;
+});
+
+
 
    const findMatch = (matchName) => {
      let found = knockoutMatches.find(m => m.match === matchName);
@@ -1639,7 +1707,7 @@ function loadMatches() {
      if (standingsHtml) {
        const standingsContainer = document.createElement("div");
        standingsContainer.innerHTML = standingsHtml;
-       standingsContainer.style.marginBottom = "10px";
+       standingsContainer.style.marginBottom = "5px";
        groupContent.appendChild(standingsContainer);
      }
      
@@ -1686,6 +1754,10 @@ function loadMatches() {
        const awayFlagCode = getFlagCode(visitorTeam);
        const homeFlagHtml = homeFlagCode ? `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` : '';
        const awayFlagHtml = awayFlagCode ? `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` : '';
+       
+       // --- Match number label (like knockout) ---
+       const matchNumberMatch = matchObj.match.match(/\d+/);
+       const matchNumberLabel = matchNumberMatch ? `<div class="match-number" style="text-align:center;font-size:0.85em;color:#4CAF50;font-weight:bold;margin-bottom:3px;">Match ${matchNumberMatch[0]}</div>` : '';
        
        let gridHtml = '';
        
@@ -1810,7 +1882,8 @@ function loadMatches() {
        
        const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
        
-       matchDiv.innerHTML = gridHtml + pickElementsHtml;
+       // --- add match number label at top of card ---
+       matchDiv.innerHTML = matchNumberLabel + gridHtml + pickElementsHtml;
        matchesWrapper.appendChild(matchDiv);
      });
      
@@ -1820,6 +1893,7 @@ function loadMatches() {
    }
    updateProgress();
    updatePlayerControlsVisibility();
+   populateCountryDropdown();
 }
 
 function renderKnockoutBracket() {
@@ -1833,7 +1907,6 @@ function renderKnockoutBracket() {
   }
 
   const roundOrder = ["Round of 32", "Round of 16", "Quarter-finals", "Semi-finals", "3rd Place Final", "Final"];
-
   const roundsMap = {};
 
   knockoutMatches.forEach(m => {
@@ -1851,7 +1924,6 @@ function renderKnockoutBracket() {
     return idxA - idxB;
   });
 
-  // Sort each round's matches using custom order if defined, otherwise by match number
   sortedRounds.forEach(round => {
     const order = CUSTOM_ORDER[round];
     roundsMap[round].sort((a, b) => {
@@ -1860,136 +1932,37 @@ function renderKnockoutBracket() {
       if (order) {
         const idxA = order.indexOf(numA);
         const idxB = order.indexOf(numB);
-        // If both are in the custom list, sort by their index
         if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        // If only A is in the list, A comes first
         if (idxA !== -1) return -1;
         if (idxB !== -1) return 1;
       }
-      // fallback: numeric ascending
       return numA - numB;
     });
   });
 
-  function getSourceNumbers(match) {
-    const sources = [];
-    const home = match.homeTeam || "";
-    const away = match.visitorTeam || "";
-    const regex = /(Winner|Loser) Match (\d+)/i;
-    let matchNum = home.match(regex);
-    if (matchNum) sources.push(parseInt(matchNum[2]));
-    matchNum = away.match(regex);
-    if (matchNum) sources.push(parseInt(matchNum[2]));
-    return sources;
-  }
-
-  const tree = {};
-  
-  knockoutMatches.forEach(m => {
-    const num = parseInt(m.match.replace(/\D/g,''));
-    if (!isNaN(num)) {
-      tree[num] = {
-        match: m,
-        sources: getSourceNumbers(m),
-        row: null,
-        col: null
-      };
-    }
-  });
-
-  sortedRounds.forEach((round, colIdx) => {
-    roundsMap[round].forEach(m => {
-      const num = parseInt(m.match.replace(/\D/g,''));
-      if (!isNaN(num) && tree[num]) {
-        tree[num].col = colIdx;
-      }
-    });
-  });
-
-  const leaves = Object.values(tree).filter(node => node.sources.length === 0);
-  if (leaves.length === 0) {
-    showFallbackKnockout(container);
-    return;
-  }
-
-  // Sort leaves using custom order for the round they belong to (usually Round of 32)
-  // Determine the round name from the first leaf (all leaves share the same round)
-  const leafRound = leaves.length > 0 ? leaves[0].match.group : null;
-  const order = leafRound ? CUSTOM_ORDER[leafRound] : null;
-  leaves.sort((a, b) => {
-    const numA = parseInt(a.match.match.replace(/\D/g,''));
-    const numB = parseInt(b.match.match.replace(/\D/g,''));
-    if (order) {
-      const idxA = order.indexOf(numA);
-      const idxB = order.indexOf(numB);
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-    }
-    return numA - numB;
-  });
-
-  leaves.forEach((node, idx) => {
-    node.row = idx;
-  });
-
-  let iterations = 0;
-  while (Object.values(tree).some(n => n.row === null) && iterations < 100) {
-    iterations++;
-    Object.values(tree).forEach(node => {
-      if (node.row !== null) return;
-      const sources = node.sources;
-      if (sources.length === 0) return;
-      const srcNodes = sources.map(s => tree[s]).filter(n => n && n.row !== null);
-      if (srcNodes.length === sources.length) {
-        const sum = srcNodes.reduce((acc, n) => acc + n.row, 0);
-        node.row = sum / srcNodes.length;
-      }
-    });
-  }
-
-  Object.values(tree).forEach(node => {
-    if (node.row === null) node.row = 0;
-  });
-
-  Object.values(tree).forEach(node => {
-    node.row = Math.round(node.row);
-  });
-
-  let maxRow = 0;
-  Object.values(tree).forEach(n => { if (n.row > maxRow) maxRow = n.row; });
-  const totalRows = maxRow + 1;
-
-  const columns = sortedRounds.map(round => ({
-    name: round,
-    matches: roundsMap[round] || []
-  }));
-
-  // ----- Build the HTML with the top scrollbar -----
   let html = `
-    <div style="padding: 10px; margin: 10px;  margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+    <div style="padding: 10px; margin: 10px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
       <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
-      <!-- Horizontal scrollbar (visible, sits below title) -->
-      <div id="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; margin: 5px; margin-left: 0px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
+
+      <div id="knockout-scrollbar" class="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
         <div style="height: 1px;"></div>
       </div>
-      <!-- Columns container (scrollable but with hidden scrollbar) -->
+
       <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0;width: 100%;">
   `;
 
   const bgColors = ['#e3f2fd', '#f3e5f5', '#fff3e0', '#e8f5e9', '#ffebee', '#eceff1'];
 
-  columns.forEach((col, colIdx) => {
-    const colName = col.name;
-    const matches = col.matches;
-    const color = bgColors[colIdx % bgColors.length];
-
-    html += `<div style="display: flex; flex-direction: column; gap: 5px; min-width: 200px; flex: 0 0 auto; background: ${color}; padding: 8px; border-radius: 8px;">`;
-    html += `<div style="font-weight: bold; text-align: center; padding: 8px; background: ${colIdx === 0 ? '#2196F3' : (colIdx === 1 ? '#9C27B0' : (colIdx === 2 ? '#FF9800' : (colIdx === 3 ? '#4CAF50' : (colIdx === 4 ? '#f44336' : '#607D8B'))))}; color: white; border-radius: 6px; font-size: 1em;">${colName}</div>`;
+  sortedRounds.forEach((round, colIdx) => {
+    const matches = roundsMap[round];
+    html += `<div style="display: flex; flex-direction: column; gap: 5px; min-width: 200px; flex: 0 0 auto; padding: 8px 2px;border-radius: 8px;">`;
+    html += `<div style="font-weight: bold; text-align: center; padding: 8px; background: ${colIdx === 0 ? '#2196F3' : (colIdx === 1 ? '#9C27B0' : (colIdx === 2 ? '#FF9800' : (colIdx === 3 ? '#0000FF' : (colIdx === 4 ? '#f44336' : '#607D8B'))))}; color: white; border-radius: 6px;">${round}</div>`;
 
     matches.forEach((m, idx) => {
       html += createKnockoutCard(m);
-      if (colIdx === 0 && idx % 2 === 1) {
+
+      // keep your current "remove last gap" behavior
+      if (colIdx === 0 && idx % 2 === 1 && idx !== matches.length - 1) {
         html += `<div style="height: 5px;"></div>`;
       }
     });
@@ -2000,187 +1973,153 @@ function renderKnockoutBracket() {
   html += `</div></div>`;
   container.innerHTML = html;
 
-  const styleTag = document.createElement('style');
-  styleTag.textContent = `
-    /* Main scrollbar container */
-  #knockout-scrollbar {
-    height: 22px;
-    background: transparent; /* ✅ important */
-    overflow-x: auto;
-  }
-
-  /* Scrollbar itself */
-  #knockout-scrollbar::-webkit-scrollbar {
-    height: 22px;
-  }
-
-  /* Track (the bar background) */
-  #knockout-scrollbar::-webkit-scrollbar-track {
-    background: #EB3324;    /* ✅ dark track */
-    border-radius: 6px;
-  }
-
-  /* Thumb (the moving part) */
-  #knockout-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #FFD700, #FFC107); /* ✅ gold */
-    border-radius: 6px;
-    border: 2px solid #EB3324;  /* ✅ creates padding effect */
-  }
-
-  /* Hover effect */
-  #knockout-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #FFC107, #FFB300);
-  }
-  `;
-  container.appendChild(styleTag);
-
-  // ----- Sync scrollbar with columns container -----
   const scrollable = container.querySelector('.scrollable-container');
-  const scrollbar = document.getElementById('knockout-scrollbar');
-  if (scrollable && scrollbar) {
-    const visibleWidth = scrollable.clientWidth;
-    
+  const topBar = document.getElementById('knockout-scrollbar');
+  if (!scrollable || !topBar) return;
 
-    const contentWidth = scrollable.scrollWidth;
-    const inner = scrollbar.querySelector('div');
-    if (inner) {
-      inner.style.width = contentWidth + 'px';
-    }
+  // added: clone the existing top scrollbar to create the bottom scrollbar
+  const bottomBar = topBar.cloneNode(true);
+  bottomBar.id = "knockout-scrollbar-bottom";
+  scrollable.parentNode.appendChild(bottomBar);
 
-    scrollbar.addEventListener('scroll', function() {
-      scrollable.scrollLeft = this.scrollLeft;
-    });
-    scrollable.addEventListener('scroll', function() {
-      scrollbar.scrollLeft = this.scrollLeft;
-    });
+  // added: sync inner widths for both custom scrollbars
+  const width = scrollable.scrollWidth;
+  if (topBar.firstElementChild) {
+    topBar.firstElementChild.style.width = width + "px";
+  }
+  if (bottomBar.firstElementChild) {
+    bottomBar.firstElementChild.style.width = width + "px";
   }
 
-  // Re-apply picks
-  setTimeout(() => {
-    const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
-    if (player) {
-      const userPicks = allPicks.filter(p => p.player === player);
-      userPicks.forEach(pick => {
-        const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
-        if (radio) radio.checked = true;
-      });
-    }
-  }, 50);
-  
-  // ✅ STRICT PATCH: ALIGN KNOCKOUT USING REAL DOM (NO LAYOUT CHANGE)
-setTimeout(() => {
-
-  const container = document.getElementById("knockout-matches");
-  if (!container) return;
-
-  const columns = container.querySelectorAll(".scrollable-container > div");
-  if (!columns || columns.length < 2) return;
-
-  const r32Col = columns[0];
-  const r16Col = columns[1];
-
-  if (!r32Col || !r16Col) return;
-
-  const r32Cards = r32Col.querySelectorAll(".match-card");
-  const r16Cards = r16Col.querySelectorAll(".match-card");
-
-  if (r32Cards.length < 2 || r16Cards.length === 0) return;
-
-  // ✅ helper: get vertical center of a card
-  function getCenter(el) {
-    const rect = el.getBoundingClientRect();
-    return rect.top + rect.height / 2;
-  }
-
-  // ✅ reference top of column (to make offsets relative)
-  const colTop = r32Col.getBoundingClientRect().top;
-
-  // ✅ ALIGN ROUND OF 16 (each match = midpoint of 2 R32 matches)
-  r16Cards.forEach((card, i) => {
-
-    const idxA = 2 * i;
-    const idxB = 2 * i + 1;
-
-    if (!r32Cards[idxA] || !r32Cards[idxB]) return;
-
-    const centerA = getCenter(r32Cards[idxA]);
-    const centerB = getCenter(r32Cards[idxB]);
-
-    const targetCenter = (centerA + centerB) / 2;
-    const currentCenter = getCenter(card);
-
-    const delta = targetCenter - currentCenter;
-
-    card.style.marginTop = delta + "px";
+  // added: sync top scrollbar, bottom scrollbar, and content scroll
+  topBar.addEventListener('scroll', () => {
+    scrollable.scrollLeft = topBar.scrollLeft;
+    bottomBar.scrollLeft = topBar.scrollLeft;
   });
 
+  bottomBar.addEventListener('scroll', () => {
+    scrollable.scrollLeft = bottomBar.scrollLeft;
+    topBar.scrollLeft = bottomBar.scrollLeft;
+  });
 
-  // ✅ GENERIC FUNCTION FOR NEXT ROUNDS
-  function alignColumn(parentCol, childCol) {
-    const parents = parentCol.querySelectorAll(".match-card");
-    const children = childCol.querySelectorAll(".match-card");
+  scrollable.addEventListener('scroll', () => {
+    topBar.scrollLeft = scrollable.scrollLeft;
+    bottomBar.scrollLeft = scrollable.scrollLeft;
+  });
 
-    children.forEach((card, i) => {
+  // keep existing custom scrollbar style, applied once
+  if (!document.getElementById("knockout-scroll-style")) {
+    const styleTag = document.createElement('style');
+    styleTag.id = "knockout-scroll-style";
+    styleTag.textContent = `
+      .knockout-scrollbar {
+        height: 22px;
+        background: transparent;
+        overflow-x: auto;
+      }
+      .knockout-scrollbar::-webkit-scrollbar {
+        height: 22px;
+      }
+      .knockout-scrollbar::-webkit-scrollbar-track {
+        background: #EB3324;
+        border-radius: 6px;
+      }
+      .knockout-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(90deg, #FFD700, #FFC107);
+        border-radius: 6px;
+        border: 2px solid #EB3324;
+      }
+      .knockout-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(90deg, #FFC107, #FFB300);
+      }
+    `;
+    document.head.appendChild(styleTag);
+  }
+
+  // RESTORE ALIGNMENT AFTER HTML IS RENDERED
+  setTimeout(() => {
+    const container = document.getElementById("knockout-matches");
+    if (!container) return;
+
+    const columns = container.querySelectorAll(".scrollable-container > div");
+    if (!columns || columns.length < 2) return;
+
+    const r32Col = columns[0];
+    const r16Col = columns[1];
+
+    if (!r32Col || !r16Col) return;
+
+    const r32Cards = r32Col.querySelectorAll(".match-card");
+    const r16Cards = r16Col.querySelectorAll(".match-card");
+
+    if (r32Cards.length < 2 || r16Cards.length === 0) return;
+
+    function getCenter(el) {
+      const rect = el.getBoundingClientRect();
+      return rect.top + rect.height / 2;
+    }
+
+    // Align Round of 16 to midpoints of Round of 32 pairs
+    r16Cards.forEach((card, i) => {
       const idxA = 2 * i;
       const idxB = 2 * i + 1;
 
-      if (!parents[idxA] || !parents[idxB]) return;
+      if (!r32Cards[idxA] || !r32Cards[idxB]) return;
 
-      const centerA = getCenter(parents[idxA]);
-      const centerB = getCenter(parents[idxB]);
-
+      const centerA = getCenter(r32Cards[idxA]);
+      const centerB = getCenter(r32Cards[idxB]);
       const targetCenter = (centerA + centerB) / 2;
       const currentCenter = getCenter(card);
-
       const delta = targetCenter - currentCenter;
 
       card.style.marginTop = delta + "px";
     });
-  }
 
-  // ✅ apply recursively for QF, SF, Final
-  for (let i = 2; i < columns.length; i++) {
-    alignColumn(columns[i - 1], columns[i]);
-  }
+    // Align later rounds recursively to the midpoints of their parent round
+    function alignColumn(parentCol, childCol) {
+      const parents = parentCol.querySelectorAll(".match-card");
+      const children = childCol.querySelectorAll(".match-card");
 
-}, 0);
+      children.forEach((card, i) => {
+        const idxA = 2 * i;
+        const idxB = 2 * i + 1;
+
+        if (!parents[idxA] || !parents[idxB]) return;
+
+        const centerA = getCenter(parents[idxA]);
+        const centerB = getCenter(parents[idxB]);
+        const targetCenter = (centerA + centerB) / 2;
+        const currentCenter = getCenter(card);
+        const delta = targetCenter - currentCenter;
+
+        card.style.marginTop = delta + "px";
+      });
+    }
+
+    for (let i = 2; i < columns.length; i++) {
+      alignColumn(columns[i - 1], columns[i]);
+    }
+
+    // Force Final to align vertically with 3rd Place Final
+    const thirdPlaceCol = columns[4];
+    const finalCol = columns[5];
+
+    if (thirdPlaceCol && finalCol) {
+      const thirdCard = thirdPlaceCol.querySelector(".match-card");
+      const finalCard = finalCol.querySelector(".match-card");
+
+      if (thirdCard && finalCard) {
+        const targetCenter = getCenter(thirdCard);
+        const currentCenter = getCenter(finalCard);
+        const delta = targetCenter - currentCenter;
+
+        finalCard.style.marginTop = delta + "px";
+      }
+    }
+  }, 0);
 
   updatePlayerControlsVisibility();
   updateProgress();
-}
-
-// Fallback function to show matches as a simple list if bracket fails
-function showFallbackKnockout(container) {
-  const roundOrder = ["Round of 32", "Round of 16", "Quarter-finals", "Semi-finals", "3rd Place Final", "Final"];
-  const roundsMap = {};
-  knockoutMatches.forEach(m => {
-    const round = m.group || "Knockout";
-    if (!roundsMap[round]) roundsMap[round] = [];
-    roundsMap[round].push(m);
-  });
-  const sortedRounds = Object.keys(roundsMap).sort((a, b) => {
-    const idxA = roundOrder.indexOf(a);
-    const idxB = roundOrder.indexOf(b);
-    if (idxA === -1 && idxB === -1) return a.localeCompare(b);
-    if (idxA === -1) return 1;
-    if (idxB === -1) return -1;
-    return idxA - idxB;
-  });
-
-  let html = `
-    <div style="padding: 10px; background: white; border-radius: 8px;margin-block-end: 0;">
-      <h3 style="text-align:center; margin-top:0;">🏆 Knockout Stage</h3>
-  `;
-  sortedRounds.forEach(round => {
-    html += `<h4 style="margin: 10px 0 5px 0; color: #333;">${round}</h4>`;
-    html += `<div style="display: flex; flex-direction: column; gap: 8px; align-items: center; flex: 1;">`;
-    roundsMap[round].forEach(m => {
-      html += createKnockoutCard(m);
-    });
-    html += `</div>`;
-  });
-  html += `</div>`;
-  container.innerHTML = html;
 }
 
 // Helper function to create a match card for the bracket
@@ -2523,9 +2462,15 @@ function createNextMatchesSection() {
        }
      }
 
+     // --- Match number + group header (today-matches only) ---
+     const matchNumMatch = tm.match.match.match(/\d+/);
+     const matchNumDisplay = matchNumMatch ? matchNumMatch[0] : '';
+     const headerHtml = `<div style="text-align:center;font-size:0.85em;font-weight:bold;color:#00FFFF;margin-bottom:4px;width:100%;">${tm.group} - Match ${matchNumDisplay}</div>`;
+
      html += `
        <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
             style="cursor:pointer; background:rgba(255,255,255,0.15); border-radius:6px; padding:6px 8px; min-width:200px; max-width:300px; flex:1 0 auto; display:flex; flex-direction:column; align-items:center;">
+         ${headerHtml}
          <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 2px; align-items:center; justify-items:center; width:100%;">
            <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
            <div style="font-weight:bold; font-size:0.9em; color:#fff; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
@@ -2625,45 +2570,71 @@ function updateProgress() {
 }
 
 function initTabs() {
-  const groupContainer = document.getElementById("group-matches");
-  if (groupContainer) {
-    groupContainer.classList.add("active");
-  }
-  
-  const groupTab = document.querySelector('.stage-tab[data-stage="group"]');
-  if (groupTab) {
-    groupTab.classList.add("active");
-  }
-  
   document.querySelectorAll('.stage-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const stage = tab.dataset.stage;
-      
-      document.querySelectorAll('.stage-tab').forEach(t => {
-        t.classList.remove('active');
-      });
-      
+
+      document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      
-      document.querySelectorAll('.matches-container').forEach(c => {
-        c.classList.remove('active');
-      });
-      
+
+      document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
+
+      const countrySelector = document.getElementById("country-selector-container");
+
       if (stage === 'group') {
-        const container = document.getElementById('group-matches');
-        if (container) {
-          container.classList.add('active');
-        }
-      } else if (stage === 'knockout') {
-        const container = document.getElementById('knockout-matches');
-        if (container) {
-          container.classList.add('active');
-          renderKnockoutBracket();
-        }
+        document.getElementById('group-matches').classList.add('active');
+        if (countrySelector) countrySelector.style.display = 'block';
+      } else {
+        document.getElementById('knockout-matches').classList.add('active');
+        if (countrySelector) countrySelector.style.display = 'none';
+        renderKnockoutBracket();
       }
     });
   });
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const selector = document.getElementById("countrySelector");
+
+  if (!selector) return;
+
+  selector.addEventListener("change", function () {
+    const country = this.value;
+    if (!country) return;
+
+    let targetGroup = null;
+
+    for (let group in groupMatches) {
+      const found = groupMatches[group].some(m =>
+        m.homeTeam === country || m.visitorTeam === country
+      );
+
+      if (found) {
+        targetGroup = group;
+        break;
+      }
+    }
+
+    if (!targetGroup) return;
+
+    const groupKey = targetGroup.replace(/ /g, '_');
+    const groupElement = document.getElementById(`group-${groupKey}`);
+
+    if (!groupElement) return;
+
+    // ✅ expand group
+    groupElement.style.display = "block";
+    expandedGroups[groupKey] = true;
+
+    const groupBlock = groupElement.closest('.group-block');
+    if (groupBlock) {
+      groupBlock.classList.add('expanded');
+    }
+
+    // ✅ smooth scroll
+    groupBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+});
 
 async function shareApp() {
   try {
@@ -2730,6 +2701,119 @@ function hidePlayerSelectionIfVisible() {
     }
 }
 
+function populateCountryDropdown() {
+  const list = document.getElementById("dropdownList");
+  if (!list) return;
+
+  list.innerHTML = '';
+
+  const countries = new Set();
+
+  Object.values(groupMatches).forEach(matches => {
+    matches.forEach(m => {
+      if (m.homeTeam) countries.add(m.homeTeam);
+      if (m.visitorTeam) countries.add(m.visitorTeam);
+    });
+  });
+
+  const sortedCountries = Array.from(countries).sort();
+
+  sortedCountries.forEach(country => {
+    const item = document.createElement("div");
+    item.className = "dropdown-item";
+
+    const flagCode = getFlagCode(country);
+
+    let flagHtml = '';
+    if (flagCode) {
+      flagHtml = '<img src="https://flagcdn.com/20x15/' + flagCode + '.png" ' +
+                 'style="width:20px;height:15px;border-radius:2px;">';
+    }
+
+    item.innerHTML = flagHtml + '<span>' + country + '</span>';
+
+    item.onclick = () => selectCountry(country);
+
+    list.appendChild(item);
+  });
+}
+
+function selectCountry(country) {
+
+  if (!country) return;  // ← prevents crash
+  document.getElementById("dropdownSelected").textContent = country;
+  const selectedBox = document.getElementById("dropdownSelected");
+selectedBox.classList.add("active");
+
+  document.querySelectorAll('.dropdown-item').forEach(item => {
+    item.classList.remove('selected');
+
+    const text = item.textContent.trim();
+    if (text === country) {
+      item.classList.add('selected');
+    }
+  });
+
+  document.getElementById("dropdownList").style.display = "none";
+
+  let targetGroup = null;
+
+  for (let group in groupMatches) {
+    for (let m of groupMatches[group]) {
+      if (m.homeTeam === country || m.visitorTeam === country) {
+        targetGroup = group;
+        break;
+      }
+    }
+    if (targetGroup) break;
+  }
+
+  if (!targetGroup) return;
+
+  const groupKey = targetGroup.replace(/ /g, '_');
+
+  Object.keys(groupMatches).forEach(group => {
+    const key = group.replace(/ /g, '_');
+    const el = document.getElementById('group-' + key);
+
+    if (el) {
+      el.style.display = "none";
+      expandedGroups[key] = false;
+
+      const block = el.closest('.group-block');
+      if (block) block.classList.remove('expanded');
+    }
+  });
+
+  const groupElement = document.getElementById('group-' + groupKey);
+  if (!groupElement) return;
+
+  groupElement.style.display = "block";
+  expandedGroups[groupKey] = true;
+
+  const groupBlock = groupElement.closest('.group-block');
+  if (groupBlock) {
+    groupBlock.classList.add('expanded');
+    groupBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  document.querySelectorAll('.match-card').forEach(card => {
+    card.style.outline = '';
+    card.style.background = '';
+  });
+
+  groupMatches[targetGroup].forEach((m, idx) => {
+    if (m.homeTeam === country || m.visitorTeam === country) {
+      const matchEl = document.getElementById('match-' + groupKey + '-' + idx);
+
+      if (matchEl) {
+        matchEl.style.outline = "3px solid gold";
+        matchEl.style.background = "#fff8dc";
+      }
+    }
+  });
+}
+
 const style = document.createElement('style');
 style.textContent = `
   @keyframes fadeOut {
@@ -2744,6 +2828,23 @@ document.head.appendChild(style);
 if ('serviceWorker' in navigator) {
    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.log('SW failed:', e)));
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const selected = document.getElementById("dropdownSelected");
+  const list = document.getElementById("dropdownList");
+
+  if (selected && list) {
+    selected.onclick = () => {
+      list.style.display = list.style.display === "block" ? "none" : "block";
+    };
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".custom-dropdown")) {
+        list.style.display = "none";
+      }
+    });
+  }
+});
 
 initTabs();
 loadAllData();
