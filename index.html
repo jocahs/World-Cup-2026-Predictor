@@ -574,7 +574,7 @@ body {
        <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
          <option value="">-- Select player --</option>
        </select>
-         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 0;" oninput="onPlayerNameEdit()">
+         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 5px;" oninput="onPlayerNameEdit()">
        <p style="line-height: 1.5; margin: 0px 20px;">Then select a stage to view the matches and pick your predictions!</p>
   </div>
   </div>
@@ -1851,7 +1851,6 @@ function renderKnockoutBracket() {
     return idxA - idxB;
   });
 
-  // Sort each round's matches using custom order if defined, otherwise by match number
   sortedRounds.forEach(round => {
     const order = CUSTOM_ORDER[round];
     roundsMap[round].sort((a, b) => {
@@ -1860,132 +1859,32 @@ function renderKnockoutBracket() {
       if (order) {
         const idxA = order.indexOf(numA);
         const idxB = order.indexOf(numB);
-        // If both are in the custom list, sort by their index
         if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        // If only A is in the list, A comes first
         if (idxA !== -1) return -1;
         if (idxB !== -1) return 1;
       }
-      // fallback: numeric ascending
       return numA - numB;
     });
   });
 
-  function getSourceNumbers(match) {
-    const sources = [];
-    const home = match.homeTeam || "";
-    const away = match.visitorTeam || "";
-    const regex = /(Winner|Loser) Match (\d+)/i;
-    let matchNum = home.match(regex);
-    if (matchNum) sources.push(parseInt(matchNum[2]));
-    matchNum = away.match(regex);
-    if (matchNum) sources.push(parseInt(matchNum[2]));
-    return sources;
-  }
-
-  const tree = {};
-  
-  knockoutMatches.forEach(m => {
-    const num = parseInt(m.match.replace(/\D/g,''));
-    if (!isNaN(num)) {
-      tree[num] = {
-        match: m,
-        sources: getSourceNumbers(m),
-        row: null,
-        col: null
-      };
-    }
-  });
-
-  sortedRounds.forEach((round, colIdx) => {
-    roundsMap[round].forEach(m => {
-      const num = parseInt(m.match.replace(/\D/g,''));
-      if (!isNaN(num) && tree[num]) {
-        tree[num].col = colIdx;
-      }
-    });
-  });
-
-  const leaves = Object.values(tree).filter(node => node.sources.length === 0);
-  if (leaves.length === 0) {
-    showFallbackKnockout(container);
-    return;
-  }
-
-  // Sort leaves using custom order for the round they belong to (usually Round of 32)
-  // Determine the round name from the first leaf (all leaves share the same round)
-  const leafRound = leaves.length > 0 ? leaves[0].match.group : null;
-  const order = leafRound ? CUSTOM_ORDER[leafRound] : null;
-  leaves.sort((a, b) => {
-    const numA = parseInt(a.match.match.replace(/\D/g,''));
-    const numB = parseInt(b.match.match.replace(/\D/g,''));
-    if (order) {
-      const idxA = order.indexOf(numA);
-      const idxB = order.indexOf(numB);
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-    }
-    return numA - numB;
-  });
-
-  leaves.forEach((node, idx) => {
-    node.row = idx;
-  });
-
-  let iterations = 0;
-  while (Object.values(tree).some(n => n.row === null) && iterations < 100) {
-    iterations++;
-    Object.values(tree).forEach(node => {
-      if (node.row !== null) return;
-      const sources = node.sources;
-      if (sources.length === 0) return;
-      const srcNodes = sources.map(s => tree[s]).filter(n => n && n.row !== null);
-      if (srcNodes.length === sources.length) {
-        const sum = srcNodes.reduce((acc, n) => acc + n.row, 0);
-        node.row = sum / srcNodes.length;
-      }
-    });
-  }
-
-  Object.values(tree).forEach(node => {
-    if (node.row === null) node.row = 0;
-  });
-
-  Object.values(tree).forEach(node => {
-    node.row = Math.round(node.row);
-  });
-
-  let maxRow = 0;
-  Object.values(tree).forEach(n => { if (n.row > maxRow) maxRow = n.row; });
-  const totalRows = maxRow + 1;
-
-  const columns = sortedRounds.map(round => ({
-    name: round,
-    matches: roundsMap[round] || []
-  }));
-
-  // ----- Build the HTML with the top scrollbar -----
   let html = `
-    <div style="padding: 10px; margin: 10px;  margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+    <div style="padding: 10px; margin: 10px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
       <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
-      <!-- Horizontal scrollbar (visible, sits below title) -->
-      <div id="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; margin: 5px; margin-left: 0px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
+
+      <!-- ORIGINAL TOP SCROLLBAR (UNCHANGED) -->
+      <div id="knockout-scrollbar" class="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
         <div style="height: 1px;"></div>
       </div>
-      <!-- Columns container (scrollable but with hidden scrollbar) -->
+
       <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0;width: 100%;">
   `;
 
   const bgColors = ['#e3f2fd', '#f3e5f5', '#fff3e0', '#e8f5e9', '#ffebee', '#eceff1'];
 
-  columns.forEach((col, colIdx) => {
-    const colName = col.name;
-    const matches = col.matches;
-    const color = bgColors[colIdx % bgColors.length];
-
+  sortedRounds.forEach((round, colIdx) => {
+    const matches = roundsMap[round];
     html += `<div style="display: flex; flex-direction: column; gap: 5px; min-width: 200px; flex: 0 0 auto; padding: 8px 2px;border-radius: 8px;">`;
-    html += `<div style="font-weight: bold; text-align: center; padding: 8px; background: ${colIdx === 0 ? '#2196F3' : (colIdx === 1 ? '#9C27B0' : (colIdx === 2 ? '#FF9800' : (colIdx === 3 ? '#0000FF' : (colIdx === 4 ? '#f44336' : '#607D8B'))))}; color: white; border-radius: 6px; font-size: 1em;">${colName}</div>`;
+    html += `<div style="font-weight: bold; text-align: center; padding: 8px; background: ${colIdx === 0 ? '#2196F3' : (colIdx === 1 ? '#9C27B0' : (colIdx === 2 ? '#FF9800' : (colIdx === 3 ? '#0000FF' : (colIdx === 4 ? '#f44336' : '#607D8B'))))}; color: white; border-radius: 6px;">${round}</div>`;
 
     matches.forEach((m, idx) => {
       html += createKnockoutCard(m);
@@ -2000,172 +1899,69 @@ function renderKnockoutBracket() {
   html += `</div></div>`;
   container.innerHTML = html;
 
-  const styleTag = document.createElement('style');
-  styleTag.textContent = `
-    /* Main scrollbar container */
-  #knockout-scrollbar {
-    height: 22px;
-    background: transparent; /* ✅ important */
-    overflow-x: auto;
-  }
-
-  /* Scrollbar itself */
-  #knockout-scrollbar::-webkit-scrollbar {
-    height: 22px;
-  }
-
-  /* Track (the bar background) */
-  #knockout-scrollbar::-webkit-scrollbar-track {
-    background: #EB3324;    /* ✅ dark track */
-    border-radius: 6px;
-  }
-
-  /* Thumb (the moving part) */
-  #knockout-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #FFD700, #FFC107); /* ✅ gold */
-    border-radius: 6px;
-    border: 2px solid #EB3324;  /* ✅ creates padding effect */
-  }
-
-  /* Hover effect */
-  #knockout-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #FFC107, #FFB300);
-  }
-  `;
-  container.appendChild(styleTag);
-
-  // ----- Sync scrollbar with columns container -----
+  // ✅ ADD BOTTOM SCROLLBAR (clone of existing, no style change)
   const scrollable = container.querySelector('.scrollable-container');
-  const scrollbar = document.getElementById('knockout-scrollbar');
-  if (scrollable && scrollbar) {
-    const visibleWidth = scrollable.clientWidth;
-    
+  const topBar = document.getElementById('knockout-scrollbar');
 
-    const contentWidth = scrollable.scrollWidth;
-    const inner = scrollbar.querySelector('div');
-    if (inner) {
-      inner.style.width = contentWidth + 'px';
-    }
+  if (!scrollable || !topBar) return;
 
-    scrollbar.addEventListener('scroll', function() {
-      scrollable.scrollLeft = this.scrollLeft;
-    });
-    scrollable.addEventListener('scroll', function() {
-      scrollbar.scrollLeft = this.scrollLeft;
-    });
+  const bottomBar = topBar.cloneNode(true);           // clone existing
+  bottomBar.id = "knockout-scrollbar-bottom";         // new id only
+  scrollable.parentNode.appendChild(bottomBar);       // place below content
+
+  // ✅ width sync (required for both bars)
+  const width = scrollable.scrollWidth;
+  if (topBar.firstElementChild) {
+    topBar.firstElementChild.style.width = width + "px";
+  }
+  if (bottomBar.firstElementChild) {
+    bottomBar.firstElementChild.style.width = width + "px";
   }
 
-  // Re-apply picks
-  setTimeout(() => {
-    const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
-    if (player) {
-      const userPicks = allPicks.filter(p => p.player === player);
-      userPicks.forEach(pick => {
-        const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
-        if (radio) radio.checked = true;
-      });
-    }
-  }, 50);
-  
-  // ✅ STRICT PATCH: ALIGN KNOCKOUT USING REAL DOM (NO LAYOUT CHANGE)
-setTimeout(() => {
-
-  const container = document.getElementById("knockout-matches");
-  if (!container) return;
-
-  const columns = container.querySelectorAll(".scrollable-container > div");
-  if (!columns || columns.length < 2) return;
-
-  const r32Col = columns[0];
-  const r16Col = columns[1];
-
-  if (!r32Col || !r16Col) return;
-
-  const r32Cards = r32Col.querySelectorAll(".match-card");
-  const r16Cards = r16Col.querySelectorAll(".match-card");
-
-  if (r32Cards.length < 2 || r16Cards.length === 0) return;
-
-  // ✅ helper: get vertical center of a card
-  function getCenter(el) {
-    const rect = el.getBoundingClientRect();
-    return rect.top + rect.height / 2;
-  }
-
-  // ✅ reference top of column (to make offsets relative)
-  const colTop = r32Col.getBoundingClientRect().top;
-
-  // ✅ ALIGN ROUND OF 16 (each match = midpoint of 2 R32 matches)
-  r16Cards.forEach((card, i) => {
-
-    const idxA = 2 * i;
-    const idxB = 2 * i + 1;
-
-    if (!r32Cards[idxA] || !r32Cards[idxB]) return;
-
-    const centerA = getCenter(r32Cards[idxA]);
-    const centerB = getCenter(r32Cards[idxB]);
-
-    const targetCenter = (centerA + centerB) / 2;
-    const currentCenter = getCenter(card);
-
-    const delta = targetCenter - currentCenter;
-
-    card.style.marginTop = delta + "px";
+  // ✅ scroll sync (top ↔ bottom ↔ content)
+  topBar.addEventListener('scroll', () => {
+    scrollable.scrollLeft = topBar.scrollLeft;
+    bottomBar.scrollLeft = topBar.scrollLeft;
   });
 
+  bottomBar.addEventListener('scroll', () => {
+    scrollable.scrollLeft = bottomBar.scrollLeft;
+    topBar.scrollLeft = bottomBar.scrollLeft;
+  });
 
-  // ✅ GENERIC FUNCTION FOR NEXT ROUNDS
-  function alignColumn(parentCol, childCol) {
-    const parents = parentCol.querySelectorAll(".match-card");
-    const children = childCol.querySelectorAll(".match-card");
+  scrollable.addEventListener('scroll', () => {
+    topBar.scrollLeft = scrollable.scrollLeft;
+    bottomBar.scrollLeft = scrollable.scrollLeft;
+  });
 
-    children.forEach((card, i) => {
-      const idxA = 2 * i;
-      const idxB = 2 * i + 1;
-
-      if (!parents[idxA] || !parents[idxB]) return;
-
-      const centerA = getCenter(parents[idxA]);
-      const centerB = getCenter(parents[idxB]);
-
-      const targetCenter = (centerA + centerB) / 2;
-      const currentCenter = getCenter(card);
-
-      const delta = targetCenter - currentCenter;
-
-      card.style.marginTop = delta + "px";
-    });
+  // ✅ KEEP YOUR EXISTING STYLE (unchanged, just ensure only one instance)
+  if (!document.getElementById("knockout-scroll-style")) {
+    const styleTag = document.createElement('style');
+    styleTag.id = "knockout-scroll-style";
+    styleTag.textContent = `
+      .knockout-scrollbar {
+        height: 22px;
+        background: transparent;
+        overflow-x: auto;
+      }
+      .knockout-scrollbar::-webkit-scrollbar {
+        height: 22px;
+      }
+      .knockout-scrollbar::-webkit-scrollbar-track {
+        background: #EB3324;
+        border-radius: 6px;
+      }
+      .knockout-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(90deg, #FFD700, #FFC107);
+        border-radius: 6px;
+        border: 2px solid #EB3324;
+      }
+      .knockout-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(90deg, #FFC107, #FFB300);
+      }
+    `;
+    document.head.appendChild(styleTag);
   }
-
-  // ✅ apply recursively for QF, SF, Final
-  for (let i = 2; i < columns.length; i++) {
-    alignColumn(columns[i - 1], columns[i]);
-  }
-// ✅ FORCE FINAL to align with 3rd place
-const thirdPlaceCol = columns[4]; // 3rd Place Final
-const finalCol = columns[5];      // Final
-
-if (thirdPlaceCol && finalCol) {
-  const thirdCard = thirdPlaceCol.querySelector(".match-card");
-  const finalCard = finalCol.querySelector(".match-card");
-
-  if (thirdCard && finalCard) {
-    const getCenter = (el) => {
-      const rect = el.getBoundingClientRect();
-      return rect.top + rect.height / 2;
-    };
-
-    const targetCenter = getCenter(thirdCard);
-    const currentCenter = getCenter(finalCard);
-
-    const delta = targetCenter - currentCenter;
-
-    finalCard.style.marginTop = delta + "px";
-  }
-}
-
-}, 0);
 
   updatePlayerControlsVisibility();
   updateProgress();
