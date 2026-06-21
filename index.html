@@ -119,7 +119,7 @@
   box-sizing: border-box;
   
   align-content: center;   /* ✅ add this */
-  height: 100%;            /* ✅ ensures vertical centering works */
+  /*height: 100%;            /* ✅ ensures vertical centering works */
 
 }
 .match-grid .team-flag {
@@ -2174,6 +2174,8 @@ function renderKnockoutBracket() {
       });
     }
   }, 50);
+  updatePlayerControlsVisibility();
+  updateProgress();
 }
 
 // Fallback function to show matches as a simple list if bracket fails
