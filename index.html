@@ -1414,18 +1414,16 @@ function getResultSymbol(result) {
 function resolveKnockoutTeams() {
    const groupStandings = {};
    
+  
 Object.keys(groupMatches).forEach(group => {
-  const key = group.replace(/ /g, '_');
-  const el = document.getElementById(`group-${key}`);
+  const standings = calculateGroupStandings(group, groupMatches[group]);
+  groupStandings[group] = standings;
 
-  if (el) {
-    el.style.display = "none";
-    expandedGroups[key] = false;
-
-    const block = el.closest('.group-block');
-    if (block) block.classList.remove('expanded');
-  }
+  // Optional (handles "A" vs "Group A" formats safely)
+  const shortName = group.replace("Group ", "").trim();
+  groupStandings[shortName] = standings;
 });
+
 
 
    const findMatch = (matchName) => {
