@@ -2066,6 +2066,85 @@ function renderKnockoutBracket() {
       });
     }
   }, 50);
+  
+  // ✅ STRICT PATCH: ALIGN KNOCKOUT USING REAL DOM (NO LAYOUT CHANGE)
+setTimeout(() => {
+
+  const container = document.getElementById("knockout-matches");
+  if (!container) return;
+
+  const columns = container.querySelectorAll(".scrollable-container > div");
+  if (!columns || columns.length < 2) return;
+
+  const r32Col = columns[0];
+  const r16Col = columns[1];
+
+  if (!r32Col || !r16Col) return;
+
+  const r32Cards = r32Col.querySelectorAll(".match-card");
+  const r16Cards = r16Col.querySelectorAll(".match-card");
+
+  if (r32Cards.length < 2 || r16Cards.length === 0) return;
+
+  // ✅ helper: get vertical center of a card
+  function getCenter(el) {
+    const rect = el.getBoundingClientRect();
+    return rect.top + rect.height / 2;
+  }
+
+  // ✅ reference top of column (to make offsets relative)
+  const colTop = r32Col.getBoundingClientRect().top;
+
+  // ✅ ALIGN ROUND OF 16 (each match = midpoint of 2 R32 matches)
+  r16Cards.forEach((card, i) => {
+
+    const idxA = 2 * i;
+    const idxB = 2 * i + 1;
+
+    if (!r32Cards[idxA] || !r32Cards[idxB]) return;
+
+    const centerA = getCenter(r32Cards[idxA]);
+    const centerB = getCenter(r32Cards[idxB]);
+
+    const targetCenter = (centerA + centerB) / 2;
+    const currentCenter = getCenter(card);
+
+    const delta = targetCenter - currentCenter;
+
+    card.style.marginTop = delta + "px";
+  });
+
+
+  // ✅ GENERIC FUNCTION FOR NEXT ROUNDS
+  function alignColumn(parentCol, childCol) {
+    const parents = parentCol.querySelectorAll(".match-card");
+    const children = childCol.querySelectorAll(".match-card");
+
+    children.forEach((card, i) => {
+      const idxA = 2 * i;
+      const idxB = 2 * i + 1;
+
+      if (!parents[idxA] || !parents[idxB]) return;
+
+      const centerA = getCenter(parents[idxA]);
+      const centerB = getCenter(parents[idxB]);
+
+      const targetCenter = (centerA + centerB) / 2;
+      const currentCenter = getCenter(card);
+
+      const delta = targetCenter - currentCenter;
+
+      card.style.marginTop = delta + "px";
+    });
+  }
+
+  // ✅ apply recursively for QF, SF, Final
+  for (let i = 2; i < columns.length; i++) {
+    alignColumn(columns[i - 1], columns[i]);
+  }
+
+}, 0);
+
   updatePlayerControlsVisibility();
   updateProgress();
 }
