@@ -2142,6 +2142,28 @@ setTimeout(() => {
   for (let i = 2; i < columns.length; i++) {
     alignColumn(columns[i - 1], columns[i]);
   }
+// ✅ FORCE FINAL to align with 3rd place
+const thirdPlaceCol = columns[4]; // 3rd Place Final
+const finalCol = columns[5];      // Final
+
+if (thirdPlaceCol && finalCol) {
+  const thirdCard = thirdPlaceCol.querySelector(".match-card");
+  const finalCard = finalCol.querySelector(".match-card");
+
+  if (thirdCard && finalCard) {
+    const getCenter = (el) => {
+      const rect = el.getBoundingClientRect();
+      return rect.top + rect.height / 2;
+    };
+
+    const targetCenter = getCenter(thirdCard);
+    const currentCenter = getCenter(finalCard);
+
+    const delta = targetCenter - currentCenter;
+
+    finalCard.style.marginTop = delta + "px";
+  }
+}
 
 }, 0);
 
