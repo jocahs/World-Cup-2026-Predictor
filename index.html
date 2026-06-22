@@ -17,11 +17,9 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: "auto";
+            max-width: auto;
             margin: 10px;
             padding: 0px;
-            /*padding-right: 10px*/
-            ;
             background: #f0f2f5;
             -webkit-tap-highlight-color: transparent;
         }
@@ -139,7 +137,8 @@
         .group-standings th:first-child {
             text-align: left;
             padding-left: 12px;
-            white-space: nowrap;   /* prevent wrapping */
+            white-space: nowrap;
+            /* prevent wrapping */
         }
 
         /* For names longer than 18 characters – allow wrap and indent second line */
@@ -160,10 +159,9 @@
         /* ----- match card ----- */
         .match-card {
             flex: 1 0 auto;
-            min-width: 200px;
-            max-width: 310px;
             margin: 0;
-            padding: 8px 10px;
+            align-content: center;
+            padding: 5px 5px;
             border-radius: 8px;
             background: #ffffff;
             border: 1px solid #e0e0e0;
@@ -177,45 +175,60 @@
         /* the inner grid that holds teams, flags, scores, date/time */
         .match-grid {
             display: grid;
-            grid-template-columns: 28px 1fr 25px 1fr;
+            grid-template-columns: 1fr auto 1fr;
             gap: 4px 2px;
             align-items: center;
             justify-items: center;
             width: 100%;
             box-sizing: border-box;
-
             align-content: center;
-            /* ✅ add this */
-            /*height: 100%;            /* ✅ ensures vertical centering works */
+        }
 
-        }
-        .match-grid .team-flag {
-            width: 20px;
-            height: 15px;
-            padding-left: 3px;
-            border-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            display: block;
-        }
-        .match-grid .team-name {
+        /* Combined flag+name cell – flex container */
+        .match-grid .team-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            
+            width: 100%;
             font-weight: bold;
             font-size: 0.9em;
             color: #333;
+            line-height: 1.2;
+        }
+        .match-grid .team-cell .team-flag {
+            width: 20px;
+            height: 15px;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+        .match-grid .team-cell .team-name {
             max-width: 13ch;
             word-break: break-word;
-            text-align: center;
-            line-height: 1.2;
-            width: 100%;
+            text-align: left;
         }
+
         .match-grid .score {
             font-size: 0.9em;
             font-weight: bold;
             color: #333;
+            text-align: center;
+            min-width: 20px;
         }
+        .match-grid .score-input {
+            width: 20px;
+            padding: 4px 2px;
+            font-size: 0.95em;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
         .match-grid .datetime,
-        .match-grid .result-symbol {
+        .match-grid .result-symbol,
+        .match-grid .transmission {
             font-size: 0.9em;
-            white-space: nowrap;
             width: 100%;
             text-align: center;
         }
@@ -224,13 +237,8 @@
             text-decoration: none;
             font-weight: bold;
         }
-
-        .match-grid .transmission {
-            font-size: 0.85em;
-        }
-
         .match-grid .transmission a {
-            color: #0000E3;
+            color: #00FFFF;
             text-decoration: none;
             font-weight: bold;
             word-break: break-word;
@@ -244,12 +252,6 @@
             max-width: 13ch;
             display: inline-block;
             text-align: center;
-            font-weight: bold;
-        }
-        .match-grid .icon-cal,
-        .match-grid .icon-tv {
-            font-size: 0.9em;
-            color: #FFD700;
             font-weight: bold;
         }
 
@@ -636,7 +638,15 @@
             .group-standings td {
                 padding: 4px 3px;
             }
-            
+
+            .match-grid {
+                grid-template-columns: 1fr auto 1fr !important;
+                gap: 2px 0 !important;
+            }
+            .match-grid .team-cell .team-flag {
+                width: 18px !important;
+                height: 13px !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -645,12 +655,12 @@
                 min-width: 0 !important;
                 max-width: 100% !important;
                 padding: 6px 4px !important;
+                justify-content: center;
             }
             .match-grid {
-                grid-template-columns: 20px 1fr 20px 1fr !important;
-                gap: 2px 0 !important;
+                grid-template-columns: 1fr auto 1fr !important;
             }
-            .match-grid .team-flag {
+            .match-grid .team-cell .team-flag {
                 width: 20px !important;
                 height: 15px !important;
             }
@@ -677,6 +687,7 @@
         /* Ensure vertical scrollbar never overlaps content */
         html {
             overflow-y: scroll;
+            min-width: 320px;
         }
         body {
             box-sizing: border-box;
@@ -965,7 +976,7 @@
         const inputId = `${side}-${getMatchInputId(matchObj.match)}`;
         const value = (scoreValue !== undefined && scoreValue !== null) ? scoreValue : '';
         if (isAdminMode) {
-            return `<input type="text" id="${inputId}" class="score-input" value="${value}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width: 15px; padding: 6px 8px; font-size: 0.95em; border-radius: 6px; border: 1px solid #ccc; text-align: center;">`;
+            return `<input type="text" id="${inputId}" class="score-input" value="${value}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`;
         }
         return `<div class="score">${value}</div>`;
     }
@@ -1149,117 +1160,124 @@
         return null;
     }
 
-    function createMatchNameWithFlags(homeTeam, visitorTeam) {
-        const flag1 = getFlagCode(homeTeam);
-        const flag2 = getFlagCode(visitorTeam);
-        const homeWithFlag = flag1 ?
-            `<img src="https://flagcdn.com/20x15/${flag1}.png" class="team-flag" alt="${homeTeam} flag"> ${homeTeam}` :
-            homeTeam;
-        const visitorWithFlag = flag2 ?
-            `<img src="https://flagcdn.com/20x15/${flag2}.png" class="team-flag" alt="${visitorTeam} flag"> ${visitorTeam}` :
-            visitorTeam;
-        return `${homeWithFlag} vs ${visitorWithFlag}`;
-    }
-
-async function saveAllScores() {
-    const scoreUpdates = [];
-
-    const allMatches = [];
-    for (let group in groupMatches) {
-        allMatches.push(...groupMatches[group]);
-    }
-    allMatches.push(...knockoutMatches);
-
-    for (let i = 0; i < allMatches.length; i++) {
-        const matchObj = allMatches[i];
-        const matchName = matchObj.match;
-        const cleanId = getMatchInputId(matchName);
-
-        const homeInput = document.getElementById(`home-${cleanId}`);
-        const awayInput = document.getElementById(`away-${cleanId}`);
-        if (!homeInput || !awayInput) continue;
-
-        const homeScoreVal = homeInput.value.trim();
-        const awayScoreVal = awayInput.value.trim();
-
-        // If both inputs are empty, skip this match (no change)
-        if (homeScoreVal === '' && awayScoreVal === '') {
-            continue;
-        }
-
-        const homeScore = parseInt(homeScoreVal) || 0;
-        const awayScore = parseInt(awayScoreVal) || 0;
-
-        // Compute result locally (for comparison and local storage)
-        let result = "";
-        if (homeScore > awayScore) result = "1";
-        else if (homeScore < awayScore) result = "2";
-        else if (homeScore === awayScore) result = "X";
-
-        const existing = actualResults[matchName] || {};
-        const existingScore = existing.score || "";
-
-        let existingHome = 0, existingAway = 0;
-        if (existingScore) {
-            const parts = existingScore.split('-');
-            if (parts.length === 2) {
-                existingHome = parseInt(parts[0]) || 0;
-                existingAway = parseInt(parts[1]) || 0;
-            }
-        }
-
-        // Only update if the scores have changed (result will follow)
-        if (homeScore === existingHome && awayScore === existingAway) {
-            continue;
-        }
-
-        // Save only the scores to the server (no 'result' field)
-        scoreUpdates.push({
-            match: matchName,
-            homeScore: homeScore,
-            awayScore: awayScore
-        });
-    }
-
-    if (scoreUpdates.length === 0) {
-        showFloatingNotification("No scores changed!", false);
-        return;
-    }
-
-    showLoading("Saving scores...");
-
-    try {
-        // Send via GET (keeping your original approach) with only scores
-        const params = new URLSearchParams();
-        params.append("action", "saveScores");
-        params.append("data", JSON.stringify(scoreUpdates));
-        await fetch(`${WEBAPP_URL}?${params.toString()}`);
-
-        // Update local cache with both score and computed result
-        scoreUpdates.forEach(update => {
-            const home = update.homeScore;
-            const away = update.awayScore;
-            let result = "";
-            if (home > away) result = "1";
-            else if (home < away) result = "2";
-            else if (home === away) result = "X";
-
-            actualResults[update.match] = {
-                result: result,
-                score: `${home}-${away}`
-            };
-        });
-
-        showFloatingNotification(`✅ ${scoreUpdates.length} match score(s) saved!`);
-        closeAdminMode();
-
-    } catch (e) {
-        showFloatingNotification("Error saving scores: " + e.message, true);
-        hideLoading();
+function getFlagHtml(teamName, width = 20, height = 15) {
+    const flagCode = getFlagCode(teamName);
+    if (flagCode) {
+        // real flag
+        return `<img src="https://flagcdn.com/${width}x${height}/${flagCode}.png" 
+                     class="team-flag" 
+                     alt="${teamName} flag"
+                     style="width:${width}px;height:${height}px;border-radius:2px;flex-shrink:0;">`;
+    } else {
+        // placeholder – a subtle grey box (or you can use a transparent image)
+        return `<span style="display:inline-block;width:${width}px;height:${height}px;background:rgba(0,0,0,0.1);border-radius:2px;flex-shrink:0;" title="No flag available"></span>`;
     }
 }
 
-function updatePlayerDropdown() {
+    function createMatchNameWithFlags(homeTeam, visitorTeam) {
+        const flag1 = getFlagHtml(homeTeam);
+        const flag2 = getFlagHtml(visitorTeam);
+    }
+    async function saveAllScores() {
+        const scoreUpdates = [];
+
+        const allMatches = [];
+        for (let group in groupMatches) {
+            allMatches.push(...groupMatches[group]);
+        }
+        allMatches.push(...knockoutMatches);
+
+        for (let i = 0; i < allMatches.length; i++) {
+            const matchObj = allMatches[i];
+            const matchName = matchObj.match;
+            const cleanId = getMatchInputId(matchName);
+
+            const homeInput = document.getElementById(`home-${cleanId}`);
+            const awayInput = document.getElementById(`away-${cleanId}`);
+            if (!homeInput || !awayInput) continue;
+
+            const homeScoreVal = homeInput.value.trim();
+            const awayScoreVal = awayInput.value.trim();
+
+            // If both inputs are empty, skip this match (no change)
+            if (homeScoreVal === '' && awayScoreVal === '') {
+                continue;
+            }
+
+            const homeScore = parseInt(homeScoreVal) || 0;
+            const awayScore = parseInt(awayScoreVal) || 0;
+
+            // Compute result locally (for comparison and local storage)
+            let result = "";
+            if (homeScore > awayScore) result = "1";
+            else if (homeScore < awayScore) result = "2";
+            else if (homeScore === awayScore) result = "X";
+
+            const existing = actualResults[matchName] || {};
+            const existingScore = existing.score || "";
+
+            let existingHome = 0,
+                existingAway = 0;
+            if (existingScore) {
+                const parts = existingScore.split('-');
+                if (parts.length === 2) {
+                    existingHome = parseInt(parts[0]) || 0;
+                    existingAway = parseInt(parts[1]) || 0;
+                }
+            }
+
+            // Only update if the scores have changed (result will follow)
+            if (homeScore === existingHome && awayScore === existingAway) {
+                continue;
+            }
+
+            // Save only the scores to the server (no 'result' field)
+            scoreUpdates.push({
+                match: matchName,
+                homeScore: homeScore,
+                awayScore: awayScore
+            });
+        }
+
+        if (scoreUpdates.length === 0) {
+            showFloatingNotification("No scores changed!", false);
+            return;
+        }
+
+        showLoading("Saving scores...");
+
+        try {
+            // Send via GET (keeping your original approach) with only scores
+            const params = new URLSearchParams();
+            params.append("action", "saveScores");
+            params.append("data", JSON.stringify(scoreUpdates));
+            await fetch(`${WEBAPP_URL}?${params.toString()}`);
+
+            // Update local cache with both score and computed result
+            scoreUpdates.forEach(update => {
+                const home = update.homeScore;
+                const away = update.awayScore;
+                let result = "";
+                if (home > away) result = "1";
+                else if (home < away) result = "2";
+                else if (home === away) result = "X";
+
+                actualResults[update.match] = {
+                    result: result,
+                    score: `${home}-${away}`
+                };
+            });
+
+            showFloatingNotification(`✅ ${scoreUpdates.length} match score(s) saved!`);
+            closeAdminMode();
+
+        } catch (e) {
+            showFloatingNotification("Error saving scores: " + e.message, true);
+            hideLoading();
+        }
+    }
+
+    function updatePlayerDropdown() {
         const select = document.getElementById("playerSelect");
         const currentValue = select.value;
         select.innerHTML = '<option value="">-- Select player --</option>';
@@ -1859,7 +1877,6 @@ function updatePlayerDropdown() {
           `;
 
         standings.forEach(team => {
-            const flagCode = getFlagCode(team.name);
             const nameLength = team.name.length;
 
             // Build the team name with optional wrapping class
@@ -1868,9 +1885,7 @@ function updatePlayerDropdown() {
                 nameHtml = `<span class="long-name">${team.name}</span>`;
             }
 
-           const teamWithFlag = flagCode ?
-          `<img src="https://flagcdn.com/20x15/${flagCode}.png" class="team-flag" alt="${team.name} flag"> ${nameHtml}` :
-          nameHtml;
+            const teamWithFlag = getFlagHtml(team.name) + ' ' + nameHtml;
             const gd = team.goalDiff;
             const gdColor = gd > 0 ? '#2e7d32' : (gd < 0 ? '#c62828' : '#555');
 
@@ -1973,16 +1988,16 @@ function updatePlayerDropdown() {
                 const homeFlagCode = getFlagCode(homeTeam);
                 const awayFlagCode = getFlagCode(visitorTeam);
                 const homeFlagHtml = homeFlagCode ?
-                    `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` :
+                    `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" class="team-flag" alt="${homeTeam} flag">` :
                     '';
                 const awayFlagHtml = awayFlagCode ?
-                    `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` :
+                    `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" class="team-flag" alt="${visitorTeam} flag">` :
                     '';
 
                 // --- Match number label (like knockout) ---
                 const matchNumberMatch = matchObj.match.match(/\d+/);
                 const matchNumberLabel = matchNumberMatch ?
-                    `<div class="match-number" style="text-align:center;font-size:0.85em;color:#4CAF50;font-weight:bold;margin-bottom:3px;">Match ${matchNumberMatch[0]}</div>` :
+                    `<div class="match-number" style="text-align:center;font-size:0.85em;color:#0000E3;font-weight:bold;margin-bottom:3px;">Match ${matchNumberMatch[0]}</div>` :
                     '';
 
                 let gridHtml = '';
@@ -2026,13 +2041,17 @@ function updatePlayerDropdown() {
 
                     gridHtml = `
                 <div class="match-grid">
-                  <div class="team-flag">${homeFlagHtml}</div>
-                  <div class="team-name">${homeTeam}</div>
+                  <div class="team-cell">
+                    ${homeFlagHtml}
+                    <span class="team-name">${homeTeam}</span>
+                  </div>
                   ${scoreLeftHtml}
                   <div class="datetime">${displayDateTime}</div>
 
-                  <div class="team-flag">${awayFlagHtml}</div>
-                  <div class="team-name">${visitorTeam}</div>
+                  <div class="team-cell">
+                    ${awayFlagHtml}
+                    <span class="team-name">${visitorTeam}</span>
+                  </div>
                   ${scoreRightHtml}
                   <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
                 </div>
@@ -2071,7 +2090,7 @@ function updatePlayerDropdown() {
                         const transText = matchObj.transmission;
                         if (transText.includes('LiveModeTV')) {
                             transHtml =
-                                `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#0000E3;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
+                                `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#00FFFF;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
                         } else {
                             transHtml =
                                 `<span style="color:#000;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
@@ -2083,13 +2102,17 @@ function updatePlayerDropdown() {
 
                     gridHtml = `
                 <div class="match-grid">
-                  <div class="team-flag">${homeFlagHtml}</div>
-                  <div class="team-name">${homeTeam}</div>
+                  <div class="team-cell">
+                    ${homeFlagHtml}
+                    <span class="team-name">${homeTeam}</span>
+                  </div>
                   ${scoreLeftHtml}
                   <div class="datetime">${calHtml}</div>
 
-                  <div class="team-flag">${awayFlagHtml}</div>
-                  <div class="team-name">${visitorTeam}</div>
+                  <div class="team-cell">
+                    ${awayFlagHtml}
+                    <span class="team-name">${visitorTeam}</span>
+                  </div>
                   ${scoreRightHtml}
                   <div class="transmission">${transHtml}</div>
                 </div>
@@ -2398,21 +2421,15 @@ function updatePlayerDropdown() {
         const homeTeam = matchObj.homeTeam || '';
         const visitorTeam = matchObj.visitorTeam || '';
 
-        const homeFlagCode = getFlagCode(homeTeam);
-        const awayFlagCode = getFlagCode(visitorTeam);
-        const homeFlagHtml = homeFlagCode ?
-            `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` :
-            '';
-        const awayFlagHtml = awayFlagCode ?
-            `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" class="team-flag" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` :
-            '';
+        const homeFlagHtml = getFlagHtml(homeTeam)
+        const awayFlagHtml = getFlagHtml(visitorTeam);
 
         let gridHtml = '';
         let homeScore = '';
         let awayScore = '';
         const matchNumberMatch = matchObj.match.match(/\d+/);
         const matchNumberLabel = matchNumberMatch ?
-            `<div class="match-number" style="text-align:center;font-size: 0.85em; color:#4CAF50; font-weight:bold; margin-bottom: 3px;">Match ${matchNumberMatch[0]}</div>` :
+            `<div class="match-number" style="text-align:center;font-size: 0.85em; color:#0000E3; font-weight:bold; margin-bottom: 3px;">Match ${matchNumberMatch[0]}</div>` :
             '';
         let scoreLeftHtml = '';
         let scoreRightHtml = '';
@@ -2454,13 +2471,17 @@ function updatePlayerDropdown() {
 
             gridHtml = `
             <div class="match-grid">
-              <div class="team-flag">${homeFlagHtml}</div>
-              <div class="team-name">${homeTeam}</div>
+              <div class="team-cell">
+                ${homeFlagHtml}
+                <span class="team-name">${homeTeam}</span>
+              </div>
               ${scoreLeftHtml}
               <div class="datetime">${displayDateTime}</div>
 
-              <div class="team-flag">${awayFlagHtml}</div>
-              <div class="team-name">${visitorTeam}</div>
+              <div class="team-cell">
+                ${awayFlagHtml}
+                <span class="team-name">${visitorTeam}</span>
+              </div>
               ${scoreRightHtml}
               <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
             </div>
@@ -2499,7 +2520,7 @@ function updatePlayerDropdown() {
                 const transText = matchObj.transmission;
                 if (transText.includes('LiveModeTV')) {
                     transHtml =
-                        `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#0000E3;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
+                        `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#00FFFF;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
                 } else {
                     transHtml =
                         `<span style="color:#000;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
@@ -2511,13 +2532,17 @@ function updatePlayerDropdown() {
 
             gridHtml = `
             <div class="match-grid">
-              <div class="team-flag">${homeFlagHtml}</div>
-              <div class="team-name">${homeTeam}</div>
+              <div class="team-cell">
+                ${homeFlagHtml}
+                <span class="team-name">${homeTeam}</span>
+              </div>
               ${scoreLeftHtml}
               <div class="datetime">${calHtml}</div>
 
-              <div class="team-flag">${awayFlagHtml}</div>
-              <div class="team-name">${visitorTeam}</div>
+              <div class="team-cell">
+                ${awayFlagHtml}
+                <span class="team-name">${visitorTeam}</span>
+              </div>
               ${scoreRightHtml}
               <div class="transmission">${transHtml}</div>
             </div>
@@ -2607,7 +2632,7 @@ function updatePlayerDropdown() {
                 }, 3000);
             } else {
                 const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest(
-                '.group-block');
+                    '.group-block');
                 if (groupBlock) {
                     groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
@@ -2678,14 +2703,8 @@ function updatePlayerDropdown() {
             const homeTeam = tm.match.homeTeam || '';
             const visitorTeam = tm.match.visitorTeam || '';
 
-            const homeFlagCode = getFlagCode(homeTeam);
-            const awayFlagCode = getFlagCode(visitorTeam);
-            const homeFlagHtml = homeFlagCode ?
-                `<img src="https://flagcdn.com/20x15/${homeFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${homeTeam} flag">` :
-                '';
-            const awayFlagHtml = awayFlagCode ?
-                `<img src="https://flagcdn.com/20x15/${awayFlagCode}.png" style="width:20px;height:15px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:block;" alt="${visitorTeam} flag">` :
-                '';
+            const homeFlagHtml = getFlagHtml(homeTeam);
+            const awayFlagHtml = getFlagHtml(visitorTeam);
 
             let dateTimeStr = '';
             if (tm.match.date && tm.match.time) {
@@ -2722,7 +2741,7 @@ function updatePlayerDropdown() {
                 const transText = tm.match.transmission;
                 if (transText.includes('LiveModeTV')) {
                     transHtml =
-                        `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="font-weight: bold;color: #0000E3;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
+                        `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="font-weight: bold;color: #00FFFF;text-decoration:none;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
                 } else {
                     transHtml =
                         `<span style="color:white;word-break:break-word;max-width:13ch;display:inline-block;text-align:center;">${transText}</span>`;
@@ -2733,20 +2752,24 @@ function updatePlayerDropdown() {
             const matchNumMatch = tm.match.match.match(/\d+/);
             const matchNumDisplay = matchNumMatch ? matchNumMatch[0] : '';
             const headerHtml =
-                `<div style="text-align:center;font-size:0.85em;font-weight:bold;color:#00FFFF;margin-bottom:4px;width:100%;">${tm.group} - Match ${matchNumDisplay}</div>`;
+                `<div style="text-align:center;font-size:0.85em;font-weight:bold;color:#0000E3;margin-bottom:4px;width:100%;">${tm.group} - Match ${matchNumDisplay}</div>`;
 
             html += `
               <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
                    style="cursor:pointer; background:rgba(255,255,255,0.15); border-radius:6px; padding:6px 8px; min-width:200px; max-width:310px; flex:1 0 auto; display:flex; flex-direction:column; align-items:center;">
                 ${headerHtml}
-                <div style="display:grid; grid-template-columns:24px 1fr 24px 1fr; gap:4px 2px; align-items:center; justify-items:center; width:100%;">
-                  <div style="display:flex; justify-content:center; width:100%;">${homeFlagHtml}</div>
-                  <div style="font-weight:bold; font-size:0.9em; color:#fff; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${homeTeam}</div>
+                <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:4px 2px; align-items:center; justify-items:center; width:max-content;">
+                  <div style="display:flex; align-items:center; gap:8px;  font-weight:bold; font-size:0.9em; color:#fff;">
+                    ${homeFlagHtml}
+                    <span style="max-width:13ch; word-break:break-word; text-align:center; line-height:1.2;">${homeTeam}</span>
+                  </div>
                   <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📅</div>
                   <div style="font-size:0.9em; white-space:nowrap; width:100%; text-align:center;">${calHtml}</div>
 
-                  <div style="display:flex; justify-content:center; width:100%;">${awayFlagHtml}</div>
-                  <div style="font-weight:bold; font-size:0.9em; color:#fff; max-width:13ch; word-break:break-word; text-align:center; line-height:1.2; width:100%;">${visitorTeam}</div>
+                  <div style="display:flex; align-items:center; gap:8px;  font-weight:bold; font-size:0.9em; color:#fff;">
+                    ${awayFlagHtml}
+                    <span style="max-width:13ch; word-break:break-word; text-align:center; line-height:1.2;">${visitorTeam}</span>
+                  </div>
                   <div style="font-size:0.9em; color:#FFD700; font-weight:bold;">📺</div>
                   <div style="font-size:0.9em; width:100%; text-align:center;">${transHtml}</div>
                 </div>
@@ -2992,13 +3015,7 @@ function updatePlayerDropdown() {
             const item = document.createElement("div");
             item.className = "dropdown-item";
 
-            const flagCode = getFlagCode(country);
-
-            let flagHtml = '';
-            if (flagCode) {
-                flagHtml = '<img src="https://flagcdn.com/20x15/' + flagCode + '.png" ' +
-                    'style="width:20px;height:15px;border-radius:2px;">';
-            }
+                        const flagHtml = getFlagHtml(country);
 
             item.innerHTML = flagHtml + '<span>' + country + '</span>';
 
@@ -3097,7 +3114,7 @@ function updatePlayerDropdown() {
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.log('SW failed:',
-        e)));
+            e)));
     }
 
     document.addEventListener("DOMContentLoaded", () => {
