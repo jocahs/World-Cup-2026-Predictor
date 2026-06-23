@@ -88,13 +88,145 @@
             justify-content: center;
         }
 
-        .group-block {
-            flex: 1 1 auto;
-            width: 10px;
-            min-width: 125px;
-            max-width: 100%;
-            margin: 0;
-        }
+          /* Group-specific colors */
+          .group-block[data-group="A"] {
+              border: 1px solid #E53935;
+              background: #E53935;
+          }
+          .group-block[data-group="A"] .group-title {
+              background: #E53935;
+          }
+          .group-block[data-group="A"] .group-title:hover {
+              background: #C62828;
+          }
+
+          .group-block[data-group="B"] {
+              border: 1px solid #1E88E5;
+              background: #1E88E5;
+          }
+          .group-block[data-group="B"] .group-title {
+              background: #1E88E5;
+          }
+          .group-block[data-group="B"] .group-title:hover {
+              background: #1565C0;
+          }
+
+          .group-block[data-group="C"] {
+              border: 1px solid #43A047;
+              background: #43A047;
+          }
+          .group-block[data-group="C"] .group-title {
+              background: #43A047;
+          }
+          .group-block[data-group="C"] .group-title:hover {
+              background: #2E7D32;
+          }
+
+          .group-block[data-group="D"] {
+              border: 1px solid #FB8C00;
+              background: #FB8C00;
+          }
+          .group-block[data-group="D"] .group-title {
+              background: #FB8C00;
+          }
+          .group-block[data-group="D"] .group-title:hover {
+              background: #E65100;
+          }
+
+          .group-block[data-group="E"] {
+              border: 1px solid #8E24AA;
+              background: #8E24AA;
+          }
+          .group-block[data-group="E"] .group-title {
+              background: #8E24AA;
+          }
+          .group-block[data-group="E"] .group-title:hover {
+              background: #6A1B9A;
+          }
+
+          .group-block[data-group="F"] {
+              border: 1px solid #00897B;
+              background: #00897B;
+          }
+          .group-block[data-group="F"] .group-title {
+              background: #00897B;
+          }
+          .group-block[data-group="F"] .group-title:hover {
+              background: #00695C;
+          }
+
+          .group-block[data-group="G"] {
+              border: 1px solid #5E35B1;
+              background: #5E35B1;
+          }
+          .group-block[data-group="G"] .group-title {
+              background: #5E35B1;
+          }
+          .group-block[data-group="G"] .group-title:hover {
+              background: #4527A0;
+          }
+
+          .group-block[data-group="H"] {
+              border: 1px solid #D81B60;
+              background: #D81B60;
+          }
+          .group-block[data-group="H"] .group-title {
+              background: #D81B60;
+          }
+          .group-block[data-group="H"] .group-title:hover {
+              background: #AD1457;
+          }
+
+           .group-block[data-group="I"] {
+              border: 1px solid #E53935;
+              background: #E53935;
+          }
+          .group-block[data-group="I"] .group-title {
+              background: #E53935;
+          }
+          .group-block[data-group="I"] .group-title:hover {
+              background: #C62828;
+          }
+
+          .group-block[data-group="J"] {
+              border: 1px solid #FB8C00;
+              background: #FB8C00;
+          }
+          .group-block[data-group="J"] .group-title {
+              background: #FB8C00;
+          }
+          .group-block[data-group="J"] .group-title:hover {
+              background: #E65100;
+          }
+
+          .group-block[data-group="L"] {
+              border: 1px solid #8E24AA;
+              background: #8E24AA;
+          }
+          .group-block[data-group="L"] .group-title {
+              background: #8E24AA;
+          }
+          .group-block[data-group="L"] .group-title:hover {
+              background: #6A1B9A;
+          }
+
+          /* Fallback for any other groups */
+          .group-block {
+              border: 1px solid #4CAF50;
+              background: #4CAF50;
+          }
+          .group-block .group-title {
+              background: #4CAF50;
+              color: white;
+              padding: 10px;
+              font-weight: bold;
+              cursor: pointer;
+              font-size: 1.1em;
+              text-align: center;
+          }
+          .group-block .group-title:hover {
+              background: #0b7dda;
+          }
 
         .group-block.expanded {
             flex: 1 0 100%;
@@ -1952,6 +2084,7 @@
             for (let group of sortedGroups) {
                 const groupDiv = document.createElement("div");
                 groupDiv.className = "group-block";
+                groupDiv.setAttribute("data-group", group); // Add this line
                 groupDiv.innerHTML = `<div class="group-title" onclick="toggleGroup('${group.replace(/ /g, '_')}')">▼ ${group}</div>`;
 
                 const groupContent = document.createElement("div");
