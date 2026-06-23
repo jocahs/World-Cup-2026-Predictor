@@ -66,6 +66,7 @@
             border-radius: 10px;
             overflow: hidden;
             background: #4CAF50;
+            flex: 1 1 60px;
         }
         .group-title {
             background: #4CAF50;
@@ -210,11 +211,6 @@
               background: #6A1B9A;
           }
 
-          /* Fallback for any other groups */
-          .group-block {
-              border: 1px solid #4CAF50;
-              background: #4CAF50;
-          }
           .group-block .group-title {
               background: #4CAF50;
               color: white;
@@ -938,6 +934,11 @@
             outline: 2px solid #FFD700;
             outline-offset: 2px;
         }
+        .group-content {
+            flex-direction: column;
+            width: 100%;
+        }
+
 
     </style>
 </head>
@@ -2157,7 +2158,7 @@
                 if (expandedGroups[groupKey] === undefined) {
                     expandedGroups[groupKey] = false;
                 }
-                groupContent.style.display = expandedGroups[groupKey] ? "block" : "none";
+                groupContent.style.display = expandedGroups[groupKey] ? "flex" : "none";
 
                 if (expandedGroups[groupKey]) {
                     groupDiv.classList.add('expanded');
