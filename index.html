@@ -1256,7 +1256,6 @@
     const playerScores = [];
     const leaderboardList = document.getElementById("leaderboard-list");
     
-    // Make sure we have players and matches loaded
     if (!currentPlayers || currentPlayers.length === 0 || !groupMatches || Object.keys(groupMatches).length === 0) {
         if (leaderboardList) {
             leaderboardList.innerHTML = '<li style="color: #ccc;">No players or matches loaded yet</li>';
@@ -1264,10 +1263,8 @@
         return;
     }
     
-    // Get the current selected player (if any)
     const selectedPlayer = document.getElementById("playerSelect").value;
     
-    // Check if we have any results to calculate scores from
     let hasResults = false;
     for (let group in groupMatches) {
         for (let m of groupMatches[group]) {
@@ -1287,11 +1284,9 @@
     }
 
     for (let player of currentPlayers) {
-        let score = 0,
-            total = 0;
+        let score = 0, total = 0;
         const playerPicks = allPicks.filter(p => p.player === player);
         
-        // Count picks for group matches
         for (let group in groupMatches) {
             for (let m of groupMatches[group]) {
                 const actual = actualResults[m.matchName];
@@ -1303,7 +1298,6 @@
             }
         }
         
-        // Count picks for knockout matches
         for (let m of knockoutMatches) {
             const actual = actualResults[m.matchName];
             const pick = playerPicks.find(p => p.match === m.matchName);
@@ -1313,10 +1307,15 @@
             }
         }
         
-        playerScores.push({ name: player, score: score, total: total });
+        const ratio = total > 0 ? score / total : 0;
+        playerScores.push({ name: player, score: score, total: total, ratio: ratio });
     }
     
-    playerScores.sort((a, b) => b.score - a.score);
+    // Sort by points (score) descending, then by percentage (ratio) descending
+    playerScores.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return b.ratio - a.ratio;
+    });
     
     if (leaderboardList) {
         if (playerScores.length === 0) {
@@ -1326,7 +1325,7 @@
         
         leaderboardList.innerHTML = "";
         playerScores.forEach((p, i) => {
-            const percent = p.total > 0 ? Math.round(p.score / p.total * 100) : 0;
+            const percent = p.total > 0 ? Math.round(p.ratio * 100) : 0;
             const isCurrentPlayer = p.name === selectedPlayer;
             const medal = i === 0 ? "🏆" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
             const highlightStyle = isCurrentPlayer ? 'background: rgba(255,215,0,0.3); padding: 2px 8px; border-radius: 4px;' : '';
