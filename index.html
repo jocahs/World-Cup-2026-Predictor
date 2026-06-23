@@ -308,6 +308,7 @@
             background: #ffffff;
             border: 1px solid #e0e0e0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            
         }
 
         .match-card.completed {
@@ -399,8 +400,8 @@
             flex: 1 1 auto;
             min-width: 0;
             display: grid;
-            grid-template-columns: minmax(80px, 130px) minmax(auto, 15px) minmax(auto,100px);
-            gap: 6px 6px;
+            grid-template-columns: minmax(100px, 130px) minmax(auto, 15px) minmax(auto,100px);
+            gap: 6px 4px;
             align-items: center;
             justify-items: stretch;
             width: 100%;
@@ -442,10 +443,10 @@
         }
 
         .match-grid .score {
-            font-size: 0.9em;
             font-weight: bold;
-            color: #333;
+            color: #D4A017;
             text-align: center;
+            font-size: 1.2em;
         }
 
         .match-grid .score-input {
@@ -493,11 +494,17 @@
         }
 
         .match-cards-wrapper {
+            align-content: flex-start; 
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: wrap; 
             gap: 6px;
-            justify-content: center;
+            justify-content: center; 
+            max-height: 220px; 
+            overflow-y: auto; 
             padding: 4px 8px 8px 8px;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin; 
+
         }
 
         .match-header {
@@ -558,7 +565,7 @@
         .match-result-badge {
             padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.9em;
+            
             font-weight: bold;
             min-width: 65px;
             text-align: center;
@@ -986,6 +993,27 @@
             text-shadow:
                 0 1px 4px rgba(0, 0, 0, 0.95),
                 0 0 8px rgba(0, 0, 0, 0.8);
+        }
+
+        /* ---- Next matches container uses the same match-card styling ---- */
+        #today-matches-container .match-cards-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        #today-matches-container .match-card {
+            flex: 0 1 auto;
+            min-width: 200px;
+            max-width: 320px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #today-matches-container .match-card:hover {
+            background: #f9f9f9;
         }
     </style>
 </head>
@@ -2360,10 +2388,10 @@
                                 .time, matchObj.transmission);
                             if (calUrl) {
                                 calHtml =
-                                    `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017 ;text-decoration:none;white-space:nowrap;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
+                                    `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017 ;text-decoration:none;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
                             } else {
                                 calHtml =
-                                    `<span style="color:#D4A017 ;white-space:nowrap;font-weight:bold;">${dateTimeStr}</span>`;
+                                    `<span style="color:#D4A017 ;font-weight:bold;">${dateTimeStr}</span>`;
                             }
                         }
 
@@ -2845,10 +2873,10 @@
                         matchObj.transmission);
                     if (calUrl) {
                         calHtml =
-                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;white-space:nowrap;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
+                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
                     } else {
                         calHtml =
-                            `<span style="color:#D4A017;white-space:nowrap;font-weight:bold;">${dateTimeStr}</span>`;
+                            `<span style="color:#D4A017;font-weight:bold;">${dateTimeStr}</span>`;
                     }
                 }
 
@@ -3044,15 +3072,16 @@
             return upcomingMatches.slice(0, 8);
         }
 
+        // ----- NEW: createNextMatchesSection using the same match-card class -----
         function createNextMatchesSection() {
             const nextMatches = getNextMatches();
             if (nextMatches.length === 0) return '';
 
             let html = `
-      <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 10px; ">
-        <h3 style="text-align:center;margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next 8 Matches</h3>
-        <div style="max-height: 220px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-content: flex-start; padding: 4px; scrollbar-width: thin; scrollbar-gutter: stable;">
-        `;
+          <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 10px;">
+            <h3 style="text-align:center;margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next 8 Matches</h3>
+            <div class="match-cards-wrapper">
+            `;
 
             nextMatches.forEach((tm, idx) => {
                 const groupId = `group-${tm.group.replace(/ /g, '_')}`;
@@ -3079,18 +3108,9 @@
                     }
                 }
 
-                // Soccer ball badge for "next matches" section (smaller)
-                const badgeHtml = `
-              <div class="match-badge">
-                <span class="ball-emoji">⚽</span>
-                <span class="badge-text" style="font-size:0.85em;">
-                  ${matchNumber ? `<span class="match-num"  style="font-size:0.85em;">${matchNumber}</span>` : ''}
-                  ${groupLetter ? `<span class="group-letter"  style="font-size:0.85em;">${groupLetter}</span>` : ''}
-                </span>
-              </div>
-            `;
-
+                // Build date/time link
                 let dateTimeStr = '';
+                let calHtml = '';
                 if (tm.match.date && tm.match.time) {
                     const relativeDate = getRelativeDate(tm.match.date);
                     if (relativeDate) {
@@ -3106,57 +3126,73 @@
                             dateTimeStr = `${monthNames[month]} ${day} ${tm.match.time}`;
                         }
                     }
-                }
-
-                let calHtml = '';
-                if (dateTimeStr && homeTeam && visitorTeam) {
                     const calUrl = getGoogleCalendarUrl(tm.match.matchName, homeTeam, visitorTeam, tm.match.date, tm.match
                         .time, tm.match.transmission);
                     if (calUrl) {
                         calHtml =
-                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;white-space:nowrap;font-weight:bold;color:#FFD700;" title="Add to calendar">${dateTimeStr}</a>`;
+                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
                     } else {
-                        calHtml =
-                            `<span style="font-weight: bold;white-space:nowrap;color:#FFD700;">${dateTimeStr}</span>`;
+                        calHtml = `<span style="color:#D4A017;font-weight:bold;">${dateTimeStr}</span>`;
                     }
                 }
 
+                // Transmission
                 let transHtml = '';
                 if (tm.match.transmission) {
                     const transText = tm.match.transmission;
                     if (transText.includes('LiveModeTV')) {
                         transHtml =
-                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="font-weight: bold;color: #2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;" title="Watch on Youtube">${transText}</a>`;
+                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
                     } else {
                         transHtml =
-                            `<span style="color:white;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;">${transText}</span>`;
+                            `<span style="color:#000;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
                     }
                 }
 
+                // Score cells (empty for upcoming)
+                const scoreLeftHtml = `<div class="score">-</div>`;
+                const scoreRightHtml = `<div class="score">-</div>`;
+
+                // Build grid
+                const gridHtml = `
+              <div class="match-grid">
+                <div class="team-cell">
+                  ${homeFlagHtml}
+                  <span class="team-name">${homeTeam}</span>
+                </div>
+                ${scoreLeftHtml}
+                <div class="datetime">${calHtml}</div>
+
+                <div class="team-cell">
+                  ${awayFlagHtml}
+                  <span class="team-name">${visitorTeam}</span>
+                </div>
+                ${scoreRightHtml}
+                <div class="transmission">${transHtml}</div>
+              </div>
+            `;
+
+                // Badge
+                const badgeHtml = `
+              <div class="match-badge">
+                <span class="ball-emoji">⚽</span>
+                <span class="badge-text">
+                  ${matchNumber ? `<span class="match-num">${matchNumber}</span>` : ''}
+                  ${groupLetter ? `<span class="group-letter">${groupLetter}</span>` : ''}
+                </span>
+              </div>
+            `;
+
+                // Full card
                 html += `
-  <div onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" 
-       style="cursor:pointer; background:rgba(255,255,255,0.15); border-radius:6px; padding:6px 8px; min-width:100px; max-width:320px; flex:1 0 auto; display:flex; justify-content: center; align-items:center; width:100%;">
-    <div style="display:grid; grid-template-columns:auto minmax(80px, 130px) minmax(auto, 15px) minmax(auto,110px); gap:6px 6px; width:100%; align-items:center;">
-      <div style="grid-row: 1 / 3; display:flex; align-items:center; justify-content:center; padding-right:4px;">
-        ${badgeHtml}
-      </div>
-
-      <div style="display:flex; align-items:center; gap:4px; font-weight:bold; color:#fff;  grid-column:2;">
-        ${homeFlagHtml}
-        <span style="max-width: 13ch; width: fit-content; word-break:break-word; text-align:left; line-height:1.2;">${homeTeam}</span>
-      </div>
-      <div style="font-size:0.9em; color:#FFD700; font-weight:bold; text-align:center; white-space:nowrap; grid-column:3;">📅</div>
-      <div style="font-size:0.9em; white-space:nowrap; text-align:right; grid-column:4;">${calHtml}</div>
-
-      <div style="display:flex; align-items:center; gap:4px; font-weight:bold; color:#fff; grid-column:2; grid-row:2;">
-        ${awayFlagHtml}
-        <span style="max-width: 13ch; width: fit-content; word-break:break-word; text-align:left; line-height:1.2;">${visitorTeam}</span>
-      </div>
-      <div style="font-size:0.9em; color:#FFD700; font-weight:bold; text-align:center; white-space:nowrap; grid-column:3; grid-row:2;">📺</div>
-      <div style="font-size:0.9em; text-align:right; grid-column:4; grid-row:2;">${transHtml}</div>
-    </div>
-  </div>
-`;
+              <div class="match-card" onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" style="cursor:pointer;">
+                <div class="match-card-row">
+                  ${badgeHtml}
+                  ${gridHtml}
+                </div>
+                <!-- no pick-elements in next-matches -->
+              </div>
+            `;
             });
 
             html += `</div></div>`;
