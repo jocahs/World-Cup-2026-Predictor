@@ -783,14 +783,14 @@
         }
 
         
-        #progress-container,
-        #leaderboard {
-        max-width: 500px;
-        margin: 10px auto;
-        }
-
         .leaderboard li {
             margin: 5px 0;
+        }
+
+        
+        #progress-container,
+        #leaderboard {
+        margin: 10px auto;
         }
 
         .progress-bar {
@@ -799,6 +799,7 @@
             height: 20px;
             margin: 10px auto;
             overflow: hidden;
+            max-width: 320px;
         }
 
         .progress-fill {
@@ -806,9 +807,8 @@
             height: 100%;
             transition: width 0.3s;
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
             line-height: 20px;
-            max-width: 320px;
         }
 
         .player-select {
@@ -1044,13 +1044,13 @@
 
     <button id="togglePlayerBtn" onclick="togglePlayerSelection()" style="margin: 5px auto; display: block; padding: 10px; background: linear-gradient(135deg,  #ea9b24 0%, #ff7043 100%);">Predict Match Results</button>
 
-    <div id="player-selection" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: linear-gradient(135deg,  #ea9b24 0%, #ff7043 100%);margin: 10px auto 10px;">
+    <div id="player-selection" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: linear-gradient(135deg,  #ea9b24 0%, #ff7043 100%);margin: 10px auto;">
         <p style="max-width: 400px;; line-height: 1.5; margin: 0px auto;">Select an existing player or Enter your name.</p>
         <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
             <option value="">-- Select player --</option>
         </select>
         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 5px;" oninput="onPlayerNameEdit()">
-        <p style="line-height: 1.5; margin: 0px 20px;">Then select a stage to view the matches and pick your predictions!</p>
+        <p style="line-height: 1.5; margin: 0px auto;">Then select a stage to view the matches and pick your predictions!</p>
     </div>
     </div>
     <div id="progress-container" class="hidden"></div>
