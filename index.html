@@ -798,19 +798,29 @@
             border-radius: 10px;
             height: 20px;
             margin: 10px auto;
-            overflow: hidden;
+            overflow: visible;
             max-width: 320px;
+            position: relative;
         }
 
         .progress-fill {
+            border-radius: 10px;
             background: #FFD700;
             height: 100%;
             transition: width 0.3s;
             text-align: center;
             font-size: 12px;
             line-height: 20px;
+            white-space: nowrap;        
+            position: relative;
+            white-space: nowrap;
         }
 
+        .progress-text {
+        position: absolute;
+        white-space: nowrap;
+        }
+        
         .player-select {
             padding: 8px;
             font-size: 1em;
@@ -1053,13 +1063,13 @@
         <p style="line-height: 1.5; margin: 0px auto;">Then select a stage to view the matches and pick your predictions!</p>
     </div>
     </div>
-    <div id="progress-container" class="hidden"></div>
-    </div>
-
 
     <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
         <h2 style="margin-top: 0; margin-bottom: 0; text-align: center;">🏅 Leaderboard</h2>
         <ol id="leaderboard-list"></ol>
+    </div>
+
+    <div id="progress-container" class="hidden"></div>
     </div>
 
     <div class="stage-tabs">
@@ -3284,10 +3294,26 @@
             const percent = total > 0 ? Math.round(saved / total * 100) : 0;
             const progressContainer = document.getElementById("progress-container");
             if (progressContainer) {
-                progressContainer.innerHTML =
-                    `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}% Complete (${saved}/${total} upcoming matches)</div></div>`;
+                progressContainer.innerHTML = `
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:${percent}%">
+                        <span class="progress-text">
+                            ${percent}% Complete (${saved}/${total} upcoming matches)
+                        </span>
+                        </div>
+                    </div>`;
+                
+                const fill = progressContainer.querySelector('.progress-fill');
+                if (fill) {
+                    if (percent > 40) {
+                    fill.classList.add('big-enough');
+                    } else {
+                    fill.classList.remove('big-enough');
+                    }
+                }
+                }
+
             }
-        }
 
         function initTabs() {
             document.querySelectorAll('.stage-tab').forEach(tab => {
