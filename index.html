@@ -20,14 +20,13 @@
             font-family: Arial, sans-serif;
             max-width: auto;
             min-width: 320px;
-            margin: 10px;
             padding: 0px;
             background: #f0f2f5;
             -webkit-tap-highlight-color: transparent;
         }
         .container {
             background: white;
-            padding: 10px;
+            padding: 5px;
             border-radius: 10px;
             margin-bottom: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -287,7 +286,7 @@
         }
         .match-card.completed {
             background: #e8f5e9;
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid #FFD700;
         }
         .match-card-row {
             display: flex;
@@ -908,6 +907,10 @@
             border-radius: 8px;
         }
 
+        #knockout-matches .match-card {
+            padding: 0px;   
+            }
+
         /* === SPLASH === */
         #splash-screen {
             position: fixed;
@@ -974,7 +977,7 @@
 
     <div class="stage-tabs">
         <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
-        <div class="stage-tab" data-stage="knockout">🏆 Knockout</div>
+        <div class="stage-tab" data-stage="Knockout">🏆 Knockout</div>
     </div>
 
     <div id="country-selector-container" style="text-align:center; margin:10px 0; display:none;">
@@ -1653,87 +1656,120 @@
         // ----------------------------------------------------------------
         async function loadMatchesOnly() {
             if (isLoading) return;
+
             isLoading = true;
             showLoading("Loading matches...");
+
+            knockoutMatches = [];
+
             try {
-                const response = await fetch(`${WEBAPP_URL}?action=load`);
-                const data = await response.json();
-                if (!data.success) throw new Error(data.error);
-                actualResults = data.results || {};
-                groupMatches = {};
-                knockoutMatches = [];
-                if (data.matches && data.matches.length > 0) {
-                    data.matches.forEach(match => {
-                        const stage = match.stage || "group";
-                        const groupName = match.group || "Other";
-                        const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
-                        const matchObj = {
-                            matchName: match.name,
-                            date: match.date,
-                            time: match.time,
-                            displayMatch: matchDisplayName,
-                            transmission: match.transmission,
-                            homeTeam: match.homeTeam,
-                            visitorTeam: match.visitorTeam,
-                            isCompleted: actualResults[match.name] && actualResults[match.name].result,
-                            stage: stage,
-                            group: groupName
-                        };
-                        if (stage === "group") {
-                            if (!groupMatches[groupName]) groupMatches[groupName] = [];
-                            groupMatches[groupName].push(matchObj);
-                        } else if (stage === "Knockout") {
-                            knockoutMatches.push(matchObj);
-                        }
-                    });
+            const response = await fetch(`${WEBAPP_URL}?action=load`);
+            const data = await response.json();
+
+            if (!data.success) throw new Error(data.error);
+
+            actualResults = data.results || {};
+            groupMatches = {};
+
+            if (data.matches && data.matches.length > 0) {
+
+                data.matches.forEach(match => {
+
+                    const stage = match.stage || "group";
+                    const groupName = match.group || "Other";
+                    const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
+
+                    const matchObj = {
+                        matchName: match.name,
+                        date: match.date,
+                        time: match.time,
+                        displayMatch: matchDisplayName,
+                        transmission: match.transmission,
+                        homeTeam: match.homeTeam,
+                        visitorTeam: match.visitorTeam,
+                        isCompleted: actualResults[match.name] && actualResults[match.name].result,
+                        stage: stage,
+                        group: groupName
+                    };
+
+                    if (stage === "group") {
+
+                        if (!groupMatches[groupName]) groupMatches[groupName] = [];
+                        groupMatches[groupName].push(matchObj);
+
+                    } else if (stage === "Knockout") {
+                        knockoutMatches.push(matchObj);
                 }
-                resolveKnockoutTeams();
-                allPicks = data.picks || [];
-                const playerSet = new Set();
-                allPicks.forEach(p => playerSet.add(p.player));
-                currentPlayers = Array.from(playerSet).sort();
-                updatePlayerDropdown();
-                loadMatches();
-                setTimeout(function() {
-                    try {
-                        if (knockoutMatches && knockoutMatches.length > 0) {
-                            renderKnockoutBracket();
-                        } else {
-                            document.getElementById("knockout-matches").innerHTML =
-                                "<p style='text-align:center; padding:20px;'>No knockout matches loaded.</p>";
-                        }
-                    } catch (e) {
-                        console.error("Error rendering knockout bracket:", e);
-                        const container = document.getElementById("knockout-matches");
-                        if (container) {
-                            container.innerHTML =
-                                "<p style='text-align:center; padding:20px; color:red;'>Error loading bracket. Please refresh.</p>";
-                        }
-                    }
-                }, 100);
-                const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName")
-                    .value.trim();
-                if (player) {
-                    document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked = false);
-                    const userPicks = allPicks.filter(p => p.player === player);
-                    userPicks.forEach(pick => {
-                        const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
-                        if (radio) radio.checked = true;
-                    });
+
+            });
+        }
+
+        resolveKnockoutTeams();
+
+        allPicks = data.picks || [];
+
+        const playerSet = new Set();
+        allPicks.forEach(p => playerSet.add(p.player));
+        currentPlayers = Array.from(playerSet).sort();
+
+        updatePlayerDropdown();
+
+        loadMatches();
+
+        setTimeout(function() {            
+            try {
+                if (knockoutMatches && knockoutMatches.length > 0) {
+                    renderKnockoutBracket();
+
+                    // ✅ move UI logic HERE (safe place)
+                    document.getElementById('knockout-matches').classList.add('active');
+
+                    const cs = document.getElementById("country-selector-container");
+                    if (cs) cs.style.display = 'none';
+
+                } else {
+                    document.getElementById("knockout-matches").innerHTML =
+                        "<p style='text-align:center; padding:20px;'>No knockout matches loaded.</p>";
                 }
-                updateTodayMatches();
-                updatePlayerControlsVisibility();
-                hideLoading();
             } catch (e) {
-                console.error("Error loading matches:", e);
-                showFloatingNotification("Error loading matches: " + e.message, true);
-                hideLoading();
+                console.error("Error rendering knockout bracket:", e);
+
+                const container = document.getElementById("knockout-matches");
+                if (container) {
+                    container.innerHTML =
+                        "<p style='text-align:center; padding:20px; color:red;'>Error loading bracket. Please refresh.</p>";
+                }
+            }
+        }, 100);
+
+        const player =
+            document.getElementById("playerSelect").value.trim() ||
+            document.getElementById("playerName").value.trim();
+
+        if (player) {
+            document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
+            document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked = false);
+
+            const userPicks = allPicks.filter(p => p.player === player);
+
+            userPicks.forEach(pick => {
+                const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
+                if (radio) radio.checked = true;
+            });
+        }
+
+        updateTodayMatches();
+        updatePlayerControlsVisibility();
+
+        hideLoading();
+
+        } catch (e) {
+            console.error("Error loading matches:", e);
+            showFloatingNotification("Error loading matches: " + e.message, true);
+
             } finally {
                 isLoading = false;
-                setTimeout(() => {
-                    hideLoading();
-                }, 1000);
+                hideLoading();
             }
         }
 
@@ -2368,9 +2404,7 @@
                 setTimeout(() => {
                     requestAnimationFrame(() => {
                         const width = scrollable.scrollWidth;
-
-                        console.log("FINAL width:", width);
-
+                        
                         if (width === 0) return; // avoid broken setup
 
                         if (topBar.firstElementChild) {
@@ -2384,9 +2418,7 @@
                         }
                     });
                 }, 50);
-                console.log("scrollWidth:", scrollable.scrollWidth);
-                console.log("clientWidth:", scrollable.clientWidth);
-
+                
                 topBar.addEventListener('scroll', () => {
                     scrollable.scrollLeft = topBar.scrollLeft;
                     bottomBar.scrollLeft = topBar.scrollLeft;
@@ -2702,7 +2734,7 @@
             let rowStyle = '';
             if (!isCompleted && stageColors) {
                 rowStyle =
-                    ` style="background: ${stageColors.bg}; border-radius: 6px; padding: 5px 5px; margin: -5px; border-left: 4px solid ${stageColors.header};"`;
+                    ` style="background: ${stageColors.bg}; border-radius: 6px; padding: 5px 5px; border-left: 4px solid ${stageColors.header};"`;
             }
 
             const matchDiv = document.createElement("div");
@@ -3040,10 +3072,12 @@
                     const countrySelector = document.getElementById("country-selector-container");
                     if (stage === 'group') {
                         document.getElementById('group-matches').classList.add('active');
-                        if (countrySelector) countrySelector.style.display = 'block';
+                        const cs = document.getElementById("country-selector-container");
+                        if (cs) cs.style.display = 'block';
                     } else {
                         document.getElementById('knockout-matches').classList.add('active');
-                        if (countrySelector) countrySelector.style.display = 'none';
+                        const cs = document.getElementById("country-selector-container");
+                        if (cs) cs.style.display = 'none';
                         // Re-align when switching to knockout
                         setTimeout(() => {
                             const koContainer = document.getElementById("knockout-matches");
