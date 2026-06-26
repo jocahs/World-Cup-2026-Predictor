@@ -565,7 +565,7 @@
         }
 
         .radio-group {
-            margin-top: 6px;
+            margin: 6px;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
@@ -602,6 +602,16 @@
             margin-right: 3px;
             border-radius: 2px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-select {
+            padding: 8px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            min-width: 150px;
+            text-align: center;
         }
 
         #player-selection {
@@ -716,19 +726,22 @@
             white-space: nowrap;
             position: relative;
             white-space: nowrap;
+            width: 0%; 
         }
         .progress-text {
             position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
             white-space: nowrap;
+            font-size: 12px;
+            line-height: 20px;     /* match bar height */
+            text-align: center;
+            color: #333;           /* choose a color that's readable over both filled and unfilled areas */
+            width: auto;           /* let the text determine its width */
+            pointer-events: none;  /* so clicks pass through to any button below */
         }
-        .player-select {
-            padding: 8px;
-            font-size: 1em;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            margin-left: 10px;
-            min-width: 150px;
-        }
+
 
         /* === LOADING === */
         .loading-overlay {
@@ -964,7 +977,7 @@
         <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
             <option value="">-- Select player --</option>
         </select>
-        <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; width: 150px; margin: 5px;" oninput="onPlayerNameEdit()">
+        <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; margin: 5px;" oninput="onPlayerNameEdit()">
         <p style="line-height: 1.5; margin: 0px auto;">Then select a stage to view the matches and pick your predictions!</p>
     </div>
 
@@ -977,7 +990,7 @@
 
     <div class="stage-tabs">
         <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
-        <div class="stage-tab" data-stage="Knockout">🏆 Knockout</div>
+        <div class="stage-tab" data-stage="Knockout">🏆 Knockout stage</div>
     </div>
 
     <div id="country-selector-container" style="text-align:center; margin:10px 0; display:none;">
@@ -1402,17 +1415,15 @@
                 const awayScoreVal = awayInput.value.trim();
                 if (homeScoreVal === '' && awayScoreVal === '') {
                     continue;
-                }
-                const homeScore = parseInt(homeScoreVal) || 0;
-                const awayScore = parseInt(awayScoreVal) || 0;
-                let result = "";
-                if (homeScore > awayScore) result = "1";
-                else if (homeScore < awayScore) result = "2";
-                else if (homeScore === awayScore) result = "X";
+                }               
+                                        
+                const homeScore = Number(homeScoreVal);
+                const awayScore = Number(awayScoreVal);
+                if (isNaN(homeScore) || isNaN(awayScore)) continue;
+
                 const existing = actualResults[matchName] || {};
                 const existingScore = existing.score || "";
-                let existingHome = 0,
-                    existingAway = 0;
+                let existingHome = 0, existingAway = 0;
                 if (existingScore) {
                     const parts = existingScore.split('-');
                     if (parts.length === 2) {
@@ -1420,7 +1431,8 @@
                         existingAway = parseInt(parts[1]) || 0;
                     }
                 }
-                if (homeScore === existingHome && awayScore === existingAway) {
+                // ✅ Only skip if there was a previous score and it matches the new one
+                if (existingScore && homeScore === existingHome && awayScore === existingAway) {
                     continue;
                 }
                 scoreUpdates.push({
@@ -1701,8 +1713,8 @@
                         knockoutMatches.push(matchObj);
                 }
 
-            });
-        }
+                });
+            }
 
         resolveKnockoutTeams();
 
@@ -1716,29 +1728,16 @@
 
         loadMatches();
 
-        setTimeout(function() {            
+        setTimeout(function() {
             try {
                 if (knockoutMatches && knockoutMatches.length > 0) {
                     renderKnockoutBracket();
-
-                    // ✅ move UI logic HERE (safe place)
-                    document.getElementById('knockout-matches').classList.add('active');
-
-                    const cs = document.getElementById("country-selector-container");
-                    if (cs) cs.style.display = 'none';
-
                 } else {
                     document.getElementById("knockout-matches").innerHTML =
                         "<p style='text-align:center; padding:20px;'>No knockout matches loaded.</p>";
                 }
             } catch (e) {
                 console.error("Error rendering knockout bracket:", e);
-
-                const container = document.getElementById("knockout-matches");
-                if (container) {
-                    container.innerHTML =
-                        "<p style='text-align:center; padding:20px; color:red;'>Error loading bracket. Please refresh.</p>";
-                }
             }
         }, 100);
 
@@ -2082,7 +2081,7 @@
                 if (expandedGroups[groupKey] === undefined) {
                     expandedGroups[groupKey] = false;
                 }
-                groupContent.style.display = expandedGroups[groupKey] ? "flex" : "none";
+                groupContent.style.display = expandedGroups[groupKey] ? "block" : "none";
                 if (expandedGroups[groupKey]) {
                     groupDiv.classList.add('expanded');
                 }
@@ -2307,6 +2306,7 @@
         function renderKnockoutBracket() {
             const container = document.getElementById("knockout-matches");
             if (!container) return;
+
             container.innerHTML = "";
             if (!knockoutMatches || knockoutMatches.length === 0) {
                 container.innerHTML = "<p style='text-align:center; padding:20px;'>No knockout matches loaded.</p>";
@@ -2359,15 +2359,15 @@
             }
 
             let html = `
-        <div style="padding: 10px; margin: 10px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
-        <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
-        
-        <div id="knockout-scrollbar" class="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
-          <div style="height: 1px;"></div>
-        </div>
+                <div style="padding: 10px; margin: 10px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+                <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
+                
+                <div id="knockout-scrollbar" class="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
+                <div style="height: 1px;"></div>
+                </div>
 
-        <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0; width: 100%;">
-        `;
+                <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0; width: 100%;">
+                `;
 
             sortedRounds.forEach((round, colIdx) => {
                 const matches = roundsMap[round];
@@ -2391,34 +2391,56 @@
             container.innerHTML = html;
 
             // --- SCROLLBAR SYNC ---
-            setTimeout(() => {
+            function setupScrollbar() {
                 const scrollable = container.querySelector('.scrollable-container');
                 const topBar = document.getElementById('knockout-scrollbar');
-
                 if (!scrollable || !topBar) return;
+
+                // Remove existing bottom bar if any
+                const existingBottom = document.getElementById('knockout-scrollbar-bottom');
+                if (existingBottom) existingBottom.remove();
 
                 const bottomBar = topBar.cloneNode(true);
                 bottomBar.id = "knockout-scrollbar-bottom";
                 scrollable.parentNode.appendChild(bottomBar);
 
-                setTimeout(() => {
+                // Wait for layout to settle
+                requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         const width = scrollable.scrollWidth;
-                        
-                        if (width === 0) return; // avoid broken setup
+
+                        if (width === 0) {
+                            // If still zero, try again after a short delay
+                            setTimeout(() => {
+                                requestAnimationFrame(() => {
+                                    const width2 = scrollable.scrollWidth;
+                                    if (width2 > 0) {
+                                        if (topBar.firstElementChild) {
+                                            topBar.firstElementChild.style.width = width2 + "px";
+                                            topBar.firstElementChild.style.height = "100%";
+                                        }
+                                        if (bottomBar.firstElementChild) {
+                                            bottomBar.firstElementChild.style.width = width2 + "px";
+                                            bottomBar.firstElementChild.style.height = "100%";
+                                        }
+                                    }
+                                });
+                            }, 150);
+                            return;
+                        }
 
                         if (topBar.firstElementChild) {
                             topBar.firstElementChild.style.width = width + "px";
                             topBar.firstElementChild.style.height = "100%";
                         }
-
                         if (bottomBar.firstElementChild) {
                             bottomBar.firstElementChild.style.width = width + "px";
                             bottomBar.firstElementChild.style.height = "100%";
                         }
                     });
-                }, 50);
-                
+                });
+
+                // Sync scroll events
                 topBar.addEventListener('scroll', () => {
                     scrollable.scrollLeft = topBar.scrollLeft;
                     bottomBar.scrollLeft = topBar.scrollLeft;
@@ -2433,8 +2455,7 @@
                     topBar.scrollLeft = scrollable.scrollLeft;
                     bottomBar.scrollLeft = scrollable.scrollLeft;
                 });
-
-            }, 50);
+            }
 
             if (!document.getElementById("knockout-scroll-style")) {
                 const styleTag = document.createElement('style');
@@ -2473,6 +2494,11 @@
                     });
                 });
             }, 400);
+            
+            if (container.classList.contains("active")) {
+                container.style.display = "block";
+            }
+
         }
 
         // ----------------------------------------------------------------
@@ -2741,6 +2767,13 @@
             matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
             matchDiv.id = `match-knockout-${matchObj.matchName.replace(/ /g, '_')}`;
 
+            let tooltip = "";
+            if (matchObj.group === "Round of 32") {
+                tooltip = `${matchObj.originalHome || matchObj.homeTeam}
+            ${matchObj.originalAway || matchObj.visitorTeam}`;
+            }
+            matchDiv.title = tooltip;
+
             matchDiv.innerHTML = `
         <div class="match-card-row"${rowStyle}>
           ${badgeHtml}
@@ -2979,10 +3012,9 @@
                 }
                 // Re-align knockout on resize
                 const koContainer = document.getElementById("knockout-matches");
-                if (koContainer && koContainer.querySelector('.scrollable-container')) {
-                    setTimeout(() => {
-                        alignKnockoutColumns(koContainer);
-                    }, 300);
+                if (koContainer && koContainer.classList.contains('active')) {
+                    alignKnockoutColumns(koContainer);
+                    setupKnockoutScrollbar(koContainer);
                 }
             }, 300);
         });
@@ -3042,54 +3074,50 @@
             if (progressContainer) {
                 progressContainer.innerHTML = `
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width:${percent}%">
+                        <div class="progress-fill" style="width:${percent}%"></div>
                         <span class="progress-text">
                             ${percent}% Complete (${saved}/${total} upcoming matches)
                         </span>
-                        </div>
                     </div>`;
-                const fill = progressContainer.querySelector('.progress-fill');
-                if (fill) {
-                    if (percent > 40) {
-                        fill.classList.add('big-enough');
-                    } else {
-                        fill.classList.remove('big-enough');
-                    }
-                }
             }
         }
 
+                    
         // ----------------------------------------------------------------
         //  TABS
         // ----------------------------------------------------------------
         function initTabs() {
-            document.querySelectorAll('.stage-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const stage = tab.dataset.stage;
-                    document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
-                    const countrySelector = document.getElementById("country-selector-container");
-                    if (stage === 'group') {
-                        document.getElementById('group-matches').classList.add('active');
-                        const cs = document.getElementById("country-selector-container");
-                        if (cs) cs.style.display = 'block';
-                    } else {
-                        document.getElementById('knockout-matches').classList.add('active');
-                        const cs = document.getElementById("country-selector-container");
-                        if (cs) cs.style.display = 'none';
-                        // Re-align when switching to knockout
-                        setTimeout(() => {
-                            const koContainer = document.getElementById("knockout-matches");
-                            if (koContainer && koContainer.querySelector('.scrollable-container')) {
-                                alignKnockoutColumns(koContainer);
-                            }
-                        }, 300);
-                    }
-                });
-            });
-        }
+        document.querySelectorAll('.stage-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+        const stage = tab.dataset.stage;
 
+        document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
+
+        const cs = document.getElementById('country-selector-container');
+        if (cs) cs.style.display = 'block';
+
+        if (stage === 'group') {
+            document.getElementById('group-matches').classList.add('active');
+            document.getElementById('knockout-matches').classList.remove('active');
+            document.getElementById('knockout-matches').style.display = '';
+        } else {
+            const ko = document.getElementById('knockout-matches');
+            ko.classList.add('active');
+            document.getElementById('group-matches').classList.remove('active');
+            ko.style.display = '';
+
+            // ✅ Setup scrollbar after the container is visible and aligned
+            setTimeout(() => {
+                alignKnockoutColumns(ko);
+                setupKnockoutScrollbar(ko);
+            }, 300);
+        }
+    });
+});
+    }
         // ----------------------------------------------------------------
         //  COUNTRY DROPDOWN
         // ----------------------------------------------------------------
@@ -3098,83 +3126,140 @@
             if (!list) return;
             list.innerHTML = '';
             const countries = new Set();
+
+            // Group matches
             Object.values(groupMatches).forEach(matches => {
                 matches.forEach(m => {
                     if (m.homeTeam) countries.add(m.homeTeam);
                     if (m.visitorTeam) countries.add(m.visitorTeam);
                 });
             });
-            const sortedCountries = Array.from(countries).sort();
-            sortedCountries.forEach(country => {
+
+            // Knockout matches
+            knockoutMatches.forEach(m => {
+                if (m.homeTeam) countries.add(m.homeTeam);
+                if (m.visitorTeam) countries.add(m.visitorTeam);
+            });
+
+            // Sort, put Portugal first
+            let sorted = Array.from(countries).sort();
+            sorted = sorted.filter(c => c !== "Portugal");
+            sorted.unshift("Portugal");
+
+            sorted.forEach(country => {
                 const item = document.createElement("div");
                 item.className = "dropdown-item";
                 const flagHtml = getFlagHtml(country);
                 item.innerHTML = flagHtml + '<span>' + country + '</span>';
-                item.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
-                });
-                item.onclick = function(e) {
-                    selectCountry(country);
-                };
+                item.addEventListener('mousedown', e => e.preventDefault());
+                item.onclick = function() { selectCountry(country); };
                 list.appendChild(item);
             });
         }
 
         function selectCountry(country) {
             if (!country) return;
+
             document.getElementById("dropdownSelected").textContent = country;
             const selectedBox = document.getElementById("dropdownSelected");
             selectedBox.classList.add("active");
             document.querySelectorAll('.dropdown-item').forEach(item => {
                 item.classList.remove('selected');
                 const text = item.textContent.trim();
-                if (text === country) {
-                    item.classList.add('selected');
-                }
+                if (text === country) item.classList.add('selected');
             });
             document.getElementById("dropdownList").style.display = "none";
+
+            // 1️⃣ Try to find in group matches
             let targetGroup = null;
+            let targetMatchIdx = null;
+            let foundInGroup = false;
             for (let group in groupMatches) {
-                for (let m of groupMatches[group]) {
+                for (let idx = 0; idx < groupMatches[group].length; idx++) {
+                    const m = groupMatches[group][idx];
                     if (m.homeTeam === country || m.visitorTeam === country) {
                         targetGroup = group;
+                        targetMatchIdx = idx;
+                        foundInGroup = true;
                         break;
                     }
                 }
-                if (targetGroup) break;
+                if (foundInGroup) break;
             }
-            if (!targetGroup) return;
-            const groupKey = targetGroup.replace(/ /g, '_');
-            Object.keys(groupMatches).forEach(group => {
-                const key = group.replace(/ /g, '_');
-                const el = document.getElementById('group-' + key);
-                if (el) {
-                    el.style.display = "none";
-                    expandedGroups[key] = false;
-                    const block = el.closest('.group-block');
-                    if (block) block.classList.remove('expanded');
+
+            if (foundInGroup) {
+                // Expand the group and scroll to the match (existing logic)
+                const groupKey = targetGroup.replace(/ /g, '_');
+                // Collapse all groups first
+                Object.keys(groupMatches).forEach(group => {
+                    const key = group.replace(/ /g, '_');
+                    const el = document.getElementById('group-' + key);
+                    if (el) {
+                        el.style.display = "none";
+                        expandedGroups[key] = false;
+                        const block = el.closest('.group-block');
+                        if (block) block.classList.remove('expanded');
+                    }
+                });
+                const groupElement = document.getElementById('group-' + groupKey);
+                if (groupElement) {
+                    groupElement.style.display = "block";
+                    expandedGroups[groupKey] = true;
+                    const groupBlock = groupElement.closest('.group-block');
+                    if (groupBlock) {
+                        groupBlock.classList.add('expanded');
+                        groupBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
                 }
-            });
-            const groupElement = document.getElementById('group-' + groupKey);
-            if (!groupElement) return;
-            groupElement.style.display = "block";
-            expandedGroups[groupKey] = true;
-            const groupBlock = groupElement.closest('.group-block');
-            if (groupBlock) {
-                groupBlock.classList.add('expanded');
-                groupBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+                // Highlight the match card
+                document.querySelectorAll('.match-card').forEach(card => {
+                    card.style.outline = '';
+                    card.style.background = '';
+                    card.removeAttribute('data-highlight-timeout');
+                });
+                const matchEl = document.getElementById('match-' + groupKey + '-' + targetMatchIdx);
+                if (matchEl) {
+                    matchEl.style.outline = "3px solid gold";
+                    matchEl.style.background = "#fff8dc";
+                    const timeoutId = setTimeout(() => {
+                        matchEl.style.outline = '';
+                        matchEl.style.background = '';
+                        matchEl.removeAttribute('data-highlight-timeout');
+                    }, 5000);
+                    matchEl.setAttribute('data-highlight-timeout', timeoutId);
+                }
+                return; // Done
             }
-            document.querySelectorAll('.match-card').forEach(card => {
-                card.style.outline = '';
-                card.style.background = '';
-                card.removeAttribute('data-highlight-timeout');
-            });
-            groupMatches[targetGroup].forEach((m, idx) => {
+
+            // 2️⃣ If not found in group, try knockout matches
+            let targetKnockoutMatch = null;
+            for (let idx = 0; idx < knockoutMatches.length; idx++) {
+                const m = knockoutMatches[idx];
                 if (m.homeTeam === country || m.visitorTeam === country) {
-                    const matchEl = document.getElementById('match-' + groupKey + '-' + idx);
+                    targetKnockoutMatch = m;
+                    break;
+                }
+            }
+
+            if (targetKnockoutMatch) {
+                // Switch to knockout tab
+                const knockoutTab = document.querySelector('.stage-tab[data-stage="Knockout"]');
+                if (knockoutTab) knockoutTab.click(); // triggers the tab switch
+
+                // Wait for knockout to render and align
+                setTimeout(() => {
+                    const matchId = `match-knockout-${targetKnockoutMatch.matchName.replace(/ /g, '_')}`;
+                    const matchEl = document.getElementById(matchId);
                     if (matchEl) {
+                        // Remove previous highlights
+                        document.querySelectorAll('.match-card').forEach(card => {
+                            card.style.outline = '';
+                            card.style.background = '';
+                            card.removeAttribute('data-highlight-timeout');
+                        });
                         matchEl.style.outline = "3px solid gold";
                         matchEl.style.background = "#fff8dc";
+                        matchEl.scrollIntoView({ behavior: "smooth", block: "center" });
                         const timeoutId = setTimeout(() => {
                             matchEl.style.outline = '';
                             matchEl.style.background = '';
@@ -3182,10 +3267,12 @@
                         }, 5000);
                         matchEl.setAttribute('data-highlight-timeout', timeoutId);
                     }
-                }
-            });
+                }, 500); // give time for knockout rendering and scrolling
+            } else {
+                showFloatingNotification(`Country "${country}" not found in any match.`, true);
+            }
         }
-
+        
         // ----------------------------------------------------------------
         //  SHARE & TOGGLE
         // ----------------------------------------------------------------
@@ -3241,6 +3328,73 @@
             }
         }
 
+        function setupKnockoutScrollbar(container) {
+            const scrollable = container.querySelector('.scrollable-container');
+            const topBar = document.getElementById('knockout-scrollbar');
+            if (!scrollable || !topBar) return;
+
+            // Remove any existing bottom bar to avoid duplicates
+            const existingBottom = document.getElementById('knockout-scrollbar-bottom');
+            if (existingBottom) existingBottom.remove();
+
+            const bottomBar = topBar.cloneNode(true);
+            bottomBar.id = 'knockout-scrollbar-bottom';
+            scrollable.parentNode.appendChild(bottomBar);
+
+            // Wait for layout to settle
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const width = scrollable.scrollWidth;
+
+                    if (width === 0) {
+                        // Retry after a short delay (content may still be rendering)
+                        setTimeout(() => {
+                            requestAnimationFrame(() => {
+                                const width2 = scrollable.scrollWidth;
+                                if (width2 > 0) {
+                                    if (topBar.firstElementChild) {
+                                        topBar.firstElementChild.style.width = width2 + 'px';
+                                        topBar.firstElementChild.style.height = '100%';
+                                    }
+                                    if (bottomBar.firstElementChild) {
+                                        bottomBar.firstElementChild.style.width = width2 + 'px';
+                                        bottomBar.firstElementChild.style.height = '100%';
+                                    }
+                                }
+                            });
+                        }, 150);
+                        return;
+                    }
+
+                    // Set the width of the spacer divs to match the scrollable content
+                    if (topBar.firstElementChild) {
+                        topBar.firstElementChild.style.width = width + 'px';
+                        topBar.firstElementChild.style.height = '100%';
+                    }
+                    if (bottomBar.firstElementChild) {
+                        bottomBar.firstElementChild.style.width = width + 'px';
+                        bottomBar.firstElementChild.style.height = '100%';
+                    }
+                });
+            });
+
+            // Sync scroll events between the three scrollable elements
+            topBar.addEventListener('scroll', () => {
+                scrollable.scrollLeft = topBar.scrollLeft;
+                bottomBar.scrollLeft = topBar.scrollLeft;
+            });
+
+            bottomBar.addEventListener('scroll', () => {
+                scrollable.scrollLeft = bottomBar.scrollLeft;
+                topBar.scrollLeft = bottomBar.scrollLeft;
+            });
+
+            scrollable.addEventListener('scroll', () => {
+                topBar.scrollLeft = scrollable.scrollLeft;
+                bottomBar.scrollLeft = scrollable.scrollLeft;
+            });
+        }
+
         // ----------------------------------------------------------------
         //  INIT
         // ----------------------------------------------------------------
@@ -3266,6 +3420,9 @@
               color: #333;
               left: 50%;
               transform: translateX(-50%);
+              padding-left: 10px;
+              font-weight: bold;
+            
             }
           `;
             document.head.appendChild(styleTag);
