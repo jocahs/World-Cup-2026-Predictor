@@ -1078,7 +1078,7 @@
     <button id="togglePlayerBtn" onclick="togglePlayerSelection()" style="margin: 5px auto; display: block; padding: 10px; background: linear-gradient(135deg, #ea9b24 0%, #ff7043 100%);">Predict Match Results</button>
 
     <div id="player-selection" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: linear-gradient(135deg, #ea9b24 0%, #ff7043 100%); margin: 10px auto;">
-        <p style="max-width: 310px; line-height: 1.5; margin: 0px auto;">Select an existing player or Enter your name.</p>
+        <p style="max-width: 100%;line-height: 1.5;margin: 0 auto 5px;">Select an existing player or Enter your name.</p>
         <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
             <option value="">-- Select player --</option>
         </select>
@@ -1105,7 +1105,7 @@
         </div>
     </div>
 
-    <div id="group-matches" class="matches-container"></div>
+    <div id="group-matches" class="matches-container" style="margin: -5px;"></div>
     <div id="knockout-matches" class="matches-container" style="margin: -5px;"></div>
 
     <div style="margin: 5px auto; text-align: center;">
