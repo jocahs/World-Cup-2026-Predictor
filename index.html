@@ -947,14 +947,15 @@
 
         /* ===== RANKING BLOCK ===== */
         .ranking-block {
-            flex: 1 0 100% !important;
-            width: 100% !important;
-            max-width: 100% !important;
+            flex: 0 0 auto;           /* don't grow or shrink */
+            width: 100%;              /* fill container up to max-width */
+            max-width: 310px; 
             background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
             border-color: #3949AB;
             border-radius: 10px;
             overflow: hidden;
         }
+        
         .ranking-block .group-title {
             background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
             color: #FFD700;
