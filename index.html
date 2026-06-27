@@ -1359,13 +1359,44 @@
             }
         }
 
-        function closeAdminMode() {
+        async function closeAdminMode() {
+            // 1. Exit admin mode
             isAdminMode = false;
-            updateAdminToolbar();
-            loadMatchesOnly();
-            setTimeout(() => {
+            updateAdminToolbar(); // this will show pick‑elements if a player is selected
+
+            // 2. Wait for any ongoing loading to finish (avoid race conditions)
+            while (isLoading) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // 3. Reload matches (this also re‑applies picks if a player is selected)
+            await loadMatchesOnly();
+
+            // 4. After reload, ensure pick‑elements are visible and radio buttons are checked
+            const player = document.getElementById("playerSelect").value.trim() ||
+                        document.getElementById("playerName").value.trim();
+
+            if (player) {
+                // Wait a tiny bit for the DOM to settle, then force re‑apply picks
+                setTimeout(() => {
+                    // Clear all radio buttons
+                    document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
+                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked = false);
+
+                    // Re‑check the user's picks from the fresh `allPicks` array
+                    const userPicks = allPicks.filter(p => p.player === player);
+                    userPicks.forEach(pick => {
+                        const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
+                        if (radio) radio.checked = true;
+                    });
+
+                    // Make sure the pick‑elements are visible
+                    updatePlayerControlsVisibility();
+                }, 100);
+            } else {
+                // If no player is selected, just update visibility
                 updatePlayerControlsVisibility();
-            }, 100);
+            }
         }
 
         // ----------------------------------------------------------------
@@ -2733,25 +2764,25 @@
             }
 
             let html = `
-                <div style="padding: 5px; margin: 5px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
-                <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
-                
-                <div id="knockout-scrollbar" class="knockout-scrollbar">
-                <div style="height: 1px;"></div>
-                </div>
+                    <div style="padding: 5px; margin: 5px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+                    <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
+                    
+                    <div id="knockout-scrollbar" class="knockout-scrollbar">
+                    <div style="height: 1px;"></div>
+                    </div>
 
-                <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0; width: 100%;">
+                    <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0; width: 100%;">
                 `;
 
             sortedRounds.forEach((round, colIdx) => {
                 const matches = roundsMap[round];
                 const colors = getStageColor(round);
                 html += `
-          <div class="knockout-col" data-round="${round}" style="min-width:200px; flex:0 0 auto;padding:8px 2px;border-radius:8px;display:flex;flex-direction:column;gap:2px;">
-            <div style="font-weight: bold; text-align: center; padding: 8px; background: ${colors.header}; color: white; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-              ${round}
-            </div>
-            `;
+                    <div class="knockout-col" data-round="${round}" style="min-width:200px; flex:0 0 auto;padding:8px 2px;border-radius:8px;display:flex;flex-direction:column;gap:2px;">
+                    <div style="font-weight: bold; text-align: center; padding: 8px; background: ${colors.header}; color: white; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    ${round}
+                    </div>
+                `;
                 matches.forEach((m, idx) => {
                     html += createKnockoutCard(m, colors);
                     if (colIdx === 0 && idx % 2 === 1 && idx !== matches.length - 1) {
@@ -2827,36 +2858,17 @@
                 });
             }
 
-            if (!document.getElementById("knockout-scroll-style")) {
-                const styleTag = document.createElement('style');
-                styleTag.id = "knockout-scroll-style";
-                styleTag.textContent = `
-                .knockout-scrollbar {
-                }
-                .knockout-scrollbar::-webkit-scrollbar {                
-                }
-                .knockout-scrollbar::-webkit-scrollbar-track {
-                }
-                .knockout-scrollbar::-webkit-scrollbar-thumb {
-                }
-                .knockout-scrollbar::-webkit-scrollbar-thumb:hover {;
-                }
-                `;
-                document.head.appendChild(styleTag);
-            }
-
             setTimeout(() => {
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         alignKnockoutColumns(container);
+                        // If the knockout tab is active, re‑setup the custom scrollbar
+                        if (container.classList.contains('active')) {
+                            setupKnockoutScrollbar(container);
+                        }
                     });
                 });
             }, 400);
-
-            if (container.classList.contains("active")) {
-                container.style.display = "block";
-            }
-
         }
 
         // ----------------------------------------------------------------
