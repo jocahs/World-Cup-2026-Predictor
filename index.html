@@ -12,11 +12,10 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="apple-touch-startup-image" href="icon-1125x2436.png">
     <style>
-        
+        /* ===== RESET & BASE ===== */
         * {
             box-sizing: border-box;
         }
-
         body {
             font-family: Arial, sans-serif;
             max-width: auto;
@@ -37,7 +36,7 @@
             text-align: center;
         }
 
-        /* === TABS === */
+        /* ===== TABS ===== */
         .stage-tabs {
             display: flex;
             gap: 10px;
@@ -58,7 +57,7 @@
             color: white;
         }
 
-        /* === GROUP BLOCKS === */
+        /* ===== GROUP BLOCKS ===== */
         .group-block {
             border: 1px solid #ddd;
             border-radius: 10px;
@@ -75,13 +74,10 @@
             font-size: 1.1em;
             text-align: center;
         }
-
-        /* === MATCHES CONTAINERS === */
         .matches-container {
             display: none;
             align-items: center;
         }
-
         .matches-container.active {
             display: flex;
             flex-wrap: wrap;
@@ -226,7 +222,7 @@
             max-width: 100%;
         }
 
-        /* === STANDINGS TABLE === */
+        /* ===== STANDINGS TABLE ===== */
         .group-standings {
             background: #2c3e50;
             margin: 0px 5px 5px;
@@ -268,7 +264,7 @@
             background: #f5f5f5;
         }
 
-        /* === MATCH CARD === */
+        /* ===== MATCH CARD ===== */
         .match-card {
             flex: 0 0 auto;
             margin: 0;
@@ -611,7 +607,7 @@
             min-width: 150px;
             width: auto;
             max-width: 250px;
-            margin: 0;         
+            margin: 0;
         }
 
         #player-selection {
@@ -627,7 +623,7 @@
             display: block;
         }
 
-        /* === NOTIFICATION === */
+        /* ===== NOTIFICATION ===== */
         .floating-notification {
             position: fixed;
             top: 50%;
@@ -742,8 +738,7 @@
             pointer-events: none;
         }
 
-
-        /* === LOADING === */
+        /* ===== LOADING ===== */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -781,8 +776,12 @@
             font-size: 14px;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .hidden {
@@ -817,7 +816,7 @@
             min-width: 320px;
         }
 
-        /* === KNOCKOUT SCROLL === */
+        /* ===== KNOCKOUT SCROLL ===== */
         #knockout-matches .scrollable-container {
             -webkit-overflow-scrolling: touch;
             overflow-x: auto;
@@ -888,7 +887,7 @@
             width: 100%;
         }
 
-        /* === TODAY MATCHES === */
+        /* ===== TODAY MATCHES ===== */
         #today-matches-container .match-cards-wrapper {
             display: flex;
             flex-wrap: wrap;
@@ -917,7 +916,7 @@
             padding: 0px;
         }
 
-        /* === SPLASH === */
+        /* ===== SPLASH ===== */
         #splash-screen {
             position: fixed;
             top: 0;
@@ -946,7 +945,7 @@
             transform: scale(1.02);
         }
 
-        /* === RANKING BLOCK (collapsible, full width) === */
+        /* ===== RANKING BLOCK ===== */
         .ranking-block {
             flex: 1 0 100% !important;
             width: 100% !important;
@@ -1044,7 +1043,6 @@
             background: linear-gradient(90deg, #FFC107, #FFB300);
         }
 
-        /* Mobile specific - force scrollbar to show */
         @media (max-width: 768px) {
             .knockout-scrollbar {
                 -webkit-overflow-scrolling: touch;
@@ -1053,15 +1051,12 @@
                 border-radius: 10px !important;
                 background: #EB3324 !important;
             }
-            
             .knockout-scrollbar::-webkit-scrollbar-thumb {
                 border-radius: 10px !important;
                 background: linear-gradient(90deg, #FFD700, #FFC107) !important;
                 border: 3px solid #EB3324 !important;
             }
         }
-
-
     </style>
 </head>
 <body>
@@ -1142,7 +1137,8 @@
     <div id="floatingNotification" class="floating-notification"></div>
 
     <script>
-        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx24HoGar2hhHhUBfz-cLp0WYqriTFtRnEAZD3je1vHPEPqa50d2JgzVj8AVcIAjvm-/exec";
+        const WEBAPP_URL =
+            "https://script.google.com/macros/s/AKfycbx24HoGar2hhHhUBfz-cLp0WYqriTFtRnEAZD3je1vHPEPqa50d2JgzVj8AVcIAjvm-/exec";
         const ADMIN_PASSWORD = "";
 
         const CUSTOM_ORDER = {
@@ -1159,13 +1155,17 @@
         let groupMatches = {};
         let knockoutMatches = [];
         let expandedGroups = {};
-        let expandedRanking = false; // default collapsed
-        let cachedStandings = {};        // group -> standings array
-        let cachedThirdPlace = null;     // result of getBestThirdPlaceTeamsCached()
+        let expandedRanking = false;
+        let cachedStandings = {};
+        let cachedThirdPlace = null;
 
-        // ----------------------------------------------------------------
+        // ===== LAYOUT THRASHING GUARD =====
+        let _alignPending = false;
+        let _alignRAF = null;
+
+        // ================================================================
         //  NOTIFICATIONS & LOADING
-        // ----------------------------------------------------------------
+        // ================================================================
         function showFloatingNotification(message, isError = false) {
             const notification = document.getElementById('floatingNotification');
             if (!notification) return;
@@ -1201,14 +1201,14 @@
             overlay.style.display = "none";
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  HELPERS
-        // ----------------------------------------------------------------
+        // ================================================================
         function invalidateCache() {
             cachedStandings = {};
             cachedThirdPlace = null;
         }
-        
+
         function getGroupStandings(group) {
             if (cachedStandings[group]) return cachedStandings[group];
             const standings = calculateGroupStandings(group, groupMatches[group]);
@@ -1223,7 +1223,6 @@
         }
 
         function updatePlayerControlsVisibility() {
-            
             if (isAdminMode) {
                 const saveBtn = document.getElementById("savePicksBtn");
                 const progressContainer = document.getElementById("progress-container");
@@ -1235,7 +1234,6 @@
                 });
                 return;
             }
-
             const playerSelect = document.getElementById("playerSelect");
             const playerName = document.getElementById("playerName");
             const saveBtn = document.getElementById("savePicksBtn");
@@ -1345,9 +1343,9 @@
             return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(details)}&ctz=Europe/Lisbon`;
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  ADMIN
-        // ----------------------------------------------------------------
+        // ================================================================
         function showAdminLogin() {
             const password = prompt("Enter admin password to edit scores:");
             if (password === ADMIN_PASSWORD) {
@@ -1360,53 +1358,40 @@
         }
 
         async function closeAdminMode() {
-            // 1. Exit admin mode
             isAdminMode = false;
-            updateAdminToolbar(); // this will show pick‑elements if a player is selected
-
-            // 2. Wait for any ongoing loading to finish (avoid race conditions)
+            updateAdminToolbar();
             while (isLoading) {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-
-            // 3. Reload matches (this also re‑applies picks if a player is selected)
             await loadMatchesOnly();
-
-            // 4. After reload, ensure pick‑elements are visible and radio buttons are checked
             const player = document.getElementById("playerSelect").value.trim() ||
-                        document.getElementById("playerName").value.trim();
-
+                document.getElementById("playerName").value.trim();
             if (player) {
-                // Wait a tiny bit for the DOM to settle, then force re‑apply picks
                 setTimeout(() => {
-                    // Clear all radio buttons
                     document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked = false);
-
-                    // Re‑check the user's picks from the fresh `allPicks` array
+                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked =
+                    false);
                     const userPicks = allPicks.filter(p => p.player === player);
                     userPicks.forEach(pick => {
                         const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
                         if (radio) radio.checked = true;
                     });
-
-                    // Make sure the pick‑elements are visible
                     updatePlayerControlsVisibility();
                 }, 100);
             } else {
-                // If no player is selected, just update visibility
                 updatePlayerControlsVisibility();
             }
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  LEADERBOARD
-        // ----------------------------------------------------------------
+        // ================================================================
         function updateLeaderboardVisibility() {
             const leaderboard = document.getElementById("leaderboard");
             const selectedFromDropdown = document.getElementById("playerSelect").value;
             const playerName = document.getElementById("playerName").value.trim();
-            const hasPlayerSelected = (selectedFromDropdown && selectedFromDropdown !== "") || (playerName && playerName !== "");
+            const hasPlayerSelected = (selectedFromDropdown && selectedFromDropdown !== "") || (playerName && playerName !==
+            "");
             if (hasPlayerSelected) {
                 leaderboard.style.display = "block";
                 updateLeaderboard();
@@ -1446,7 +1431,8 @@
                 return;
             }
             for (let player of currentPlayers) {
-                let score = 0, total = 0;
+                let score = 0,
+                    total = 0;
                 const playerPicks = allPicks.filter(p => p.player === player);
                 for (let group in groupMatches) {
                     for (let m of groupMatches[group]) {
@@ -1483,16 +1469,17 @@
                     const percent = p.total > 0 ? Math.round(p.ratio * 100) : 0;
                     const isCurrentPlayer = p.name === selectedPlayer;
                     const medal = i === 0 ? "🏆" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
-                    const highlightStyle = isCurrentPlayer ? 'background: rgba(255,215,0,0.3); padding: 2px 8px; border-radius: 4px;' : '';
+                    const highlightStyle = isCurrentPlayer ?
+                        'background: rgba(255,215,0,0.3); padding: 2px 8px; border-radius: 4px;' : '';
                     leaderboardList.innerHTML +=
                         `<li style="${highlightStyle}"> ${medal} <strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%) <span style="font-weight:bold; color: ${p.score > 0 ? '#FFD700' : '#ff6b6b'};">: ${p.score} point${p.score !== 1 ? 's' : ''}</span>${isCurrentPlayer ? ' 👤' : ''}</li>`;
                 });
             }
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  FLAGS
-        // ----------------------------------------------------------------
+        // ================================================================
         function getFlagCode(teamName) {
             const flagMap = {
                 'Mexico': 'mx',
@@ -1554,25 +1541,38 @@
             return null;
         }
 
-        function getFlagHtml(teamName, width = 20, height = 15) {
-            const flagCode = getFlagCode(teamName);
-            if (flagCode) {
-                return `<img src="https://flagcdn.com/${width}x${height}/${flagCode}.png" 
-                     class="team-flag" 
-                     alt="${teamName} flag"
-                     style="width:${width}px;height:${height}px;">`;
-            } else {
-                return `<span style="display:inline-block;width:${width}px;height:${height}px;background:rgba(0,0,0,0.1);border-radius:2px;flex-shrink:0;" title="No flag available"></span>`;
-            }
-        }
+            // ===== FLAG CACHE =====
+            const flagCache = new Map();
 
+            function getFlagHtml(teamName, width = 20, height = 15) {
+                const cacheKey = `${teamName}|${width}|${height}`;
+                if (flagCache.has(cacheKey)) {
+                    return flagCache.get(cacheKey);
+                }
+                
+                const flagCode = getFlagCode(teamName);
+                let html;
+                if (flagCode) {
+                    html = `<img src="https://flagcdn.com/${width}x${height}/${flagCode}.png" 
+                                class="team-flag" 
+                                alt="${teamName} flag"
+                                loading="lazy"
+                                width="${width}"
+                                height="${height}"
+                                style="width:${width}px;height:${height}px;">`;
+                } else {
+                    html = `<span style="display:inline-block;width:${width}px;height:${height}px;background:rgba(0,0,0,0.1);border-radius:2px;flex-shrink:0;" title="No flag available"></span>`;
+                }
+                flagCache.set(cacheKey, html);
+                return html;
+            }
         function createMatchNameWithFlags(homeTeam, visitorTeam) {
             return `${homeTeam} vs ${visitorTeam}`;
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  SAVE SCORES (ADMIN)
-        // ----------------------------------------------------------------
+        // ================================================================
         async function saveAllScores() {
             const scoreUpdates = [];
             const allMatches = [];
@@ -1592,14 +1592,13 @@
                 if (homeScoreVal === '' && awayScoreVal === '') {
                     continue;
                 }
-
                 const homeScore = Number(homeScoreVal);
                 const awayScore = Number(awayScoreVal);
                 if (isNaN(homeScore) || isNaN(awayScore)) continue;
-
                 const existing = actualResults[matchName] || {};
                 const existingScore = existing.score || "";
-                let existingHome = 0, existingAway = 0;
+                let existingHome = 0,
+                    existingAway = 0;
                 if (existingScore) {
                     const parts = existingScore.split('-');
                     if (parts.length === 2) {
@@ -1647,9 +1646,9 @@
             }
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  PLAYER SELECTION
-        // ----------------------------------------------------------------
+        // ================================================================
         function updatePlayerDropdown() {
             const select = document.getElementById("playerSelect");
             const currentValue = select.value;
@@ -1721,7 +1720,8 @@
                 showFloatingNotification("Cannot save picks in admin mode!", true);
                 return;
             }
-            const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
+            const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName")
+                .value.trim();
             if (!player) {
                 showFloatingNotification("Enter your name!", true);
                 return;
@@ -1754,7 +1754,6 @@
             }
             showLoading("Saving your picks...");
             try {
-                // 1. Reload to get the latest data (results and existing picks)
                 const response = await fetch(`${WEBAPP_URL}?action=load`);
                 const data = await response.json();
                 if (!data.success) throw new Error(data.error);
@@ -1769,7 +1768,6 @@
                 currentPicks.forEach(pick => {
                     currentMap.set(pick.match, pick.pick.toString());
                 });
-
                 const picksToUpdate = [];
                 for (let [match, pick] of currentMap) {
                     const existingPick = existingMap.get(match);
@@ -1782,8 +1780,6 @@
                     hideLoading();
                     return;
                 }
-
-                // --- BATCH REQUEST (single network call) ---
                 const updateParams = new URLSearchParams();
                 updateParams.append("action", "batchUpdatePicks");
                 updateParams.append("player", player);
@@ -1791,7 +1787,6 @@
                 const batchResponse = await fetch(`${WEBAPP_URL}?${updateParams.toString()}`);
                 const batchResult = await batchResponse.json();
                 if (!batchResult.success) throw new Error(batchResult.error || "Batch update failed");
-
                 showFloatingNotification(`✅ Updated ${picksToUpdate.length} pick(s) for ${player}!`);
                 updateLeaderboard();
                 updateProgress();
@@ -1822,7 +1817,6 @@
                     match: String(p.match).trim(),
                     pick: String(p.pick).trim()
                 }));
-
                 actualResults = {};
                 Object.keys(data.results || {}).forEach(key => {
                     const r = data.results[key];
@@ -1831,7 +1825,6 @@
                         result: r.result != null ? String(r.result).trim() : ""
                     };
                 });
-
                 invalidateCache();
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
@@ -1862,7 +1855,6 @@
 
         function getBestThirdPlaceTeams() {
             const thirdPlaceTeams = [];
-
             for (let group in groupMatches) {
                 const standings = getGroupStandings(group);
                 if (standings.length >= 3) {
@@ -1882,22 +1874,18 @@
                     });
                 }
             }
-
-            // Sort: Pts desc, GD desc, GF desc, GA asc (fewer GA is better)
             thirdPlaceTeams.sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
                 if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
                 if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
-                return a.goalsAgainst - b.goalsAgainst; // lower GA is better
+                return a.goalsAgainst - b.goalsAgainst;
             });
-
             const advanced = new Set();
             thirdPlaceTeams.forEach((t, idx) => {
                 t.rank = idx + 1;
                 t.advanced = idx < 8;
                 if (t.advanced) advanced.add(t.group);
             });
-
             return {
                 ranked: thirdPlaceTeams,
                 advancedGroups: advanced,
@@ -1905,25 +1893,20 @@
             };
         }
 
-        // ----------------------------------------------------------------
-        //  RENDER 3RD PLACE RANKING (table format, like group standings)
-        // ----------------------------------------------------------------
+        // ================================================================
+        //  RENDER 3RD PLACE RANKING
+        // ================================================================
         function renderThirdPlaceRanking() {
             const container = document.getElementById('group-matches');
             if (!container) return;
-
             const existing = document.getElementById('thirdPlaceRankingWrapper');
             if (existing) existing.remove();
-
             const result = getBestThirdPlaceTeamsCached();
             if (!result.ranked || result.ranked.length === 0) return;
-
             const wrapper = document.createElement('div');
             wrapper.id = 'thirdPlaceRankingWrapper';
             wrapper.className = 'group-block ranking-block';
             if (expandedRanking) wrapper.classList.add('expanded');
-
-            // Title
             const title = document.createElement('div');
             title.className = 'group-title';
             title.innerHTML = `
@@ -1933,7 +1916,6 @@
             title.onclick = function(e) {
                 e.stopPropagation();
                 toggleRanking();
-                 // Scroll to the ranking after toggling
                 setTimeout(() => {
                     const wrapperEl = document.getElementById('thirdPlaceRankingWrapper');
                     if (wrapperEl) {
@@ -1942,17 +1924,13 @@
                 }, 100);
             };
             wrapper.appendChild(title);
-
             const content = document.createElement('div');
             content.className = 'ranking-content';
             content.style.display = expandedRanking ? 'block' : 'none';
-
-            // Build the table using the same style as group standings
             let html = `
                 <div style="display:flex;justify-content: center;;color:#6FFF75;font-weight:600;margin-bottom:4px;">
                     <span>Top 8 advance to Round of 32</span>
                 </div>
-            
                 <div class="group-standings"><table>
                     <thead>
                         <tr>
@@ -1966,11 +1944,9 @@
                     </thead>
                 <tbody>
             `;
-
             result.ranked.forEach((t, idx) => {
                 const rowClass = t.advanced ? 'advanced-row' : 'eliminated-row';
                 const flagHtml = getFlagHtml(t.team, 20, 15);
-                // Extract group letter: e.g., "Group A" -> "A"
                 const groupLetter = t.group.replace(/^Group\s*/i, '').trim();
                 const teamDisplay = `${t.team} <span style="font-weight:600;"><span style="color:#1E88E5">(${groupLetter})`;
                 const gd = t.goalDiff;
@@ -1986,22 +1962,17 @@
                     </tr>
                 `;
             });
-
             html += `</tbody></table></div>`;
-            // Add a small footer with sorting info
             html += `
                 <div style="display:flex;justify-content: left;font-size:0.65em;color:#888;padding:4px 6px 0 6px;margin-top:4px;">
                     <span>🔵 Sorted by: Points → Goal Diff → Goals For → Goals Against</span>
                 </div>    
-
             `;
-
             content.innerHTML = html;
             wrapper.appendChild(content);
             container.insertBefore(wrapper, container.firstChild);
         }
 
-        // Toggle function for ranking
         function toggleRanking() {
             expandedRanking = !expandedRanking;
             const wrapper = document.getElementById('thirdPlaceRankingWrapper');
@@ -2016,8 +1987,6 @@
                 if (chevron) chevron.textContent = expandedRanking ? '▼' : '▶';
             }
             wrapper.classList.toggle('expanded', expandedRanking);
-
-                // If expanded, scroll to the ranking
             if (expandedRanking) {
                 setTimeout(() => {
                     wrapper.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2025,23 +1994,18 @@
             }
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  LOAD MATCHES
-        // ----------------------------------------------------------------
+        // ================================================================
         async function loadMatchesOnly() {
             if (isLoading) return;
-
             isLoading = true;
             showLoading("Loading matches...");
-
             knockoutMatches = [];
-
             try {
                 const response = await fetch(`${WEBAPP_URL}?action=load`);
                 const data = await response.json();
-
                 if (!data.success) throw new Error(data.error);
-                
                 actualResults = {};
                 Object.keys(data.results || {}).forEach(key => {
                     const r = data.results[key];
@@ -2052,15 +2016,11 @@
                 });
                 invalidateCache();
                 groupMatches = {};
-
                 if (data.matches && data.matches.length > 0) {
-
                     data.matches.forEach(match => {
-
                         const stage = match.stage || "group";
                         const groupName = match.group || "Other";
                         const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
-
                         const matchObj = {
                             matchName: match.name,
                             date: match.date,
@@ -2073,44 +2033,32 @@
                             stage: stage,
                             group: groupName
                         };
-
                         if (stage === "group") {
-
                             if (!groupMatches[groupName]) groupMatches[groupName] = [];
                             groupMatches[groupName].push(matchObj);
-
                         } else if (stage === "Knockout") {
                             knockoutMatches.push(matchObj);
                         }
-
                     });
                 }
-
-                resolveKnockoutTeams();    
-                            
+                resolveKnockoutTeams();
                 allPicks = (data.picks || []).map(p => ({
                     ...p,
                     match: String(p.match).trim(),
                     pick: String(p.pick).trim()
                 }));
-
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
                 currentPlayers = Array.from(playerSet).sort();
-
                 updatePlayerDropdown();
                 loadMatches();
-                
-
-                // Render 3rd place ranking after matches are loaded
+                preloadAllFlags();
                 setTimeout(() => {
                     renderThirdPlaceRanking();
                 }, 50);
-
                 const activeTab = document.querySelector('.stage-tab.active');
                 const currentStage = activeTab ? activeTab.dataset.stage : 'group';
                 populateCountryDropdown(currentStage);
-
                 setTimeout(function() {
                     try {
                         if (knockoutMatches && knockoutMatches.length > 0) {
@@ -2123,32 +2071,25 @@
                         console.error("Error rendering knockout bracket:", e);
                     }
                 }, 100);
-
                 const player =
                     document.getElementById("playerSelect").value.trim() ||
                     document.getElementById("playerName").value.trim();
-
                 if (player) {
                     document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked = false);
-
+                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked =
+                    false);
                     const userPicks = allPicks.filter(p => p.player === player);
-
                     userPicks.forEach(pick => {
                         const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
                         if (radio) radio.checked = true;
                     });
                 }
-
                 updateTodayMatches();
                 updatePlayerControlsVisibility();
-
                 hideLoading();
-
             } catch (e) {
                 console.error("Error loading matches:", e);
                 showFloatingNotification("Error loading matches: " + e.message, true);
-
             } finally {
                 isLoading = false;
                 hideLoading();
@@ -2159,9 +2100,9 @@
             await loadMatchesOnly();
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  DATE HELPERS
-        // ----------------------------------------------------------------
+        // ================================================================
         function getRelativeDate(dateStr) {
             if (!dateStr) return null;
             const dateParts = dateStr.split('/');
@@ -2188,9 +2129,9 @@
             return "?";
         }
 
-        // ----------------------------------------------------------------
-        //  RESOLVE KNOCKOUT TEAMS (UPDATED)
-        // ----------------------------------------------------------------
+        // ================================================================
+        //  RESOLVE KNOCKOUT TEAMS
+        // ================================================================
         function resolveKnockoutTeams() {
             const groupStandings = {};
             Object.keys(groupMatches).forEach(group => {
@@ -2199,11 +2140,8 @@
                 const shortName = group.replace("Group ", "").trim();
                 groupStandings[shortName] = standings;
             });
-
-            // Compute best 8 third-place teams
             const thirdPlaceResult = getBestThirdPlaceTeamsCached();
             const advancedGroups = thirdPlaceResult.advancedGroups;
-
             const findMatch = (matchName) => {
                 let found = knockoutMatches.find(m => m.matchName === matchName);
                 if (found) return found;
@@ -2213,7 +2151,6 @@
                 }
                 return null;
             };
-
             const getMatchOutcome = (matchName) => {
                 const match = findMatch(matchName);
                 if (!match) return null;
@@ -2231,27 +2168,23 @@
                 }
                 return null;
             };
-
             const resolvePlaceholder = (teamPlaceholder, visited = new Set()) => {
                 if (!teamPlaceholder || typeof teamPlaceholder !== 'string') return teamPlaceholder;
                 const normalized = teamPlaceholder.trim();
                 if (visited.has(normalized)) return teamPlaceholder;
                 visited.add(normalized);
-
-                // Handle "3rd Group X" - check if this group's 3rd place team advanced
                 const thirdMatch = normalized.match(/^(3rd|Third|3rd Place)\s*(?:of\s*)?(?:Group\s*)?([A-Z0-9]+)$/i);
                 if (thirdMatch) {
                     const groupName = thirdMatch[2];
                     if (advancedGroups.has(groupName) || advancedGroups.has(`Group ${groupName}`)) {
-                        const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] || groupStandings[groupName.toUpperCase()];
+                        const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] ||
+                            groupStandings[groupName.toUpperCase()];
                         if (standings && standings.length >= 3) {
                             return resolvePlaceholder(standings[2].name, visited);
                         }
                     }
                     return teamPlaceholder;
                 }
-
-                // Handle "Winner/Loser Match X"
                 const matchRef = normalized.match(/^(?:Winner|Loser|Winner of|Loser of)\s*(?:Match\s*)?(\d+)$/i);
                 if (matchRef) {
                     const matchName = `Match ${matchRef[1]}`;
@@ -2262,8 +2195,6 @@
                     }
                     return teamPlaceholder;
                 }
-
-                // Handle "Winner Group X", "Runner-up Group X", "1st Group X", "2nd Group X"
                 let groupMatch = normalized.match(
                     /^(?:Winner|Winner of|Loser|Loser of|Runner[- ]?up|1st|2nd|3rd|4th)\s*(?:of\s*)?(?:Group\s*)?([A-Z0-9]+)$/i
                 );
@@ -2271,7 +2202,8 @@
                     const position = normalized.match(
                         /^(Winner|Winner of|Loser|Loser of|Runner[- ]?up|1st|2nd|3rd|4th)/i)?.[1];
                     const groupName = groupMatch[1];
-                    const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] || groupStandings[groupName.toUpperCase()];
+                    const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] ||
+                        groupStandings[groupName.toUpperCase()];
                     if (standings && standings.length > 0) {
                         if (/^Winner/i.test(position) || /^1st/i.test(position)) {
                             return resolvePlaceholder(standings[0].name, visited);
@@ -2291,13 +2223,12 @@
                     }
                     return teamPlaceholder;
                 }
-
-                // Handle "Group X Winner", "Group X Runner-up", etc.
                 groupMatch = normalized.match(/^(?:Group\s*)?([A-Z0-9]+)\s*(Winner|Runner[- ]?up|Loser|1st|2nd|3rd|4th)$/i);
                 if (groupMatch) {
                     const groupName = groupMatch[1];
                     const position = groupMatch[2];
-                    const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] || groupStandings[groupName.toUpperCase()];
+                    const standings = groupStandings[groupName] || groupStandings[`Group ${groupName}`] ||
+                        groupStandings[groupName.toUpperCase()];
                     if (standings && standings.length > 0) {
                         if (/^Winner/i.test(position) || /^1st/i.test(position)) {
                             return resolvePlaceholder(standings[0].name, visited);
@@ -2317,10 +2248,8 @@
                     }
                     return teamPlaceholder;
                 }
-
                 return teamPlaceholder;
             };
-
             knockoutMatches.forEach(match => {
                 const resolvedHome = resolvePlaceholder(match.homeTeam);
                 const resolvedAway = resolvePlaceholder(match.visitorTeam);
@@ -2332,9 +2261,9 @@
             });
         }
 
-        // ----------------------------------------------------------------
-        //  GROUP STANDINGS (with GA tiebreaker)
-        // ----------------------------------------------------------------
+        // ================================================================
+        //  GROUP STANDINGS
+        // ================================================================
         function calculateGroupStandings(groupName, matchesArray) {
             const standings = {};
             matchesArray.forEach(match => {
@@ -2353,10 +2282,12 @@
                 }
                 if (team1 && team2) {
                     if (!standings[team1]) {
-                        standings[team1] = { played: 0, won: 0, draw: 0, lost: 0, points: 0, goalsFor: 0, goalsAgainst: 0 };
+                        standings[team1] = { played: 0, won: 0, draw: 0, lost: 0, points: 0, goalsFor: 0,
+                            goalsAgainst: 0 };
                     }
                     if (!standings[team2]) {
-                        standings[team2] = { played: 0, won: 0, draw: 0, lost: 0, points: 0, goalsFor: 0, goalsAgainst: 0 };
+                        standings[team2] = { played: 0, won: 0, draw: 0, lost: 0, points: 0, goalsFor: 0,
+                            goalsAgainst: 0 };
                     }
                 }
             });
@@ -2417,7 +2348,7 @@
                 if (b.points !== a.points) return b.points - a.points;
                 if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
                 if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
-                return a.goalsAgainst - b.goalsAgainst; // lower GA is better
+                return a.goalsAgainst - b.goalsAgainst;
             });
         }
 
@@ -2475,24 +2406,19 @@
             return html;
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  LOAD MATCHES (render group)
-        // ----------------------------------------------------------------
+        // ================================================================
         function loadMatches() {
             const container = document.getElementById("group-matches");
             if (!container) return;
-
-            // Keep the ranking wrapper if it exists, but we'll re-render it after
             const rankingWrapper = document.getElementById('thirdPlaceRankingWrapper');
-
-            // Clear all group blocks but keep ranking if present
             const children = Array.from(container.children);
             for (let child of children) {
                 if (child.id !== 'thirdPlaceRankingWrapper') {
                     child.remove();
                 }
             }
-
             const sortedGroups = Object.keys(groupMatches).sort();
             for (let group of sortedGroups) {
                 const groupDiv = document.createElement("div");
@@ -2545,7 +2471,8 @@
                                 p.player === player &&
                                 String(p.match).trim() === String(matchObj.matchName).trim()
                             );
-                            if (pick) playerPicks.push({ name: player, pick: pick.pick, correct: actualResult && String(pick.pick) === String(actualResult) });
+                            if (pick) playerPicks.push({ name: player, pick: pick.pick, correct: actualResult &&
+                                    String(pick.pick) === String(actualResult) });
                         }
                     }
                     const matchDiv = document.createElement("div");
@@ -2637,7 +2564,8 @@
                                     dateTimeStr = `${monthNames[month]} ${day} ${matchObj.time}`;
                                 }
                             }
-                            const calUrl = getGoogleCalendarUrl(matchObj.matchName, homeTeam, visitorTeam, matchObj.date,
+                            const calUrl = getGoogleCalendarUrl(matchObj.matchName, homeTeam, visitorTeam, matchObj
+                                .date,
                                 matchObj.time, matchObj.transmission);
                             if (calUrl) {
                                 calHtml =
@@ -2683,7 +2611,8 @@
                         picksHtml = '<div class="picks-row">';
                         for (let pp of playerPicks) {
                             let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
-                            let pickClass = isCompleted ? (pp.correct ? 'pick-correct' : 'pick-wrong') : 'pick-pending';
+                            let pickClass = isCompleted ? (pp.correct ? 'pick-correct' : 'pick-wrong') :
+                            'pick-pending';
                             picksHtml +=
                                 `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${pickClass}">${pickSymbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
                         }
@@ -2699,13 +2628,13 @@
                     } else {
                         radioHtml = `<div class="radio-group disabled"></div>`;
                     }
-                let pickElementsHtml = '';
-                if (!isAdminMode) {
-                    pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
-                } else {
-                    pickElementsHtml = `<div class="pick-elements" style="display:none;"></div>`;
-                }
-                const badgeHtml = `
+                    let pickElementsHtml = '';
+                    if (!isAdminMode) {
+                        pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
+                    } else {
+                        pickElementsHtml = `<div class="pick-elements" style="display:none;"></div>`;
+                    }
+                    const badgeHtml = `
                 <div class="match-badge">
                   <span class="ball-emoji">⚽</span>
                   <span class="badge-text">
@@ -2732,13 +2661,12 @@
             populateCountryDropdown();
         }
 
-        // ----------------------------------------------------------------
-        //  RENDER KNOCKOUT BRACKET (FIXED ALIGNMENT)
-        // ----------------------------------------------------------------
+        // ================================================================
+        //  RENDER KNOCKOUT BRACKET (OPTIMISED)
+        // ================================================================
         function renderKnockoutBracket() {
             const container = document.getElementById("knockout-matches");
             if (!container) return;
-
             container.innerHTML = "";
             if (!knockoutMatches || knockoutMatches.length === 0) {
                 container.innerHTML = "<p style='text-align:center; padding:20px;'>No knockout matches loaded.</p>";
@@ -2795,7 +2723,7 @@
                     <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
                     
                     <div id="knockout-scrollbar" class="knockout-scrollbar">
-                    <div style="height: 1px;"></div>
+                    <div></div>
                     </div>
 
                     <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0; width: 100%;">
@@ -2822,101 +2750,53 @@
             html += `</div></div>`;
             container.innerHTML = html;
 
-            // --- SCROLLBAR SYNC ---
-            function setupScrollbar() {
-                const scrollable = container.querySelector('.scrollable-container');
-                const topBar = document.getElementById('knockout-scrollbar');
-                if (!scrollable || !topBar) return;
+            // ===== Defer layout-heavy alignment =====
+            scheduleKnockoutAlignment(container);
+            setupKnockoutScrollbar(container);
+        }
 
-                const existingBottom = document.getElementById('knockout-scrollbar-bottom');
-                if (existingBottom) existingBottom.remove();
-
-                const bottomBar = topBar.cloneNode(true);
-                bottomBar.id = "knockout-scrollbar-bottom";
-                scrollable.parentNode.appendChild(bottomBar);
-
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        const width = scrollable.scrollWidth;
-
-                        if (width === 0) {
-                            setTimeout(() => {
-                                requestAnimationFrame(() => {
-                                    const width2 = scrollable.scrollWidth;
-                                    if (width2 > 0) {
-                                        if (topBar.firstElementChild) {
-                                            topBar.firstElementChild.style.width = width2 + "px";
-                                            topBar.firstElementChild.style.height = "100%";
-                                        }
-                                        if (bottomBar.firstElementChild) {
-                                            bottomBar.firstElementChild.style.width = width2 + "px";
-                                            bottomBar.firstElementChild.style.height = "100%";
-                                        }
-                                    }
-                                });
-                            }, 150);
-                            return;
-                        }
-
-                        if (topBar.firstElementChild) {
-                            topBar.firstElementChild.style.width = width + "px";
-                            topBar.firstElementChild.style.height = "100%";
-                        }
-                        if (bottomBar.firstElementChild) {
-                            bottomBar.firstElementChild.style.width = width + "px";
-                            bottomBar.firstElementChild.style.height = "100%";
-                        }
-                    });
-                });
-
-                topBar.addEventListener('scroll', () => {
-                    scrollable.scrollLeft = topBar.scrollLeft;
-                    bottomBar.scrollLeft = topBar.scrollLeft;
-                });
-
-                bottomBar.addEventListener('scroll', () => {
-                    scrollable.scrollLeft = bottomBar.scrollLeft;
-                    topBar.scrollLeft = bottomBar.scrollLeft;
-                });
-
-                scrollable.addEventListener('scroll', () => {
-                    topBar.scrollLeft = scrollable.scrollLeft;
-                    bottomBar.scrollLeft = scrollable.scrollLeft;
-                });
+        // ================================================================
+        //  OPTIMISED ALIGNMENT – restores original working logic
+        // ================================================================
+        function scheduleKnockoutAlignment(container) {
+            if (_alignRAF) {
+                cancelAnimationFrame(_alignRAF);
+                _alignRAF = null;
             }
-
-            setTimeout(() => {
+            if (_alignPending) return;
+            _alignPending = true;
+            requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        alignKnockoutColumns(container);
-                        // If the knockout tab is active, re‑setup the custom scrollbar
-                        if (container.classList.contains('active')) {
-                            setupKnockoutScrollbar(container);
-                        }
-                    });
+                    _alignPending = false;
+                    _alignRAF = null;
+                    if (!container || !container.classList.contains('active')) return;
+                    alignKnockoutColumns(container);
                 });
-            }, 400);
+            });
         }
 
         // ----------------------------------------------------------------
-        //  ALIGNMENT ENGINE
+        //  ALIGNMENT ENGINE – exact copy of the old working version
         // ----------------------------------------------------------------
         function alignKnockoutColumns(container) {
             const columns = container.querySelectorAll('.knockout-col');
             if (!columns || columns.length < 2) return;
 
+            // Reset transforms to natural positions
             columns.forEach(col => {
                 col.querySelectorAll('.match-card').forEach(card => {
                     card.style.transform = 'translateY(0px)';
                 });
             });
 
+            // Helper to get card center relative to its column
             function getCardCenterY(card, col) {
                 const cardRect = card.getBoundingClientRect();
                 const colRect = col.getBoundingClientRect();
                 return (cardRect.top + cardRect.height / 2) - colRect.top;
             }
 
+            // Align each child column with its parent
             for (let i = 1; i < columns.length; i++) {
                 const parentCol = columns[i - 1];
                 const childCol = columns[i];
@@ -2940,6 +2820,7 @@
                 });
             }
 
+            // Special handling: Final aligns with 3rd Place Final
             const allCols = Array.from(columns);
             const thirdIdx = allCols.findIndex(c => c.dataset.round === '3rd Place Final');
             const finalIdx = allCols.findIndex(c => c.dataset.round === 'Final');
@@ -2957,9 +2838,9 @@
             }
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  CREATE KNOCKOUT CARD
-        // ----------------------------------------------------------------
+        // ================================================================
         function createKnockoutCard(matchObj, stageColors) {
             const actual = actualResults[matchObj.matchName];
             const actualResult = actual ? actual.result : null;
@@ -3034,7 +2915,8 @@
                     } else {
                         const dateParts = matchObj.date.split('/');
                         if (dateParts.length === 3) {
-                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
+                                'Nov',
                                 'Dec'
                             ];
                             const month = parseInt(dateParts[1]) - 1;
@@ -3070,7 +2952,8 @@
                     } else {
                         const dateParts = matchObj.date.split('/');
                         if (dateParts.length === 3) {
-                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
+                                'Nov',
                                 'Dec'
                             ];
                             const month = parseInt(dateParts[1]) - 1;
@@ -3135,24 +3018,21 @@
 
             let radioHtml = '';
             if (!isCompleted && !isPast) {
-                // Check if this is a knockout match (no draws allowed)
-                const isKnockout = matchObj.stage === 'Knockout' || 
-                                matchObj.group === 'Round of 32' || 
-                                matchObj.group === 'Round of 16' || 
-                                matchObj.group === 'Quarter-finals' || 
-                                matchObj.group === 'Semi-finals' || 
-                                matchObj.group === '3rd Place Final' || 
-                                matchObj.group === 'Final';
-                
+                const isKnockout = matchObj.stage === 'Knockout' ||
+                    matchObj.group === 'Round of 32' ||
+                    matchObj.group === 'Round of 16' ||
+                    matchObj.group === 'Quarter-finals' ||
+                    matchObj.group === 'Semi-finals' ||
+                    matchObj.group === '3rd Place Final' ||
+                    matchObj.group === 'Final';
+
                 if (isKnockout) {
-                    // Only show Win options for knockout matches
                     radioHtml = `
                         <div class="radio-group">
                             <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Home Win</label>
                             <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Visitor Win</label>
                         </div>`;
                 } else {
-                    // Show all three options for group stage
                     radioHtml = `
                         <div class="radio-group">
                             <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Win</label>
@@ -3211,9 +3091,9 @@
             return matchDiv.outerHTML;
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  SCROLL TO MATCH
-        // ----------------------------------------------------------------
+        // ================================================================
         function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
             let targetStage = 'group';
             const groupElement = document.getElementById(groupId);
@@ -3263,9 +3143,9 @@
             }, 100);
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  NEXT MATCHES
-        // ----------------------------------------------------------------
+        // ================================================================
         function getNextMatches() {
             const now = new Date();
             const upcomingMatches = [];
@@ -3346,7 +3226,8 @@
                     } else {
                         const dateParts = tm.match.date.split('/');
                         if (dateParts.length === 3) {
-                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
+                                'Nov',
                                 'Dec'
                             ];
                             const month = parseInt(dateParts[1]) - 1;
@@ -3428,6 +3309,7 @@
             }
         }
 
+        // ===== DEBOUNCED RESIZE =====
         let resizeTimeout;
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimeout);
@@ -3438,15 +3320,15 @@
                 }
                 const koContainer = document.getElementById("knockout-matches");
                 if (koContainer && koContainer.classList.contains('active')) {
-                    alignKnockoutColumns(koContainer);
+                    scheduleKnockoutAlignment(koContainer);
                     setupKnockoutScrollbar(koContainer);
                 }
             }, 300);
         });
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  TOGGLE GROUP
-        // ----------------------------------------------------------------
+        // ================================================================
         function toggleGroup(id) {
             const el = document.getElementById(`group-${id}`);
             if (el) {
@@ -3463,11 +3345,12 @@
             }
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  PROGRESS
-        // ----------------------------------------------------------------
+        // ================================================================
         function updateProgress() {
-            let total = 0, saved = 0;
+            let total = 0,
+                saved = 0;
             const now = new Date();
             for (let group in groupMatches) {
                 for (let i = 0; i < groupMatches[group].length; i++) {
@@ -3506,23 +3389,18 @@
             }
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  TABS
-        // ----------------------------------------------------------------
+        // ================================================================
         function initTabs() {
             document.querySelectorAll('.stage-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     const stage = tab.dataset.stage;
-
                     document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-
                     document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
-
                     const cs = document.getElementById('country-selector-container');
                     if (cs) cs.style.display = 'block';
-
-                    // Reset the dropdown selection when switching tabs
                     const dropdownSelected = document.getElementById('dropdownSelected');
                     if (dropdownSelected) {
                         dropdownSelected.textContent = '🌍 Select a country';
@@ -3531,16 +3409,12 @@
                     document.querySelectorAll('.dropdown-item').forEach(item => {
                         item.classList.remove('selected');
                     });
-
                     let targetContainer = null;
-
                     if (stage === 'group') {
                         targetContainer = document.getElementById('group-matches');
                         targetContainer.classList.add('active');
                         document.getElementById('knockout-matches').classList.remove('active');
                         document.getElementById('knockout-matches').style.display = '';
-                        
-                        // Re-render 3rd place ranking when switching to group tab
                         setTimeout(() => {
                             renderThirdPlaceRanking();
                         }, 50);
@@ -3549,39 +3423,33 @@
                         targetContainer.classList.add('active');
                         document.getElementById('group-matches').classList.remove('active');
                         targetContainer.style.display = '';
-
                         setTimeout(() => {
-                            alignKnockoutColumns(targetContainer);
+                            scheduleKnockoutAlignment(targetContainer);
                             setupKnockoutScrollbar(targetContainer);
                         }, 300);
                     }
-
-                    // Repopulate dropdown with countries from the current stage
                     populateCountryDropdown(stage);
-
-                    // Scroll to the target container after a short delay
                     setTimeout(() => {
                         if (targetContainer) {
-                            const header = targetContainer.querySelector('h3') || 
-                                        targetContainer.querySelector('.stage-tab') ||
-                                        targetContainer;
+                            const header = targetContainer.querySelector('h3') ||
+                                targetContainer.querySelector('.stage-tab') ||
+                                targetContainer;
                             header.scrollIntoView({ behavior: "smooth", block: "start" });
                         }
                     }, 100);
                 });
             });
         }
-        // ----------------------------------------------------------------
+
+        // ================================================================
         //  COUNTRY DROPDOWN
-        // ----------------------------------------------------------------
+        // ================================================================
         function populateCountryDropdown(stage = 'group') {
             const list = document.getElementById("dropdownList");
             if (!list) return;
             list.innerHTML = '';
             const countries = new Set();
-
             if (stage === 'group') {
-                // Only get countries from group stage matches
                 Object.values(groupMatches).forEach(matches => {
                     matches.forEach(m => {
                         if (m.homeTeam) countries.add(m.homeTeam);
@@ -3589,15 +3457,13 @@
                     });
                 });
             } else {
-                // Only get countries from knockout matches (resolved teams, not placeholders)
                 knockoutMatches.forEach(m => {
                     const homeTeam = m.homeTeam || '';
                     const visitorTeam = m.visitorTeam || '';
-                    // Skip placeholder teams
                     const isPlaceholder = (team) => {
                         if (!team) return true;
                         const placeholderPatterns = [
-                            /3rd/i, /Third/i, /Winner/i, /Loser/i, 
+                            /3rd/i, /Third/i, /Winner/i, /Loser/i,
                             /Runner[- ]?up/i, /1st/i, /2nd/i, /4th/i,
                             /Match \d+/i
                         ];
@@ -3607,12 +3473,9 @@
                     if (visitorTeam && !isPlaceholder(visitorTeam)) countries.add(visitorTeam);
                 });
             }
-
             let sorted = Array.from(countries).sort();
-            // Move Portugal to the top
             sorted = sorted.filter(c => c !== "Portugal");
             sorted.unshift("Portugal");
-
             sorted.forEach(country => {
                 const item = document.createElement("div");
                 item.className = "dropdown-item";
@@ -3622,8 +3485,6 @@
                 item.onclick = function() { selectCountry(country); };
                 list.appendChild(item);
             });
-            
-            // If no countries found, show a message
             if (sorted.length === 0) {
                 const item = document.createElement("div");
                 item.className = "dropdown-item";
@@ -3631,9 +3492,9 @@
                 list.appendChild(item);
             }
         }
+
         function selectCountry(country) {
             if (!country) return;
-
             document.getElementById("dropdownSelected").textContent = country;
             const selectedBox = document.getElementById("dropdownSelected");
             selectedBox.classList.add("active");
@@ -3643,18 +3504,12 @@
                 if (text === country) item.classList.add('selected');
             });
             document.getElementById("dropdownList").style.display = "none";
-
-            // Determine which stage is currently active
             const activeTab = document.querySelector('.stage-tab.active');
             const currentStage = activeTab ? activeTab.dataset.stage : 'group';
-
             let found = false;
-
             if (currentStage === 'group') {
-                // Search in group matches
                 let targetGroup = null;
                 let targetMatchIdx = null;
-                
                 for (let group in groupMatches) {
                     for (let idx = 0; idx < groupMatches[group].length; idx++) {
                         const m = groupMatches[group][idx];
@@ -3667,7 +3522,6 @@
                     }
                     if (found) break;
                 }
-
                 if (found) {
                     const groupKey = targetGroup.replace(/ /g, '_');
                     Object.keys(groupMatches).forEach(group => {
@@ -3708,7 +3562,6 @@
                     }
                 }
             } else {
-                // Search in knockout matches
                 let targetKnockoutMatch = null;
                 for (let idx = 0; idx < knockoutMatches.length; idx++) {
                     const m = knockoutMatches[idx];
@@ -3718,7 +3571,6 @@
                         break;
                     }
                 }
-
                 if (found && targetKnockoutMatch) {
                     setTimeout(() => {
                         const matchId = `match-knockout-${targetKnockoutMatch.matchName.replace(/ /g, '_')}`;
@@ -3742,15 +3594,14 @@
                     }, 500);
                 }
             }
-
             if (!found) {
                 showFloatingNotification(`⚠️ "${country}" is not in the ${currentStage} stage!`, true);
             }
-        }   
+        }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  SHARE & TOGGLE
-        // ----------------------------------------------------------------
+        // ================================================================
         async function shareApp() {
             try {
                 if (navigator.share) {
@@ -3802,7 +3653,40 @@
                 togglePlayerSelection();
             }
         }
-
+        function preloadAllFlags() {
+            const teamNames = new Set();
+            
+            // Collect all teams from group stage
+            for (let group in groupMatches) {
+                groupMatches[group].forEach(match => {
+                    if (match.homeTeam) teamNames.add(match.homeTeam);
+                    if (match.visitorTeam) teamNames.add(match.visitorTeam);
+                });
+            }
+            
+            // Also collect teams from knockout (they should be resolved already)
+            knockoutMatches.forEach(match => {
+                if (match.homeTeam && !match.homeTeam.includes('Match') && !match.homeTeam.includes('Winner') && !match.homeTeam.includes('Loser')) {
+                    teamNames.add(match.homeTeam);
+                }
+                if (match.visitorTeam && !match.visitorTeam.includes('Match') && !match.visitorTeam.includes('Winner') && !match.visitorTeam.includes('Loser')) {
+                    teamNames.add(match.visitorTeam);
+                }
+            });
+            
+            // Preload each flag image
+            teamNames.forEach(team => {
+                const flagCode = getFlagCode(team);
+                if (flagCode) {
+                    const img = new Image();
+                    img.src = `https://flagcdn.com/20x15/${flagCode}.png`;
+                    // Optionally also preload larger sizes if needed
+                }
+            });
+        }
+        // ================================================================
+        //  KNOCKOUT SCROLLBAR (lightweight)
+        // ================================================================
         function setupKnockoutScrollbar(container) {
             const scrollable = container.querySelector('.scrollable-container');
             const topBar = document.getElementById('knockout-scrollbar');
@@ -3815,7 +3699,6 @@
             bottomBar.id = 'knockout-scrollbar-bottom';
             scrollable.parentNode.appendChild(bottomBar);
 
-            // Set the inner div width to match the scrollable content
             function updateWidth() {
                 const width = scrollable.scrollWidth;
                 if (width > 0) {
@@ -3825,29 +3708,25 @@
                     if (bottomInner) bottomInner.style.width = width + 'px';
                 }
             }
-
-            // Update after a short delay to ensure content is rendered
             setTimeout(updateWidth, 100);
 
             topBar.addEventListener('scroll', () => {
                 scrollable.scrollLeft = topBar.scrollLeft;
                 bottomBar.scrollLeft = topBar.scrollLeft;
             });
-
             bottomBar.addEventListener('scroll', () => {
                 scrollable.scrollLeft = bottomBar.scrollLeft;
                 topBar.scrollLeft = bottomBar.scrollLeft;
             });
-
             scrollable.addEventListener('scroll', () => {
                 topBar.scrollLeft = scrollable.scrollLeft;
                 bottomBar.scrollLeft = scrollable.scrollLeft;
             });
         }
 
-        // ----------------------------------------------------------------
+        // ================================================================
         //  INIT
-        // ----------------------------------------------------------------
+        // ================================================================
         document.addEventListener("DOMContentLoaded", () => {
             const selected = document.getElementById("dropdownSelected");
             const list = document.getElementById("dropdownList");
@@ -3872,17 +3751,14 @@
               transform: translateX(-50%);
               padding-left: 10px;
               font-weight: bold;
-            
             }
           `;
             document.head.appendChild(styleTag);
         });
 
-        // Init tabs and load
         initTabs();
         loadAllData();
 
-        // Splash screen
         window.addEventListener('load', function() {
             const splash = document.getElementById('splash-screen');
             if (splash) {
@@ -3896,9 +3772,9 @@
             }
         });
 
-        // Service Worker
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.log('SW failed:',
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.log(
+                'SW failed:',
                 e)));
         }
     </script>
