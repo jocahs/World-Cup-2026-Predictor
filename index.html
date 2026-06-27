@@ -1454,7 +1454,7 @@
                         const pick = playerPicks.find(p => p.match === m.matchName);
                         if (actual && actual.result && pick && pick.pick) {
                             total++;
-                            if (pick.pick === actual.result) score++;
+                            if (String(pick.pick) === String(actual.result)) score++;
                         }
                     }
                 }
@@ -1463,7 +1463,7 @@
                     const pick = playerPicks.find(p => p.match === m.matchName);
                     if (actual && actual.result && pick && pick.pick) {
                         total++;
-                        if (pick.pick === actual.result) score++;
+                        if (String(pick.pick) === String(actual.result)) score++;
                     }
                 }
                 const ratio = total > 0 ? score / total : 0;
@@ -1817,8 +1817,21 @@
                 const response = await fetch(`${WEBAPP_URL}?action=load`);
                 const data = await response.json();
                 if (!data.success) throw new Error(data.error);
-                allPicks = data.picks || [];
-                actualResults = data.results || {};
+                allPicks = (data.picks || []).map(p => ({
+                    ...p,
+                    match: String(p.match).trim(),
+                    pick: String(p.pick).trim()
+                }));
+
+                actualResults = {};
+                Object.keys(data.results || {}).forEach(key => {
+                    const r = data.results[key];
+                    actualResults[String(key).trim()] = {
+                        ...r,
+                        result: r.result != null ? String(r.result).trim() : ""
+                    };
+                });
+
                 invalidateCache();
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
@@ -2028,8 +2041,15 @@
                 const data = await response.json();
 
                 if (!data.success) throw new Error(data.error);
-
-                actualResults = data.results || {};
+                
+                actualResults = {};
+                Object.keys(data.results || {}).forEach(key => {
+                    const r = data.results[key];
+                    actualResults[String(key).trim()] = {
+                        ...r,
+                        result: r.result != null ? String(r.result).trim() : ""
+                    };
+                });
                 invalidateCache();
                 groupMatches = {};
 
@@ -2066,9 +2086,13 @@
                     });
                 }
 
-                resolveKnockoutTeams();
-
-                allPicks = data.picks || [];
+                resolveKnockoutTeams();    
+                            
+                allPicks = (data.picks || []).map(p => ({
+                    ...p,
+                    match: String(p.match).trim(),
+                    pick: String(p.pick).trim()
+                }));
 
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
@@ -2517,8 +2541,11 @@
                     const showPicks = hasPlayer || hasName;
                     if (showPicks && currentPlayers.length > 0) {
                         for (let player of currentPlayers) {
-                            const pick = allPicks.find(p => p.player === player && p.match === matchObj.matchName);
-                            if (pick) playerPicks.push({ name: player, pick: pick.pick, correct: actualResult && pick.pick === actualResult });
+                            const pick = allPicks.find(p =>
+                                p.player === player &&
+                                String(p.match).trim() === String(matchObj.matchName).trim()
+                            );
+                            if (pick) playerPicks.push({ name: player, pick: pick.pick, correct: actualResult && String(pick.pick) === String(actualResult) });
                         }
                     }
                     const matchDiv = document.createElement("div");
@@ -2953,12 +2980,15 @@
             const showPicks = hasPlayer || hasName;
             if (showPicks && currentPlayers.length > 0) {
                 for (let player of currentPlayers) {
-                    const pick = allPicks.find(p => p.player === player && p.match === matchObj.matchName);
+                    const pick = allPicks.find(p =>
+                        p.player === player &&
+                        String(p.match).trim() === String(matchObj.matchName).trim()
+                    );
                     if (pick) {
                         playerPicks.push({
                             name: player,
                             pick: pick.pick,
-                            correct: actualResult && pick.pick === actualResult
+                            correct: actualResult && String(pick.pick) === String(actualResult)
                         });
                     }
                 }
