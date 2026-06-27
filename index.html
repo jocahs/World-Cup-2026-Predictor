@@ -2707,7 +2707,7 @@
                 <div style="padding: 10px; margin: 10px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
                 <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
                 
-                <div id="knockout-scrollbar" class="knockout-scrollbar" style="overflow-x: scroll; overflow-y: hidden; height: 22px; background: #EB3324; border-radius: 6px; width: 100%; box-sizing: border-box;">
+                <div id="knockout-scrollbar" class="knockout-scrollbar">
                 <div style="height: 1px;"></div>
                 </div>
 
@@ -3743,6 +3743,22 @@
             const bottomBar = topBar.cloneNode(true);
             bottomBar.id = 'knockout-scrollbar-bottom';
             scrollable.parentNode.appendChild(bottomBar);
+
+            // Get the actual scrollable width
+            const scrollWidth = scrollable.scrollWidth;
+            
+            // Set the inner div width to match the scrollable content
+            const topInner = topBar.querySelector('div');
+            if (topInner) {
+                topInner.style.width = scrollWidth + 'px';
+                topInner.style.height = '100%';
+            }
+            
+            const bottomInner = bottomBar.querySelector('div');
+            if (bottomInner) {
+                bottomInner.style.width = scrollWidth + 'px';
+                bottomInner.style.height = '100%';
+            }
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
