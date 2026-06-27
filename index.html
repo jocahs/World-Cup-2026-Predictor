@@ -1018,6 +1018,48 @@
             text-align: left;
             padding-left: 8px;
         }
+
+        .knockout-scrollbar {
+            height: 22px;
+            background: transparent;
+            overflow-x: auto;
+            scrollbar-width: auto;
+        }
+        .knockout-scrollbar::-webkit-scrollbar {
+            height: 22px;
+            width: 22px;
+        }
+        .knockout-scrollbar::-webkit-scrollbar-track {
+            background: #EB3324;
+            border-radius: 6px;
+        }
+        .knockout-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, #FFD700, #FFC107);
+            border-radius: 6px;
+            border: 2px solid #EB3324;
+            min-height: 40px;
+            min-width: 40px;
+        }
+        .knockout-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(90deg, #FFC107, #FFB300);
+        }
+
+        /* Mobile specific - force scrollbar to show */
+        @media (max-width: 768px) {
+            .knockout-scrollbar {
+                -webkit-overflow-scrolling: touch;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                border-radius: 10px !important;
+                background: #EB3324 !important;
+            }
+            
+            .knockout-scrollbar::-webkit-scrollbar-thumb {
+                border-radius: 10px !important;
+                background: linear-gradient(90deg, #FFD700, #FFC107) !important;
+                border: 3px solid #EB3324 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2761,24 +2803,14 @@
                 styleTag.id = "knockout-scroll-style";
                 styleTag.textContent = `
                 .knockout-scrollbar {
-                height: 22px;
-                background: transparent;
-                overflow-x: auto;
                 }
-                .knockout-scrollbar::-webkit-scrollbar {
-                height: 22px;
+                .knockout-scrollbar::-webkit-scrollbar {                
                 }
                 .knockout-scrollbar::-webkit-scrollbar-track {
-                background: #EB3324;
-                border-radius: 6px;
                 }
                 .knockout-scrollbar::-webkit-scrollbar-thumb {
-                background: linear-gradient(90deg, #FFD700, #FFC107);
-                border-radius: 6px;
-                border: 2px solid #EB3324;
                 }
-                .knockout-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(90deg, #FFC107, #FFB300);
+                .knockout-scrollbar::-webkit-scrollbar-thumb:hover {;
                 }
                 `;
                 document.head.appendChild(styleTag);
