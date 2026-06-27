@@ -1700,10 +1700,12 @@
             }
             showLoading("Saving your picks...");
             try {
+                // 1. Reload to get the latest data (results and existing picks)
                 const response = await fetch(`${WEBAPP_URL}?action=load`);
                 const data = await response.json();
                 if (!data.success) throw new Error(data.error);
                 actualResults = data.results || {};
+
                 const existingPicks = data.picks.filter(p => p.player === player) || [];
                 const existingMap = new Map();
                 existingPicks.forEach(pick => {
@@ -1713,11 +1715,12 @@
                 currentPicks.forEach(pick => {
                     currentMap.set(pick.match, pick.pick.toString());
                 });
+
                 const picksToUpdate = [];
                 for (let [match, pick] of currentMap) {
                     const existingPick = existingMap.get(match);
                     if (existingPick !== pick) {
-                        picksToUpdate.push({ match: match, pick: pick });
+                        picksToUpdate.push({ match, pick });
                     }
                 }
                 if (picksToUpdate.length === 0) {
@@ -1725,14 +1728,16 @@
                     hideLoading();
                     return;
                 }
-                for (let update of picksToUpdate) {
-                    const updateParams = new URLSearchParams();
-                    updateParams.append("action", "updatePick");
-                    updateParams.append("player", player);
-                    updateParams.append("match", update.match);
-                    updateParams.append("pick", update.pick);
-                    await fetch(`${WEBAPP_URL}?${updateParams.toString()}`);
-                }
+
+                // --- BATCH REQUEST (single network call) ---
+                const updateParams = new URLSearchParams();
+                updateParams.append("action", "batchUpdatePicks");
+                updateParams.append("player", player);
+                updateParams.append("data", JSON.stringify(picksToUpdate));
+                const batchResponse = await fetch(`${WEBAPP_URL}?${updateParams.toString()}`);
+                const batchResult = await batchResponse.json();
+                if (!batchResult.success) throw new Error(batchResult.error || "Batch update failed");
+
                 showFloatingNotification(`✅ Updated ${picksToUpdate.length} pick(s) for ${player}!`);
                 updateLeaderboard();
                 updateProgress();
@@ -1740,7 +1745,6 @@
                 console.error("Save error:", e);
                 showFloatingNotification("Error saving picks: " + e.message, true);
             } finally {
-                updateLeaderboard();
                 hideLoading();
             }
         }
