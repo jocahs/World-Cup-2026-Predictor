@@ -3744,55 +3744,19 @@
             bottomBar.id = 'knockout-scrollbar-bottom';
             scrollable.parentNode.appendChild(bottomBar);
 
-            // Get the actual scrollable width
-            const scrollWidth = scrollable.scrollWidth;
-            
             // Set the inner div width to match the scrollable content
-            const topInner = topBar.querySelector('div');
-            if (topInner) {
-                topInner.style.width = scrollWidth + 'px';
-                topInner.style.height = '100%';
-            }
-            
-            const bottomInner = bottomBar.querySelector('div');
-            if (bottomInner) {
-                bottomInner.style.width = scrollWidth + 'px';
-                bottomInner.style.height = '100%';
+            function updateWidth() {
+                const width = scrollable.scrollWidth;
+                if (width > 0) {
+                    const topInner = topBar.querySelector('div');
+                    const bottomInner = bottomBar.querySelector('div');
+                    if (topInner) topInner.style.width = width + 'px';
+                    if (bottomInner) bottomInner.style.width = width + 'px';
+                }
             }
 
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    const width = scrollable.scrollWidth;
-
-                    if (width === 0) {
-                        setTimeout(() => {
-                            requestAnimationFrame(() => {
-                                const width2 = scrollable.scrollWidth;
-                                if (width2 > 0) {
-                                    if (topBar.firstElementChild) {
-                                        topBar.firstElementChild.style.width = width2 + 'px';
-                                        topBar.firstElementChild.style.height = '100%';
-                                    }
-                                    if (bottomBar.firstElementChild) {
-                                        bottomBar.firstElementChild.style.width = width2 + 'px';
-                                        bottomBar.firstElementChild.style.height = '100%';
-                                    }
-                                }
-                            });
-                        }, 150);
-                        return;
-                    }
-
-                    if (topBar.firstElementChild) {
-                        topBar.firstElementChild.style.width = width + 'px';
-                        topBar.firstElementChild.style.height = '100%';
-                    }
-                    if (bottomBar.firstElementChild) {
-                        bottomBar.firstElementChild.style.width = width + 'px';
-                        bottomBar.firstElementChild.style.height = '100%';
-                    }
-                });
-            });
+            // Update after a short delay to ensure content is rendered
+            setTimeout(updateWidth, 100);
 
             topBar.addEventListener('scroll', () => {
                 scrollable.scrollLeft = topBar.scrollLeft;
