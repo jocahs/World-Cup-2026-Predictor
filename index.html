@@ -1060,6 +1060,8 @@
                 border: 3px solid #EB3324 !important;
             }
         }
+
+
     </style>
 </head>
 <body>
@@ -1140,7 +1142,7 @@
     <div id="floatingNotification" class="floating-notification"></div>
 
     <script>
-        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzLP_FPsv9SWBlS6CnTkwJhEXqiOan1wVvTuCLjUVDZ1IVwsTVOAwbvQAcY1hMhHqQ/exec";
+        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx24HoGar2hhHhUBfz-cLp0WYqriTFtRnEAZD3je1vHPEPqa50d2JgzVj8AVcIAjvm-/exec";
         const ADMIN_PASSWORD = "";
 
         const CUSTOM_ORDER = {
@@ -1158,6 +1160,8 @@
         let knockoutMatches = [];
         let expandedGroups = {};
         let expandedRanking = false; // default collapsed
+        let cachedStandings = {};        // group -> standings array
+        let cachedThirdPlace = null;     // result of getBestThirdPlaceTeamsCached()
 
         // ----------------------------------------------------------------
         //  NOTIFICATIONS & LOADING
@@ -1200,6 +1204,24 @@
         // ----------------------------------------------------------------
         //  HELPERS
         // ----------------------------------------------------------------
+        function invalidateCache() {
+            cachedStandings = {};
+            cachedThirdPlace = null;
+        }
+        
+        function getGroupStandings(group) {
+            if (cachedStandings[group]) return cachedStandings[group];
+            const standings = calculateGroupStandings(group, groupMatches[group]);
+            cachedStandings[group] = standings;
+            return standings;
+        }
+
+        function getBestThirdPlaceTeamsCached() {
+            if (cachedThirdPlace) return cachedThirdPlace;
+            cachedThirdPlace = getBestThirdPlaceTeams();
+            return cachedThirdPlace;
+        }
+
         function updatePlayerControlsVisibility() {
             
             if (isAdminMode) {
@@ -1585,6 +1607,7 @@
                         score: `${home}-${away}`
                     };
                 });
+                invalidateCache();
                 showFloatingNotification(`✅ ${scoreUpdates.length} match score(s) saved!`);
                 closeAdminMode();
             } catch (e) {
@@ -1705,7 +1728,7 @@
                 const data = await response.json();
                 if (!data.success) throw new Error(data.error);
                 actualResults = data.results || {};
-
+                invalidateCache();
                 const existingPicks = data.picks.filter(p => p.player === player) || [];
                 const existingMap = new Map();
                 existingPicks.forEach(pick => {
@@ -1765,6 +1788,7 @@
                 if (!data.success) throw new Error(data.error);
                 allPicks = data.picks || [];
                 actualResults = data.results || {};
+                invalidateCache();
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
                 currentPlayers = Array.from(playerSet).sort();
@@ -1796,7 +1820,7 @@
             const thirdPlaceTeams = [];
 
             for (let group in groupMatches) {
-                const standings = calculateGroupStandings(group, groupMatches[group]);
+                const standings = getGroupStandings(group);
                 if (standings.length >= 3) {
                     const third = standings[2];
                     thirdPlaceTeams.push({
@@ -1847,7 +1871,7 @@
             const existing = document.getElementById('thirdPlaceRankingWrapper');
             if (existing) existing.remove();
 
-            const result = getBestThirdPlaceTeams();
+            const result = getBestThirdPlaceTeamsCached();
             if (!result.ranked || result.ranked.length === 0) return;
 
             const wrapper = document.createElement('div');
@@ -1975,6 +1999,7 @@
                 if (!data.success) throw new Error(data.error);
 
                 actualResults = data.results || {};
+                invalidateCache();
                 groupMatches = {};
 
                 if (data.matches && data.matches.length > 0) {
@@ -2114,14 +2139,14 @@
         function resolveKnockoutTeams() {
             const groupStandings = {};
             Object.keys(groupMatches).forEach(group => {
-                const standings = calculateGroupStandings(group, groupMatches[group]);
+                const standings = getGroupStandings(group);
                 groupStandings[group] = standings;
                 const shortName = group.replace("Group ", "").trim();
                 groupStandings[shortName] = standings;
             });
 
             // Compute best 8 third-place teams
-            const thirdPlaceResult = getBestThirdPlaceTeams();
+            const thirdPlaceResult = getBestThirdPlaceTeamsCached();
             const advancedGroups = thirdPlaceResult.advancedGroups;
 
             const findMatch = (matchName) => {
@@ -2430,7 +2455,7 @@
                 if (expandedGroups[groupKey]) {
                     groupDiv.classList.add('expanded');
                 }
-                const standings = calculateGroupStandings(group, groupMatches[group]);
+                const standings = getGroupStandings(group);
                 const standingsHtml = createStandingsTable(standings);
                 if (standingsHtml) {
                     const standingsContainer = document.createElement("div");
