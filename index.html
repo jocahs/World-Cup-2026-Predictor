@@ -279,7 +279,7 @@
             border: 1px solid #e0e0e0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             min-width: 200px;
-            max-width: 320px;
+            max-width: 310px;
             transition: background 0.2s;
             justify-content: center;
         }
@@ -712,7 +712,7 @@
             height: 20px;
             margin: 10px auto;
             overflow: visible;
-            max-width: 320px;
+            max-width: 310px;
             position: relative;
         }
         .progress-fill {
@@ -1081,7 +1081,7 @@
     <button id="togglePlayerBtn" onclick="togglePlayerSelection()" style="margin: 5px auto; display: block; padding: 10px; background: linear-gradient(135deg, #ea9b24 0%, #ff7043 100%);">Predict Match Results</button>
 
     <div id="player-selection" class="container" style="text-align: center; padding: 5px; font-size: 1.2em; color: white; background: linear-gradient(135deg, #ea9b24 0%, #ff7043 100%); margin: 10px auto;">
-        <p style="max-width: 350px; line-height: 1.5; margin: 0px auto;">Select an existing player or Enter your name.</p>
+        <p style="max-width: 310px; line-height: 1.5; margin: 0px auto;">Select an existing player or Enter your name.</p>
         <select id="playerSelect" class="player-select" onchange="selectPlayer()" style="width: auto; max-width: 250px; min-width: 200px; margin: 0;">
             <option value="">-- Select player --</option>
         </select>
@@ -1109,7 +1109,7 @@
     </div>
 
     <div id="group-matches" class="matches-container"></div>
-    <div id="knockout-matches" class="matches-container"></div>
+    <div id="knockout-matches" class="matches-container" style="margin: -5px;"></div>
 
     <div style="margin: 5px auto; text-align: center;">
         <button id="savePicksBtn" onclick="savePicks()" class="hidden">💾 Save My Picks</button>
@@ -2704,7 +2704,7 @@
             }
 
             let html = `
-                <div style="padding: 10px; margin: 10px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+                <div style="padding: 5px; margin: 5px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
                 <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
                 
                 <div id="knockout-scrollbar" class="knockout-scrollbar">
@@ -2718,7 +2718,7 @@
                 const matches = roundsMap[round];
                 const colors = getStageColor(round);
                 html += `
-          <div class="knockout-col" data-round="${round}" style="min-width:200px;flex:0 0 auto;padding:8px 2px;border-radius:8px;display:flex;flex-direction:column;gap:2px;">
+          <div class="knockout-col" data-round="${round}" style="min-width:200px; flex:0 0 auto;padding:8px 2px;border-radius:8px;display:flex;flex-direction:column;gap:2px;">
             <div style="font-weight: bold; text-align: center; padding: 8px; background: ${colors.header}; color: white; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
               ${round}
             </div>
