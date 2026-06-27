@@ -12,10 +12,11 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="apple-touch-startup-image" href="icon-1125x2436.png">
     <style>
-        /* === RESET & BASE === */
-        /** {
+        
+        * {
             box-sizing: border-box;
-        }*/
+        }
+
         body {
             font-family: Arial, sans-serif;
             max-width: auto;
@@ -558,8 +559,8 @@
             color: white;
         }
         .pick-pending {
-            background: burlywood;
-            color: #333;
+            background: chocolate;
+            color: white;
         }
 
         .radio-group {
@@ -815,9 +816,6 @@
             overflow-y: scroll;
             min-width: 320px;
         }
-        body {
-            box-sizing: border-box;
-        }
 
         /* === KNOCKOUT SCROLL === */
         #knockout-matches .scrollable-container {
@@ -1034,7 +1032,7 @@
         </div>
     </div>
 
-    <h1>🏆 World Cup 2026 Predictor</h1>
+    <h1 style="margin: 10px auto;">🏆 World Cup 2026 Predictor</h1>
 
     <div id="today-matches-container" class="container" style="display: none; padding: 0; margin: 0px auto;"></div>
 
@@ -1161,6 +1159,19 @@
         //  HELPERS
         // ----------------------------------------------------------------
         function updatePlayerControlsVisibility() {
+            
+            if (isAdminMode) {
+                const saveBtn = document.getElementById("savePicksBtn");
+                const progressContainer = document.getElementById("progress-container");
+                if (saveBtn) saveBtn.classList.add("hidden");
+                if (progressContainer) progressContainer.classList.add("hidden");
+                document.querySelectorAll('.pick-elements').forEach(function(el) {
+                    el.classList.remove('visible');
+                    el.style.display = 'none';
+                });
+                return;
+            }
+
             const playerSelect = document.getElementById("playerSelect");
             const playerName = document.getElementById("playerName");
             const saveBtn = document.getElementById("savePicksBtn");
@@ -1226,16 +1237,18 @@
             if (!isAdminMode) {
                 if (toolbar) toolbar.style.display = 'none';
                 if (loginBtn) loginBtn.style.display = 'inline-block';
+                updatePlayerControlsVisibility();
                 return;
             }
             if (toolbar) {
                 toolbar.style.display = 'block';
                 toolbar.innerHTML = `
-            <button onclick="saveAllScores()" class="btn-orange">💾 Save Scores</button>
-            <button onclick="closeAdminMode()" class="btn-red">Exit Admin Mode</button>
-          `;
+                    <button onclick="saveAllScores()" class="btn-orange">💾 Save Scores</button>
+                    <button onclick="closeAdminMode()" class="btn-red">Exit Admin Mode</button>
+                    `;
             }
             if (loginBtn) loginBtn.style.display = 'none';
+            updatePlayerControlsVisibility();
         }
 
         function isWithinThreeHoursAfter(matchDateTime) {
@@ -1286,6 +1299,9 @@
             isAdminMode = false;
             updateAdminToolbar();
             loadMatchesOnly();
+            setTimeout(() => {
+                updatePlayerControlsVisibility();
+            }, 100);
         }
 
         // ----------------------------------------------------------------
@@ -1605,6 +1621,10 @@
         }
 
         async function savePicks() {
+            if (isAdminMode) {
+                showFloatingNotification("Cannot save picks in admin mode!", true);
+                return;
+            }
             const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
             if (!player) {
                 showFloatingNotification("Enter your name!", true);
@@ -1799,6 +1819,13 @@
             title.onclick = function(e) {
                 e.stopPropagation();
                 toggleRanking();
+                 // Scroll to the ranking after toggling
+                setTimeout(() => {
+                    const wrapperEl = document.getElementById('thirdPlaceRankingWrapper');
+                    if (wrapperEl) {
+                        wrapperEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }, 100);
             };
             wrapper.appendChild(title);
 
@@ -1875,6 +1902,13 @@
                 if (chevron) chevron.textContent = expandedRanking ? '▼' : '▶';
             }
             wrapper.classList.toggle('expanded', expandedRanking);
+
+                // If expanded, scroll to the ranking
+            if (expandedRanking) {
+                setTimeout(() => {
+                    wrapper.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 100);
+            }
         }
 
         // ----------------------------------------------------------------
@@ -1939,13 +1973,17 @@
                 currentPlayers = Array.from(playerSet).sort();
 
                 updatePlayerDropdown();
-
                 loadMatches();
+                
 
                 // Render 3rd place ranking after matches are loaded
                 setTimeout(() => {
                     renderThirdPlaceRanking();
                 }, 50);
+
+                const activeTab = document.querySelector('.stage-tab.active');
+                const currentStage = activeTab ? activeTab.dataset.stage : 'group';
+                populateCountryDropdown(currentStage);
 
                 setTimeout(function() {
                     try {
@@ -2532,8 +2570,13 @@
                     } else {
                         radioHtml = `<div class="radio-group disabled"></div>`;
                     }
-                    const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
-                    const badgeHtml = `
+                let pickElementsHtml = '';
+                if (!isAdminMode) {
+                    pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
+                } else {
+                    pickElementsHtml = `<div class="pick-elements" style="display:none;"></div>`;
+                }
+                const badgeHtml = `
                 <div class="match-badge">
                   <span class="ball-emoji">⚽</span>
                   <span class="badge-text">
@@ -2989,15 +3032,43 @@
 
             let radioHtml = '';
             if (!isCompleted && !isPast) {
-                radioHtml =
-                    `<div class="radio-group"><label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Win</label><label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()"> 🤝 Draw</label><label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Win</label></div>`;
+                // Check if this is a knockout match (no draws allowed)
+                const isKnockout = matchObj.stage === 'Knockout' || 
+                                matchObj.group === 'Round of 32' || 
+                                matchObj.group === 'Round of 16' || 
+                                matchObj.group === 'Quarter-finals' || 
+                                matchObj.group === 'Semi-finals' || 
+                                matchObj.group === '3rd Place Final' || 
+                                matchObj.group === 'Final';
+                
+                if (isKnockout) {
+                    // Only show Win options for knockout matches
+                    radioHtml = `
+                        <div class="radio-group">
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Home Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Visitor Win</label>
+                        </div>`;
+                } else {
+                    // Show all three options for group stage
+                    radioHtml = `
+                        <div class="radio-group">
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()"> 🤝 Draw</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Win</label>
+                        </div>`;
+                }
             } else if (!isCompleted && isPast) {
                 radioHtml = `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
             } else {
                 radioHtml = `<div class="radio-group disabled"></div>`;
             }
 
-            const pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
+            let pickElementsHtml = '';
+            if (!isAdminMode) {
+                pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
+            } else {
+                pickElementsHtml = `<div class="pick-elements" style="display:none;"></div>`;
+            }
 
             const badgeHtml = `
                 <div class="match-badge">
@@ -3348,51 +3419,94 @@
                     const cs = document.getElementById('country-selector-container');
                     if (cs) cs.style.display = 'block';
 
+                    // Reset the dropdown selection when switching tabs
+                    const dropdownSelected = document.getElementById('dropdownSelected');
+                    if (dropdownSelected) {
+                        dropdownSelected.textContent = '🌍 Select a country';
+                        dropdownSelected.classList.remove('active');
+                    }
+                    document.querySelectorAll('.dropdown-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+
+                    let targetContainer = null;
+
                     if (stage === 'group') {
-                        document.getElementById('group-matches').classList.add('active');
+                        targetContainer = document.getElementById('group-matches');
+                        targetContainer.classList.add('active');
                         document.getElementById('knockout-matches').classList.remove('active');
                         document.getElementById('knockout-matches').style.display = '';
+                        
                         // Re-render 3rd place ranking when switching to group tab
                         setTimeout(() => {
                             renderThirdPlaceRanking();
                         }, 50);
                     } else {
-                        const ko = document.getElementById('knockout-matches');
-                        ko.classList.add('active');
+                        targetContainer = document.getElementById('knockout-matches');
+                        targetContainer.classList.add('active');
                         document.getElementById('group-matches').classList.remove('active');
-                        ko.style.display = '';
+                        targetContainer.style.display = '';
 
                         setTimeout(() => {
-                            alignKnockoutColumns(ko);
-                            setupKnockoutScrollbar(ko);
+                            alignKnockoutColumns(targetContainer);
+                            setupKnockoutScrollbar(targetContainer);
                         }, 300);
                     }
+
+                    // Repopulate dropdown with countries from the current stage
+                    populateCountryDropdown(stage);
+
+                    // Scroll to the target container after a short delay
+                    setTimeout(() => {
+                        if (targetContainer) {
+                            const header = targetContainer.querySelector('h3') || 
+                                        targetContainer.querySelector('.stage-tab') ||
+                                        targetContainer;
+                            header.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }
+                    }, 100);
                 });
             });
         }
-
         // ----------------------------------------------------------------
         //  COUNTRY DROPDOWN
         // ----------------------------------------------------------------
-        function populateCountryDropdown() {
+        function populateCountryDropdown(stage = 'group') {
             const list = document.getElementById("dropdownList");
             if (!list) return;
             list.innerHTML = '';
             const countries = new Set();
 
-            Object.values(groupMatches).forEach(matches => {
-                matches.forEach(m => {
-                    if (m.homeTeam) countries.add(m.homeTeam);
-                    if (m.visitorTeam) countries.add(m.visitorTeam);
+            if (stage === 'group') {
+                // Only get countries from group stage matches
+                Object.values(groupMatches).forEach(matches => {
+                    matches.forEach(m => {
+                        if (m.homeTeam) countries.add(m.homeTeam);
+                        if (m.visitorTeam) countries.add(m.visitorTeam);
+                    });
                 });
-            });
-
-            knockoutMatches.forEach(m => {
-                if (m.homeTeam) countries.add(m.homeTeam);
-                if (m.visitorTeam) countries.add(m.visitorTeam);
-            });
+            } else {
+                // Only get countries from knockout matches (resolved teams, not placeholders)
+                knockoutMatches.forEach(m => {
+                    const homeTeam = m.homeTeam || '';
+                    const visitorTeam = m.visitorTeam || '';
+                    // Skip placeholder teams
+                    const isPlaceholder = (team) => {
+                        if (!team) return true;
+                        const placeholderPatterns = [
+                            /3rd/i, /Third/i, /Winner/i, /Loser/i, 
+                            /Runner[- ]?up/i, /1st/i, /2nd/i, /4th/i,
+                            /Match \d+/i
+                        ];
+                        return placeholderPatterns.some(pattern => pattern.test(team));
+                    };
+                    if (homeTeam && !isPlaceholder(homeTeam)) countries.add(homeTeam);
+                    if (visitorTeam && !isPlaceholder(visitorTeam)) countries.add(visitorTeam);
+                });
+            }
 
             let sorted = Array.from(countries).sort();
+            // Move Portugal to the top
             sorted = sorted.filter(c => c !== "Portugal");
             sorted.unshift("Portugal");
 
@@ -3405,8 +3519,15 @@
                 item.onclick = function() { selectCountry(country); };
                 list.appendChild(item);
             });
+            
+            // If no countries found, show a message
+            if (sorted.length === 0) {
+                const item = document.createElement("div");
+                item.className = "dropdown-item";
+                item.innerHTML = '<span style="color:#999;">No countries in this stage</span>';
+                list.appendChild(item);
+            }
         }
-
         function selectCountry(country) {
             if (!country) return;
 
@@ -3420,88 +3541,61 @@
             });
             document.getElementById("dropdownList").style.display = "none";
 
-            let targetGroup = null;
-            let targetMatchIdx = null;
-            let foundInGroup = false;
-            for (let group in groupMatches) {
-                for (let idx = 0; idx < groupMatches[group].length; idx++) {
-                    const m = groupMatches[group][idx];
-                    if (m.homeTeam === country || m.visitorTeam === country) {
-                        targetGroup = group;
-                        targetMatchIdx = idx;
-                        foundInGroup = true;
-                        break;
+            // Determine which stage is currently active
+            const activeTab = document.querySelector('.stage-tab.active');
+            const currentStage = activeTab ? activeTab.dataset.stage : 'group';
+
+            let found = false;
+
+            if (currentStage === 'group') {
+                // Search in group matches
+                let targetGroup = null;
+                let targetMatchIdx = null;
+                
+                for (let group in groupMatches) {
+                    for (let idx = 0; idx < groupMatches[group].length; idx++) {
+                        const m = groupMatches[group][idx];
+                        if (m.homeTeam === country || m.visitorTeam === country) {
+                            targetGroup = group;
+                            targetMatchIdx = idx;
+                            found = true;
+                            break;
+                        }
                     }
+                    if (found) break;
                 }
-                if (foundInGroup) break;
-            }
 
-            if (foundInGroup) {
-                const groupKey = targetGroup.replace(/ /g, '_');
-                Object.keys(groupMatches).forEach(group => {
-                    const key = group.replace(/ /g, '_');
-                    const el = document.getElementById('group-' + key);
-                    if (el) {
-                        el.style.display = "none";
-                        expandedGroups[key] = false;
-                        const block = el.closest('.group-block');
-                        if (block) block.classList.remove('expanded');
+                if (found) {
+                    const groupKey = targetGroup.replace(/ /g, '_');
+                    Object.keys(groupMatches).forEach(group => {
+                        const key = group.replace(/ /g, '_');
+                        const el = document.getElementById('group-' + key);
+                        if (el) {
+                            el.style.display = "none";
+                            expandedGroups[key] = false;
+                            const block = el.closest('.group-block');
+                            if (block) block.classList.remove('expanded');
+                        }
+                    });
+                    const groupElement = document.getElementById('group-' + groupKey);
+                    if (groupElement) {
+                        groupElement.style.display = "block";
+                        expandedGroups[groupKey] = true;
+                        const groupBlock = groupElement.closest('.group-block');
+                        if (groupBlock) {
+                            groupBlock.classList.add('expanded');
+                            groupBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
                     }
-                });
-                const groupElement = document.getElementById('group-' + groupKey);
-                if (groupElement) {
-                    groupElement.style.display = "block";
-                    expandedGroups[groupKey] = true;
-                    const groupBlock = groupElement.closest('.group-block');
-                    if (groupBlock) {
-                        groupBlock.classList.add('expanded');
-                        groupBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }
-                }
-                document.querySelectorAll('.match-card').forEach(card => {
-                    card.style.outline = '';
-                    card.style.background = '';
-                    card.removeAttribute('data-highlight-timeout');
-                });
-                const matchEl = document.getElementById('match-' + groupKey + '-' + targetMatchIdx);
-                if (matchEl) {
-                    matchEl.style.outline = "3px solid gold";
-                    matchEl.style.background = "#fff8dc";
-                    const timeoutId = setTimeout(() => {
-                        matchEl.style.outline = '';
-                        matchEl.style.background = '';
-                        matchEl.removeAttribute('data-highlight-timeout');
-                    }, 5000);
-                    matchEl.setAttribute('data-highlight-timeout', timeoutId);
-                }
-                return;
-            }
-
-            let targetKnockoutMatch = null;
-            for (let idx = 0; idx < knockoutMatches.length; idx++) {
-                const m = knockoutMatches[idx];
-                if (m.homeTeam === country || m.visitorTeam === country) {
-                    targetKnockoutMatch = m;
-                    break;
-                }
-            }
-
-            if (targetKnockoutMatch) {
-                const knockoutTab = document.querySelector('.stage-tab[data-stage="Knockout"]');
-                if (knockoutTab) knockoutTab.click();
-
-                setTimeout(() => {
-                    const matchId = `match-knockout-${targetKnockoutMatch.matchName.replace(/ /g, '_')}`;
-                    const matchEl = document.getElementById(matchId);
+                    document.querySelectorAll('.match-card').forEach(card => {
+                        card.style.outline = '';
+                        card.style.background = '';
+                        card.removeAttribute('data-highlight-timeout');
+                    });
+                    const matchEl = document.getElementById('match-' + groupKey + '-' + targetMatchIdx);
                     if (matchEl) {
-                        document.querySelectorAll('.match-card').forEach(card => {
-                            card.style.outline = '';
-                            card.style.background = '';
-                            card.removeAttribute('data-highlight-timeout');
-                        });
                         matchEl.style.outline = "3px solid gold";
                         matchEl.style.background = "#fff8dc";
-                        matchEl.scrollIntoView({ behavior: "smooth", block: "center" });
                         const timeoutId = setTimeout(() => {
                             matchEl.style.outline = '';
                             matchEl.style.background = '';
@@ -3509,11 +3603,47 @@
                         }, 5000);
                         matchEl.setAttribute('data-highlight-timeout', timeoutId);
                     }
-                }, 500);
+                }
             } else {
-                showFloatingNotification(`Country "${country}" not found in any match.`, true);
+                // Search in knockout matches
+                let targetKnockoutMatch = null;
+                for (let idx = 0; idx < knockoutMatches.length; idx++) {
+                    const m = knockoutMatches[idx];
+                    if (m.homeTeam === country || m.visitorTeam === country) {
+                        targetKnockoutMatch = m;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found && targetKnockoutMatch) {
+                    setTimeout(() => {
+                        const matchId = `match-knockout-${targetKnockoutMatch.matchName.replace(/ /g, '_')}`;
+                        const matchEl = document.getElementById(matchId);
+                        if (matchEl) {
+                            document.querySelectorAll('.match-card').forEach(card => {
+                                card.style.outline = '';
+                                card.style.background = '';
+                                card.removeAttribute('data-highlight-timeout');
+                            });
+                            matchEl.style.outline = "3px solid gold";
+                            matchEl.style.background = "#fff8dc";
+                            matchEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                            const timeoutId = setTimeout(() => {
+                                matchEl.style.outline = '';
+                                matchEl.style.background = '';
+                                matchEl.removeAttribute('data-highlight-timeout');
+                            }, 5000);
+                            matchEl.setAttribute('data-highlight-timeout', timeoutId);
+                        }
+                    }, 500);
+                }
             }
-        }
+
+            if (!found) {
+                showFloatingNotification(`⚠️ "${country}" is not in the ${currentStage} stage!`, true);
+            }
+        }   
 
         // ----------------------------------------------------------------
         //  SHARE & TOGGLE
