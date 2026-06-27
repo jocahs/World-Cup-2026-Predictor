@@ -1588,18 +1588,34 @@
                 const homeInput = document.getElementById(`home-${cleanId}`);
                 const awayInput = document.getElementById(`away-${cleanId}`);
                 if (!homeInput || !awayInput) continue;
+
                 const homeScoreVal = homeInput.value.trim();
                 const awayScoreVal = awayInput.value.trim();
+
+                // If both are empty, treat as deletion
                 if (homeScoreVal === '' && awayScoreVal === '') {
+                    // Check if the match already has a result; if not, skip to avoid unnecessary updates
+                    if (!actualResults[matchName] || !actualResults[matchName].result) {
+                        continue;  // already empty, nothing to change
+                    }
+                    // Add deletion update
+                    scoreUpdates.push({
+                        match: matchName,
+                        homeScore: null,
+                        awayScore: null
+                    });
                     continue;
                 }
+
+                // Otherwise, parse numbers
                 const homeScore = Number(homeScoreVal);
                 const awayScore = Number(awayScoreVal);
                 if (isNaN(homeScore) || isNaN(awayScore)) continue;
+
+                // Check if unchanged
                 const existing = actualResults[matchName] || {};
                 const existingScore = existing.score || "";
-                let existingHome = 0,
-                    existingAway = 0;
+                let existingHome = 0, existingAway = 0;
                 if (existingScore) {
                     const parts = existingScore.split('-');
                     if (parts.length === 2) {
@@ -1608,8 +1624,9 @@
                     }
                 }
                 if (existingScore && homeScore === existingHome && awayScore === existingAway) {
-                    continue;
+                    continue; // no change
                 }
+
                 scoreUpdates.push({
                     match: matchName,
                     homeScore: homeScore,
@@ -2023,7 +2040,7 @@
                         const groupName = match.group || "Other";
                         const matchDisplayName = createMatchNameWithFlags(match.homeTeam, match.visitorTeam);
                         const matchObj = {
-                            matchName: match.name,
+                            matchName: match.name.trim(),
                             date: match.date,
                             time: match.time,
                             displayMatch: matchDisplayName,
