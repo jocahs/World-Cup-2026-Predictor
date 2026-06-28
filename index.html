@@ -274,8 +274,7 @@
             background: #ffffff;
             border: 1px solid #e0e0e0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            min-width: 200px;
-            max-width: 310px;
+            max-width: 315px;
             transition: background 0.2s;
             justify-content: center;
         }
@@ -354,7 +353,7 @@
             flex: 1 1 auto;
             min-width: 0;
             display: grid;
-            grid-template-columns: minmax(100px, 130px) minmax(auto, auto) minmax(auto, 130px);
+            grid-template-columns: minmax(6ch,14ch) minmax(auto, auto) minmax(auto, 14ch);
             gap: 6px 4px;
             align-items: center;
             justify-items: stretch;
@@ -365,7 +364,7 @@
         .match-grid .team-cell {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 2px;
             font-weight: bold;
             color: #333;
             line-height: 1.2;
@@ -986,7 +985,7 @@
             <option value="">-- Select player --</option>
         </select>
         <input type="text" id="playerName" placeholder="Enter your name" style="padding: 8px; font-size: 1em; margin: 5px;text-align: center;" oninput="onPlayerNameEdit()">
-        <p style="line-height: 1.5; margin: 0px auto;">Then select a stage to view the matches and pick your predictions!</p>
+        <p style="line-height: 1.5; margin: 0px auto;">Then select a stage to view the matches and pick your predictions for 1€ each!</p>
     </div>
 
     <div id="leaderboard" class="leaderboard" style="display: none; margin-top: 0;">
@@ -1384,9 +1383,9 @@
                     const isCurrentPlayer = p.name === selectedPlayer;
                     const medal = i === 0 ? "🏆" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
                     const highlightStyle = isCurrentPlayer ?
-                        'background: rgba(255,215,0,0.3); padding: 2px 8px; border-radius: 4px;' : '';
+                        'background: rgba(255,215,0,0.3); padding: 2px 0px; border-radius: 4px;' : '';
                     leaderboardList.innerHTML +=
-                        `<li style="${highlightStyle}"> ${medal} <strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%) <span style="font-weight:bold; color: ${p.score > 0 ? '#FFD700' : '#ff6b6b'};">: ${p.score} point${p.score !== 1 ? 's' : ''}</span>${isCurrentPlayer ? ' 👤' : ''}</li>`;
+                        `<li style="${highlightStyle}">${medal} <strong>${p.name}</strong> - ${p.score}/${p.total} (${percent}%): <span style="font-weight:bold; color: ${p.score > 0 ? '#FFD700' : '#ff6b6b'};">${p.score+p.score}€</span>${isCurrentPlayer ? ' 👤' : ''}</li>`;
                 });
             }
         }
@@ -2722,7 +2721,7 @@
                 const colors = getStageColor(round);
                 html += `
                     <div class="knockout-col" data-round="${round}" style="min-width:200px; flex:0 0 auto;padding:8px 2px;border-radius:8px;display:flex;flex-direction:column;gap:2px;">
-                    <div style="font-weight: bold; text-align: center; padding: 8px; background: ${colors.header}; color: white; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <div style="font-weight: bold; text-align: center; padding: 4px; background: ${colors.header}; color: white; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                     ${round}
                     </div>
                 `;
@@ -3191,7 +3190,7 @@
             if (nextMatches.length === 0) return '';
             let html = `
                 <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 10px;">
-                <h3 style="text-align:center;margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next 8 Matches</h3>
+                <h3 style="text-align:center;margin: 0 0 4px 0; font-size: 1.4em; color: #FFD700;">⚡ Next 8 Matches</h3>
                 <div class="match-cards-wrapper">
         `;
             nextMatches.forEach((tm, idx) => {
