@@ -274,8 +274,7 @@
             background: #ffffff;
             border: 1px solid #e0e0e0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            min-width: 200px;
-            max-width: 310px;
+            max-width: 315px;
             transition: background 0.2s;
             justify-content: center;
         }
@@ -354,7 +353,7 @@
             flex: 1 1 auto;
             min-width: 0;
             display: grid;
-            grid-template-columns: minmax(100px, 130px) minmax(auto, auto) minmax(auto, 130px);
+            grid-template-columns: minmax(6ch,14ch) minmax(auto, auto) minmax(auto, 14ch);
             gap: 6px 4px;
             align-items: center;
             justify-items: stretch;
@@ -365,7 +364,7 @@
         .match-grid .team-cell {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 2px;
             font-weight: bold;
             color: #333;
             line-height: 1.2;
@@ -2722,7 +2721,7 @@
                 const colors = getStageColor(round);
                 html += `
                     <div class="knockout-col" data-round="${round}" style="min-width:200px; flex:0 0 auto;padding:8px 2px;border-radius:8px;display:flex;flex-direction:column;gap:2px;">
-                    <div style="font-weight: bold; text-align: center; padding: 8px; background: ${colors.header}; color: white; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <div style="font-weight: bold; text-align: center; padding: 4px; background: ${colors.header}; color: white; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                     ${round}
                     </div>
                 `;
