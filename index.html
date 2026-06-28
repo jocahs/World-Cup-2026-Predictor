@@ -444,14 +444,6 @@
             max-height: none;
             overflow-y: visible;
         }
-
-        .match-header {
-            display: flex;
-            align-items: baseline;
-            flex-wrap: wrap;
-            margin-bottom: 6px;
-            gap: 6px;
-        }
         .match-name {
             font-weight: bold;
             font-size: 1em;
@@ -459,63 +451,6 @@
             align-items: center;
             gap: 5px;
         }
-        .match-time {
-            color: #666;
-            font-size: 0.8em;
-        }
-        .transmission-link {
-            color: #ff9800;
-            font-size: 0.75em;
-            margin-left: 5px;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .transmission-link:hover {
-            text-decoration: underline;
-            color: #ff5722;
-        }
-        .transmission-info {
-            color: #ff9800;
-            font-size: 0.75em;
-            margin-left: 5px;
-        }
-        .calendar-link-time {
-            color: #4285f4;
-            font-size: 0.8em;
-            text-decoration: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .calendar-link-time:hover {
-            text-decoration: underline;
-            color: #0d47a1;
-        }
-        .match-result-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            min-width: 65px;
-            text-align: center;
-        }
-        .result-home {
-            background: #4CAF50;
-            color: white;
-        }
-        .result-draw {
-            background: #FF9800;
-            color: white;
-        }
-        .result-away {
-            background: #f44336;
-            color: white;
-        }
-        .result-none {
-            background: #999;
-            color: white;
-        }
-
         /* Picks row */
         .picks-row {
             display: flex;
@@ -562,7 +497,7 @@
         .radio-group {
             margin: 6px;
             display: flex;
-            gap: 10px;
+            gap: 3px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -570,8 +505,9 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 3px;
-            font-size: 1em;
+            font-size: 0.9em;
         }
         .radio-group input[type="radio"] {
             cursor: pointer;
@@ -662,17 +598,11 @@
             border: none;
             border-radius: 5px;
         }
-        .btn-blue {
-            background: #4CAF50;
-        }
         .btn-orange {
             background: #FF9800;
         }
         .btn-red {
             background: #f44336;
-        }
-        .btn-purple {
-            background: #9C27B0;
         }
         .btn-group {
             display: flex;
@@ -787,30 +717,7 @@
         .hidden {
             display: none !important;
         }
-        .match-label {
-            font-size: 0.7em;
-            color: #999;
-            text-align: center;
-            margin-bottom: 2px;
-        }
-        .bracket-radio-group {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 4px;
-            font-size: 0.8em;
-        }
-        .bracket-radio-group label {
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-            font-size: 0.9em;
-        }
-        .bracket-radio-group input[type="radio"] {
-            width: 14px;
-            height: 14px;
-            margin: 0;
-        }
+
         html {
             overflow-y: scroll;
             min-width: 320px;
@@ -882,11 +789,6 @@
             outline: 2px solid #FFD700;
             outline-offset: 2px;
         }
-        .group-content {
-            flex-direction: column;
-            width: 100%;
-        }
-
         /* ===== TODAY MATCHES ===== */
         #today-matches-container .match-cards-wrapper {
             display: flex;
@@ -947,9 +849,9 @@
 
         /* ===== RANKING BLOCK ===== */
         .ranking-block {
-            flex: 0 0 auto;           /* don't grow or shrink */
-            width: 100%;              /* fill container up to max-width */
-            max-width: 310px; 
+            flex: 0 0 auto;
+            width: 100%;
+            max-width: 310px;
             background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
             border-color: #3949AB;
             border-radius: 10px;
@@ -979,7 +881,7 @@
         .ranking-block .group-standings th {
             background: #1a252f;
             color: white;
-            border-color: #3a4a5a;
+            border-color: #3a4a5a;            
         }
         .ranking-block .group-standings td {
             background: rgba(255, 255, 255, 0.05);
@@ -1159,6 +1061,19 @@
         let expandedRanking = false;
         let cachedStandings = {};
         let cachedThirdPlace = null;
+
+        // ----- Caching for heavy renders -----
+        let cacheVersion = 0;
+        let cachedRankingHTML = null;
+        let cachedKnockoutHTML = null;
+        let cachedKnockoutVersion = 0;
+
+        function invalidateCaches() {
+            cacheVersion++;
+            cachedRankingHTML = null;
+            cachedKnockoutHTML = null;
+            cachedKnockoutVersion = 0;
+        }
 
         // ===== LAYOUT THRASHING GUARD =====
         let _alignPending = false;
@@ -1370,8 +1285,6 @@
             if (player) {
                 setTimeout(() => {
                     document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked =
-                    false);
                     const userPicks = allPicks.filter(p => p.player === player);
                     userPicks.forEach(pick => {
                         const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
@@ -1392,7 +1305,7 @@
             const selectedFromDropdown = document.getElementById("playerSelect").value;
             const playerName = document.getElementById("playerName").value.trim();
             const hasPlayerSelected = (selectedFromDropdown && selectedFromDropdown !== "") || (playerName && playerName !==
-            "");
+                "");
             if (hasPlayerSelected) {
                 leaderboard.style.display = "block";
                 updateLeaderboard();
@@ -1542,31 +1455,32 @@
             return null;
         }
 
-            // ===== FLAG CACHE =====
-            const flagCache = new Map();
+        // ===== FLAG CACHE =====
+        const flagCache = new Map();
 
-            function getFlagHtml(teamName, width = 20, height = 15) {
-                const cacheKey = `${teamName}|${width}|${height}`;
-                if (flagCache.has(cacheKey)) {
-                    return flagCache.get(cacheKey);
-                }
-                
-                const flagCode = getFlagCode(teamName);
-                let html;
-                if (flagCode) {
-                    html = `<img src="https://flagcdn.com/${width}x${height}/${flagCode}.png" 
+        function getFlagHtml(teamName, width = 20, height = 15) {
+            const cacheKey = `${teamName}|${width}|${height}`;
+            if (flagCache.has(cacheKey)) {
+                return flagCache.get(cacheKey);
+            }
+            
+            const flagCode = getFlagCode(teamName);
+            let html;
+            if (flagCode) {
+                html = `<img src="https://flagcdn.com/${width}x${height}/${flagCode}.png" 
                                 class="team-flag" 
                                 alt="${teamName} flag"
                                 loading="lazy"
                                 width="${width}"
                                 height="${height}"
                                 style="width:${width}px;height:${height}px;">`;
-                } else {
-                    html = `<span style="display:inline-block;width:${width}px;height:${height}px;background:rgba(0,0,0,0.1);border-radius:2px;flex-shrink:0;" title="No flag available"></span>`;
-                }
-                flagCache.set(cacheKey, html);
-                return html;
+            } else {
+                html = `<span style="display:inline-block;width:${width}px;height:${height}px;background:rgba(0,0,0,0.1);border-radius:2px;flex-shrink:0;" title="No flag available"></span>`;
             }
+            flagCache.set(cacheKey, html);
+            return html;
+        }
+
         function createMatchNameWithFlags(homeTeam, visitorTeam) {
             return `${homeTeam} vs ${visitorTeam}`;
         }
@@ -1656,6 +1570,7 @@
                     };
                 });
                 invalidateCache();
+                invalidateCaches(); // clear rendering caches
                 showFloatingNotification(`✅ ${scoreUpdates.length} match score(s) saved!`);
                 closeAdminMode();
             } catch (e) {
@@ -1728,7 +1643,6 @@
 
         function clearAllPicks() {
             document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-            document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked = false);
             updateProgress();
             updatePlayerControlsVisibility();
         }
@@ -1844,6 +1758,7 @@
                     };
                 });
                 invalidateCache();
+                invalidateCaches(); // clear rendering caches
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
                 currentPlayers = Array.from(playerSet).sort();
@@ -1853,7 +1768,6 @@
                 updateTodayMatches();
                 const userPicks = allPicks.filter(p => p.player === player);
                 document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-                document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked = false);
                 userPicks.forEach(pick => {
                     const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
                     if (radio) radio.checked = true;
@@ -1912,19 +1826,47 @@
         }
 
         // ================================================================
-        //  RENDER 3RD PLACE RANKING
+        //  RENDER 3RD PLACE RANKING (cached)
         // ================================================================
         function renderThirdPlaceRanking() {
             const container = document.getElementById('group-matches');
             if (!container) return;
+
+            // Check cache
+            if (cachedRankingHTML !== null && cacheVersion === cachedRankingVersion) {
+                // Reuse cached content
+                let wrapper = document.getElementById('thirdPlaceRankingWrapper');
+                if (!wrapper) {
+                    wrapper = document.createElement('div');
+                    wrapper.id = 'thirdPlaceRankingWrapper';
+                    wrapper.className = 'group-block ranking-block';
+                    if (expandedRanking) wrapper.classList.add('expanded');
+                    container.insertBefore(wrapper, container.firstChild);
+                }
+                // Update content
+                const content = wrapper.querySelector('.ranking-content');
+                if (content) content.innerHTML = cachedRankingHTML;
+                // Ensure title and chevron are correct
+                const title = wrapper.querySelector('.group-title');
+                if (title) {
+                    const chevron = title.querySelector('.chevron');
+                    if (chevron) chevron.textContent = expandedRanking ? '▼' : '▶';
+                }
+                wrapper.classList.toggle('expanded', expandedRanking);
+                return;
+            }
+
+            // Build fresh
             const existing = document.getElementById('thirdPlaceRankingWrapper');
             if (existing) existing.remove();
             const result = getBestThirdPlaceTeamsCached();
             if (!result.ranked || result.ranked.length === 0) return;
+
             const wrapper = document.createElement('div');
             wrapper.id = 'thirdPlaceRankingWrapper';
             wrapper.className = 'group-block ranking-block';
             if (expandedRanking) wrapper.classList.add('expanded');
+
             const title = document.createElement('div');
             title.className = 'group-title';
             title.innerHTML = `
@@ -1942,9 +1884,11 @@
                 }, 100);
             };
             wrapper.appendChild(title);
+
             const content = document.createElement('div');
             content.className = 'ranking-content';
             content.style.display = expandedRanking ? 'block' : 'none';
+
             let html = `
                 <div style="display:flex;justify-content: center;;color:#6FFF75;font-weight:600;margin-bottom:4px;">
                     <span>Top 8 advance to Round of 32</span>
@@ -1953,7 +1897,7 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>Team</th>                        
+                            <th style="text-align: left;padding-left: 20px;">Team <span style="color:#1E88E5">(Group)</th>                        
                             <th>Pts</th>
                             <th>GD</th>
                             <th>GF</th>
@@ -1989,6 +1933,10 @@
             content.innerHTML = html;
             wrapper.appendChild(content);
             container.insertBefore(wrapper, container.firstChild);
+
+            // Cache the HTML
+            cachedRankingHTML = html;
+            cachedRankingVersion = cacheVersion;
         }
 
         function toggleRanking() {
@@ -2033,6 +1981,7 @@
                     };
                 });
                 invalidateCache();
+                invalidateCaches(); // clear rendering caches when data changes
                 groupMatches = {};
                 if (data.matches && data.matches.length > 0) {
                     data.matches.forEach(match => {
@@ -2071,13 +2020,15 @@
                 updatePlayerDropdown();
                 loadMatches();
                 preloadAllFlags();
-                setTimeout(() => {
+                // Use requestAnimationFrame instead of setTimeout
+                requestAnimationFrame(() => {
                     renderThirdPlaceRanking();
-                }, 50);
+                });
                 const activeTab = document.querySelector('.stage-tab.active');
                 const currentStage = activeTab ? activeTab.dataset.stage : 'group';
                 populateCountryDropdown(currentStage);
-                setTimeout(function() {
+                // Use requestAnimationFrame for knockout bracket
+                requestAnimationFrame(() => {
                     try {
                         if (knockoutMatches && knockoutMatches.length > 0) {
                             renderKnockoutBracket();
@@ -2088,14 +2039,12 @@
                     } catch (e) {
                         console.error("Error rendering knockout bracket:", e);
                     }
-                }, 100);
+                });
                 const player =
                     document.getElementById("playerSelect").value.trim() ||
                     document.getElementById("playerName").value.trim();
                 if (player) {
                     document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-                    document.querySelectorAll('.bracket-radio-group input[type="radio"]').forEach(r => r.checked =
-                    false);
                     const userPicks = allPicks.filter(p => p.player === player);
                     userPicks.forEach(pick => {
                         const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
@@ -2378,7 +2327,7 @@
                     <thead>
                     <tr>
                         <th></th>
-                        <th>Team</th>
+                        <th style="text-align: left;">Team</th>
                         <th>P</th>
                         <th>W</th>
                         <th>D</th>
@@ -2630,7 +2579,7 @@
                         for (let pp of playerPicks) {
                             let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
                             let pickClass = isCompleted ? (pp.correct ? 'pick-correct' : 'pick-wrong') :
-                            'pick-pending';
+                                'pick-pending';
                             picksHtml +=
                                 `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${pickClass}">${pickSymbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
                         }
@@ -2638,8 +2587,15 @@
                     }
                     let radioHtml = '';
                     if (!isCompleted && !isPast) {
-                        radioHtml =
-                            `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="updateProgress()"> 🏠 Win</label><label><input type="radio" name="${matchId}" value="X" onchange="updateProgress()"> 🤝 Draw</label><label><input type="radio" name="${matchId}" value="2" onchange="updateProgress()"> ✈️ Win</label></div>`;
+                        // Get the actual team names (they should already be resolved)
+                        const homeTeamName = matchObj.homeTeam || 'Home';
+                        const visitorTeamName = matchObj.visitorTeam || 'Visitor';
+                        radioHtml = `
+                        <div class="radio-group">
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()">${homeTeamName}</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()">🤝 Draw</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()">${visitorTeamName}</label>
+                        </div>`;
                     } else if (!isCompleted && isPast) {
                         radioHtml =
                             `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
@@ -2680,14 +2636,28 @@
         }
 
         // ================================================================
-        //  RENDER KNOCKOUT BRACKET (OPTIMISED)
+        //  RENDER KNOCKOUT BRACKET (cached)
         // ================================================================
         function renderKnockoutBracket() {
             const container = document.getElementById("knockout-matches");
             if (!container) return;
-            container.innerHTML = "";
+
+            // Check cache
+            if (cachedKnockoutHTML !== null && cachedKnockoutVersion === cacheVersion) {
+                container.innerHTML = cachedKnockoutHTML;
+                // Re-run alignment and scrollbar setup after DOM update
+                requestAnimationFrame(() => {
+                    scheduleKnockoutAlignment(container);
+                    setupKnockoutScrollbar(container);
+                });
+                return;
+            }
+
+            // Build fresh
             if (!knockoutMatches || knockoutMatches.length === 0) {
                 container.innerHTML = "<p style='text-align:center; padding:20px;'>No knockout matches loaded.</p>";
+                cachedKnockoutHTML = container.innerHTML;
+                cachedKnockoutVersion = cacheVersion;
                 return;
             }
 
@@ -2737,15 +2707,15 @@
             }
 
             let html = `
-                    <div style="padding: 5px; margin: 5px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
-                    <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
-                    
-                    <div id="knockout-scrollbar" class="knockout-scrollbar">
-                    <div></div>
-                    </div>
+                <div style="padding: 5px; margin: 5px; margin-top: 0px; background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); border-radius: 8px; max-width: 100%;">
+                <h3 style="text-align:center; margin-top:0;margin-bottom:5px; color: #FFD700;">🏆 Knockout stage</h3>
+                
+                <div id="knockout-scrollbar" class="knockout-scrollbar">
+                <div></div>
+                </div>
 
-                    <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0; width: 100%;">
-                `;
+                <div class="scrollable-container" style="display: flex; flex-direction: row; gap: 0px; align-items: flex-start; padding: 0px 0; width: 100%;">
+            `;
 
             sortedRounds.forEach((round, colIdx) => {
                 const matches = roundsMap[round];
@@ -2768,13 +2738,17 @@
             html += `</div></div>`;
             container.innerHTML = html;
 
-            // ===== Defer layout-heavy alignment =====
+            // Cache the HTML
+            cachedKnockoutHTML = container.innerHTML;
+            cachedKnockoutVersion = cacheVersion;
+
+            // Defer layout-heavy alignment
             scheduleKnockoutAlignment(container);
             setupKnockoutScrollbar(container);
         }
 
         // ================================================================
-        //  OPTIMISED ALIGNMENT – restores original working logic
+        //  OPTIMISED ALIGNMENT – now with batch reads/writes
         // ================================================================
         function scheduleKnockoutAlignment(container) {
             if (_alignRAF) {
@@ -2793,9 +2767,6 @@
             });
         }
 
-        // ----------------------------------------------------------------
-        //  ALIGNMENT ENGINE – exact copy of the old working version
-        // ----------------------------------------------------------------
         function alignKnockoutColumns(container) {
             const columns = container.querySelectorAll('.knockout-col');
             if (!columns || columns.length < 2) return;
@@ -2857,7 +2828,7 @@
         }
 
         // ================================================================
-        //  CREATE KNOCKOUT CARD
+        //  CREATE KNOCKOUT CARD (unchanged, but used by renderKnockoutBracket)
         // ================================================================
         function createKnockoutCard(matchObj, stageColors) {
             const actual = actualResults[matchObj.matchName];
@@ -3045,19 +3016,27 @@
                     matchObj.group === 'Final';
 
                 if (isKnockout) {
+                    // Get the actual team names (they should already be resolved)
+                    const homeTeamName = matchObj.homeTeam || 'Home';
+                    const visitorTeamName = matchObj.visitorTeam || 'Visitor';
+                    // Get flags for the teams
+                    const homeFlag = getFlagHtml(homeTeamName);
+                    const awayFlag = getFlagHtml(visitorTeamName);
+                    
                     radioHtml = `
                         <div class="radio-group">
-                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Home Win</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Visitor Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeamName}</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeamName}</label>
                         </div>`;
                 } else {
                     radioHtml = `
                         <div class="radio-group">
-                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeamName}</label>
                             <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()"> 🤝 Draw</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeamName}</label>
                         </div>`;
                 }
+            
             } else if (!isCompleted && isPast) {
                 radioHtml = `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
             } else {
@@ -3211,10 +3190,10 @@
             const nextMatches = getNextMatches();
             if (nextMatches.length === 0) return '';
             let html = `
-                    <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 10px;">
-                    <h3 style="text-align:center;margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next 8 Matches</h3>
-                    <div class="match-cards-wrapper">
-            `;
+                <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 10px;">
+                <h3 style="text-align:center;margin: 0 0 4px 0; font-size: 1.1em; color: #FFD700;">⚡ Next 8 Matches</h3>
+                <div class="match-cards-wrapper">
+        `;
             nextMatches.forEach((tm, idx) => {
                 const groupId = `group-${tm.group.replace(/ /g, '_')}`;
                 const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
@@ -3433,18 +3412,20 @@
                         targetContainer.classList.add('active');
                         document.getElementById('knockout-matches').classList.remove('active');
                         document.getElementById('knockout-matches').style.display = '';
-                        setTimeout(() => {
+                        // Use requestAnimationFrame for rendering
+                        requestAnimationFrame(() => {
                             renderThirdPlaceRanking();
-                        }, 50);
+                        });
                     } else {
                         targetContainer = document.getElementById('knockout-matches');
                         targetContainer.classList.add('active');
                         document.getElementById('group-matches').classList.remove('active');
                         targetContainer.style.display = '';
-                        setTimeout(() => {
+                        // Schedule after layout
+                        requestAnimationFrame(() => {
                             scheduleKnockoutAlignment(targetContainer);
                             setupKnockoutScrollbar(targetContainer);
-                        }, 300);
+                        });
                     }
                     populateCountryDropdown(stage);
                     setTimeout(() => {
@@ -3671,6 +3652,7 @@
                 togglePlayerSelection();
             }
         }
+
         function preloadAllFlags() {
             const teamNames = new Set();
             
@@ -3702,6 +3684,7 @@
                 }
             });
         }
+
         // ================================================================
         //  KNOCKOUT SCROLLBAR (lightweight)
         // ================================================================
