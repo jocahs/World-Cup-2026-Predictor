@@ -497,7 +497,7 @@
         .radio-group {
             margin: 6px;
             display: flex;
-            gap: 10px;
+            gap: 3px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -505,8 +505,9 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 3px;
-            font-size: 1em;
+            font-size: 0.9em;
         }
         .radio-group input[type="radio"] {
             cursor: pointer;
@@ -2586,8 +2587,15 @@
                     }
                     let radioHtml = '';
                     if (!isCompleted && !isPast) {
-                        radioHtml =
-                            `<div class="radio-group"><label><input type="radio" name="${matchId}" value="1" onchange="updateProgress()"> 🏠 Win</label><label><input type="radio" name="${matchId}" value="X" onchange="updateProgress()"> 🤝 Draw</label><label><input type="radio" name="${matchId}" value="2" onchange="updateProgress()"> ✈️ Win</label></div>`;
+                        // Get the actual team names (they should already be resolved)
+                        const homeTeamName = matchObj.homeTeam || 'Home';
+                        const visitorTeamName = matchObj.visitorTeam || 'Visitor';
+                        radioHtml = `
+                        <div class="radio-group">
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()">${homeTeamName}</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()">🤝 Draw</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()">${visitorTeamName}</label>
+                        </div>`;
                     } else if (!isCompleted && isPast) {
                         radioHtml =
                             `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
@@ -3008,19 +3016,27 @@
                     matchObj.group === 'Final';
 
                 if (isKnockout) {
+                    // Get the actual team names (they should already be resolved)
+                    const homeTeamName = matchObj.homeTeam || 'Home';
+                    const visitorTeamName = matchObj.visitorTeam || 'Visitor';
+                    // Get flags for the teams
+                    const homeFlag = getFlagHtml(homeTeamName);
+                    const awayFlag = getFlagHtml(visitorTeamName);
+                    
                     radioHtml = `
                         <div class="radio-group">
-                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Home Win</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Visitor Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeamName}</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeamName}</label>
                         </div>`;
                 } else {
                     radioHtml = `
                         <div class="radio-group">
-                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> 🏠 Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeamName}</label>
                             <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()"> 🤝 Draw</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ✈️ Win</label>
+                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeamName}</label>
                         </div>`;
                 }
+            
             } else if (!isCompleted && isPast) {
                 radioHtml = `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
             } else {
