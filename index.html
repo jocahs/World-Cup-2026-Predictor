@@ -277,6 +277,7 @@
             max-width: 315px;
             transition: background 0.2s;
             justify-content: center;
+            text-align: center;
         }
         .match-card.completed {
             background: #e8f5e9;
@@ -332,15 +333,11 @@
             font-size: 0.7em;
             letter-spacing: 0.02em;
         }
-        .match-badge .badge-text .group-letter .match-num {
-            font-size: 0.9em;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-        .match-card.completed .match-badge .ball-emoji {
+
+        .match-card.completed {
             filter: drop-shadow(0 2px 6px rgba(76, 175, 80, 0.6));
         }
-        .match-card.completed .match-badge .badge-text {
+        .match-card.completed {
             color: #6FFF75;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.8);
         }
@@ -353,22 +350,22 @@
             flex: 1 1 auto;
             min-width: 0;
             display: grid;
-            grid-template-columns: minmax(6ch,14ch) minmax(auto, auto) minmax(auto, 14ch);
+            grid-template-columns: 125px minmax(20px, auto) minmax(20px, auto) 125px;
             gap: 6px 4px;
             align-items: center;
-            justify-items: stretch;
+            justify-items: center;
             width: 100%;
             box-sizing: border-box;
             align-content: center;
+            text-align: center;
         }
         .match-grid .team-cell {
             display: flex;
             align-items: center;
-            gap: 2px;
             font-weight: bold;
             color: #333;
             line-height: 1.2;
-            justify-content: flex-start;
+            justify-content: left;
         }
         .match-grid .team-cell:last-child {
             justify-content: flex-end;
@@ -380,7 +377,6 @@
         .match-grid .team-cell .team-name {
             width: fit-content;
             word-break: break-word;
-            text-align: left;
         }
         .match-grid .score {
             font-weight: bold;
@@ -396,35 +392,43 @@
             border: 1px solid #ccc;
             text-align: center;
         }
-        .match-grid .datetime,
         .match-grid .result-symbol,
         .match-grid .transmission {
             width: 100%;
-            text-align: center;
         }
         .match-grid .datetime a {
             color: #D4A017;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: bold;            
+            font-size: 0.75em;
         }
         .match-grid .transmission a {
             color: #2A63EB;
             text-decoration: none;
             font-weight: bold;
-            word-break: break-word;
-            max-width: 13ch;
             width: fit-content;
             display: inline-block;
-            text-align: center;
+            font-size: 0.75em;
+            word-break:break-word;
+            max-width: 13ch;  
+            text-align: center;      
         }
         .match-grid .transmission span {
-            color: #000;
-            word-break: break-word;
-            max-width: 13ch;
+            color: #861493;
             width: fit-content;
             display: inline-block;
+            font-weight: bold;            
+            font-size: 0.75em;
+            word-break:break-word;
+            max-width: 13ch;     
+        }
+        .match-grid .match-number {
+            grid-column: 2 / 4;  /* spans columns 2 and 3 */
             text-align: center;
             font-weight: bold;
+            font-size: 0.9em;
+            color: #666;
+            opacity: 0.8;
         }
 
         .match-cards-wrapper {
@@ -529,9 +533,9 @@
             width: 20px;
             height: 15px;
             vertical-align: middle;
-            margin-right: 3px;
             border-radius: 2px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin: auto 4px auto;
         }
 
         .player-select {
@@ -1265,6 +1269,7 @@
             const password = prompt("Enter admin password to edit scores:");
             if (password === ADMIN_PASSWORD) {
                 isAdminMode = true;
+                invalidateCaches();
                 updateAdminToolbar();
                 loadMatchesOnly();
             } else if (password) {
@@ -1480,6 +1485,7 @@
             return html;
         }
 
+        
         function createMatchNameWithFlags(homeTeam, visitorTeam) {
             return `${homeTeam} vs ${visitorTeam}`;
         }
@@ -1568,7 +1574,6 @@
                         score: `${home}-${away}`
                     };
                 });
-                invalidateCache();
                 invalidateCaches(); // clear rendering caches
                 showFloatingNotification(`✅ ${scoreUpdates.length} match score(s) saved!`);
                 closeAdminMode();
@@ -1756,7 +1761,6 @@
                         result: r.result != null ? String(r.result).trim() : ""
                     };
                 });
-                invalidateCache();
                 invalidateCaches(); // clear rendering caches
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
@@ -1980,7 +1984,6 @@
                     };
                 });
                 invalidateCache();
-                invalidateCaches(); // clear rendering caches when data changes
                 groupMatches = {};
                 if (data.matches && data.matches.length > 0) {
                     data.matches.forEach(match => {
@@ -2546,31 +2549,31 @@
                             const transText = matchObj.transmission;
                             if (transText.includes('LiveModeTV')) {
                                 transHtml =
-                                    `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
+                                    `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" title="Watch on Youtube">${transText}</a>`;
                             } else {
                                 transHtml =
-                                    `<span style="color:#000;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
+                                    `<span>${transText}</span>`;
                             }
                         }
                         const scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
                         const scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
                         gridHtml = `
-                <div class="match-grid">
-                  <div class="team-cell">
-                    ${homeFlagHtml}
-                    <span class="team-name">${homeTeam}</span>
-                  </div>
-                  ${scoreLeftHtml}
-                  <div class="datetime">${calHtml}</div>
+                            <div class="match-grid">
+                            <div class="team-cell">
+                                ${homeFlagHtml}
+                                <span class="team-name">${homeTeam}</span>
+                            </div>
+                            ${scoreLeftHtml}
+                            <div class="datetime">${calHtml}</div>
 
-                  <div class="team-cell">
-                    ${awayFlagHtml}
-                    <span class="team-name">${visitorTeam}</span>
-                  </div>
-                  ${scoreRightHtml}
-                  <div class="transmission">${transHtml}</div>
-                </div>
-              `;
+                            <div class="team-cell">
+                                ${awayFlagHtml}
+                                <span class="team-name">${visitorTeam}</span>
+                            </div>
+                            ${scoreRightHtml}
+                            <div class="transmission">${transHtml}</div>
+                            </div>
+                        `;
                     }
                     let picksHtml = '';
                     if (playerPicks.length > 0) {
@@ -2826,9 +2829,6 @@
             }
         }
 
-        // ================================================================
-        //  CREATE KNOCKOUT CARD (unchanged, but used by renderKnockoutBracket)
-        // ================================================================
         function createKnockoutCard(matchObj, stageColors) {
             const actual = actualResults[matchObj.matchName];
             const actualResult = actual ? actual.result : null;
@@ -2914,22 +2914,22 @@
                     }
                 }
                 gridHtml = `
-            <div class="match-grid">
-              <div class="team-cell">
-                ${homeFlagHtml}
-                <span class="team-name">${homeTeam}</span>
-              </div>
-              ${scoreLeftHtml}
-              <div class="datetime">${displayDateTime}</div>
+                    <div class="match-grid">
+                    <div class="team-cell">
+                        ${homeFlagHtml}
+                        <span class="team-name">${homeTeam}</span>
+                    </div>
+                    ${scoreLeftHtml}
+                    <div class="datetime">${displayDateTime}</div>
 
-              <div class="team-cell">
-                ${awayFlagHtml}
-                <span class="team-name">${visitorTeam}</span>
-              </div>
-              ${scoreRightHtml}
-              <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
-            </div>
-          `;
+                    <div class="team-cell">
+                        ${awayFlagHtml}
+                        <span class="team-name">${visitorTeam}</span>
+                    </div>
+                    ${scoreRightHtml}
+                    <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
+                    </div>
+                `;
             } else {
                 let dateTimeStr = '';
                 let calHtml = '';
@@ -2954,7 +2954,7 @@
                         matchObj.transmission);
                     if (calUrl) {
                         calHtml =
-                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
+                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" title="Add to calendar">${dateTimeStr}</a>`;
                     } else {
                         calHtml =
                             `<span style="color:#D4A017;font-weight:bold;">${dateTimeStr}</span>`;
@@ -2965,31 +2965,30 @@
                     const transText = matchObj.transmission;
                     if (transText.includes('LiveModeTV')) {
                         transHtml =
-                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
+                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();"  title="Watch on Youtube">${transText}</a>`;
                     } else {
                         transHtml =
-                            `<span style="color:#000;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
+                            `<span>${transText}</span>`;
                     }
                 }
                 scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
                 scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
                 gridHtml = `
-            <div class="match-grid">
-              <div class="team-cell">
-                ${homeFlagHtml}
-                <span class="team-name">${homeTeam}</span>
-              </div>
-              ${scoreLeftHtml}
-              <div class="datetime">${calHtml}</div>
-
-              <div class="team-cell">
-                ${awayFlagHtml}
-                <span class="team-name">${visitorTeam}</span>
-              </div>
-              ${scoreRightHtml}
-              <div class="transmission">${transHtml}</div>
-            </div>
-          `;
+                    <div class="match-grid">
+                        <div class="team-cell">
+                            ${homeFlagHtml}
+                            <span class="team-name">${homeTeam}</span>
+                        </div>
+                        ${scoreLeftHtml}
+                        ${scoreRightHtml}
+                        <div class="team-cell" style="justify-content:right;">
+                            <span class="team-name">${visitorTeam}</span>${awayFlagHtml}                        
+                        </div>
+                        <div class="datetime">${calHtml}</div>
+                        <div class="match-number">#${matchNumber}</div>              
+                        <div class="transmission">${transHtml}</div>
+                    </div>
+                `;
             }
 
             let picksHtml = '';
@@ -3049,20 +3048,10 @@
                 pickElementsHtml = `<div class="pick-elements" style="display:none;"></div>`;
             }
 
-            const badgeHtml = `
-                <div class="match-badge">
-                  <span class="ball-emoji">⚽</span>
-                  <span class="badge-text">
-                    ${groupLetter ? `<span class="group-letter">${groupLetter}</span>` : ''}
-                    ${matchNumber ? `<span class="match-num">${matchNumber}</span>` : ''}
-                  </span>
-                </div>
-              `;
-
             let rowStyle = '';
             if (!isCompleted && stageColors) {
                 rowStyle =
-                    ` style="background: ${stageColors.bg}; border-radius: 6px; padding: 5px 5px; border-left: 4px solid ${stageColors.header};"`;
+                    ` style="background: ${stageColors.bg}; border-radius: 6px; padding: 5px 0px; border-left: 4px solid ${stageColors.header};"`;
             }
 
             const matchDiv = document.createElement("div");
@@ -3078,7 +3067,6 @@
 
             matchDiv.innerHTML = `
         <div class="match-card-row"${rowStyle}>
-          ${badgeHtml}
           ${gridHtml}
         </div>
         ${pickElementsHtml}
@@ -3245,10 +3233,10 @@
                     const transText = tm.match.transmission;
                     if (transText.includes('LiveModeTV')) {
                         transHtml =
-                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
+                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();"  title="Watch on Youtube">${transText}</a>`;
                     } else {
                         transHtml =
-                            `<span style="color:#000;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
+                            `<span>${transText}</span>`;
                     }
                 }
                 const scoreLeftHtml = `<div class="score"></div>`;
