@@ -274,14 +274,12 @@
             background: #ffffff;
             border: 1px solid #e0e0e0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            max-width: 315px;
+            max-width: 310px;
             transition: background 0.2s;
             justify-content: center;
+            text-align: center;
         }
-        .match-card.completed {
-            background: #e8f5e9;
-            border-left: 4px solid #FFD700;
-        }
+
         .match-card-row {
             display: flex;
             align-items: center;
@@ -289,98 +287,44 @@
             width: auto;
         }
 
-        /* Soccer ball badge */
-        .match-badge {
-            flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4em;
-            line-height: 1;
-            user-select: none;
-            margin: 0px;
-        }
-        .ball-emoji {
-            font-size: 1.75em;
-            line-height: 1;
-            display: block;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-            transition: transform 0.2s;
-            padding: 0 4px;
-        }
-        .match-card:hover .match-badge .ball-emoji {
-            transform: scale(1.05);
-        }
-        .match-badge .badge-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.1;
-            text-align: center;
-            font-weight: 900;
-            color: #FFD700;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.7);
-            pointer-events: none;
-            font-size: 0.7em;
-            letter-spacing: 0.02em;
-        }
-        .match-badge .badge-text .group-letter .match-num {
-            font-size: 0.9em;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-        .match-card.completed .match-badge .ball-emoji {
-            filter: drop-shadow(0 2px 6px rgba(76, 175, 80, 0.6));
-        }
-        .match-card.completed .match-badge .badge-text {
-            color: #6FFF75;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.8);
+        .match-card.completed {
+            background: #e8f5e9;
+            border-left: 4px solid #FFD700;
         }
         .match-card.completed .radio-group {
             display: none;
         }
 
-        /* Grid inside card */
         .match-grid {
             flex: 1 1 auto;
             min-width: 0;
             display: grid;
-            grid-template-columns: minmax(6ch,14ch) minmax(auto, auto) minmax(auto, 14ch);
+            grid-template-columns: 125px minmax(20px, auto) minmax(20px, auto) 125px;
             gap: 6px 4px;
             align-items: center;
-            justify-items: stretch;
+            justify-items: center;
             width: 100%;
             box-sizing: border-box;
             align-content: center;
+            text-align: center;
+            justify-content: center;
+            padding: 4px;
         }
         .match-grid .team-cell {
             display: flex;
             align-items: center;
-            gap: 2px;
             font-weight: bold;
             color: #333;
             line-height: 1.2;
-            justify-content: flex-start;
+            max-width: 14ch;
         }
-        .match-grid .team-cell:last-child {
+        .match-grid .team-cell.away {
             justify-content: flex-end;
-        }
-        .match-grid .team-cell .team-flag {
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            flex-shrink: 0;
+
         }
         .match-grid .team-cell .team-name {
             width: fit-content;
             word-break: break-word;
-            text-align: left;
         }
         .match-grid .score {
             font-weight: bold;
@@ -396,35 +340,38 @@
             border: 1px solid #ccc;
             text-align: center;
         }
-        .match-grid .datetime,
-        .match-grid .result-symbol,
-        .match-grid .transmission {
-            width: 100%;
-            text-align: center;
-        }
+
         .match-grid .datetime a {
             color: #D4A017;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: bold;            
+            font-size: 0.85em;
         }
         .match-grid .transmission a {
             color: #2A63EB;
             text-decoration: none;
             font-weight: bold;
-            word-break: break-word;
-            max-width: 13ch;
             width: fit-content;
             display: inline-block;
-            text-align: center;
+            font-size: 0.8em;
+            text-align: center;      
         }
         .match-grid .transmission span {
-            color: #000;
-            word-break: break-word;
-            max-width: 13ch;
+            color: #861493;
             width: fit-content;
             display: inline-block;
+            font-weight: bold;            
+            font-size: 0.8em;
+            word-break:break-word;
+            max-width: 13ch;     
+        }
+        .match-grid .match-number {
+            grid-column: 2 / 4;  /* spans columns 2 and 3 */
             text-align: center;
             font-weight: bold;
+            font-size: 0.85em;
+            color: #666;
+            opacity: 0.8;
         }
 
         .match-cards-wrapper {
@@ -529,9 +476,9 @@
             width: 20px;
             height: 15px;
             vertical-align: middle;
-            margin-right: 3px;
             border-radius: 2px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin: auto 4px auto;
         }
 
         .player-select {
@@ -1265,6 +1212,7 @@
             const password = prompt("Enter admin password to edit scores:");
             if (password === ADMIN_PASSWORD) {
                 isAdminMode = true;
+                invalidateCaches();
                 updateAdminToolbar();
                 loadMatchesOnly();
             } else if (password) {
@@ -1464,24 +1412,184 @@
             }
             
             const flagCode = getFlagCode(teamName);
-            let html;
+            let html = ' ';
             if (flagCode) {
                 html = `<img src="https://flagcdn.com/${width}x${height}/${flagCode}.png" 
                                 class="team-flag" 
                                 alt="${teamName} flag"
                                 loading="lazy"
                                 width="${width}"
-                                height="${height}"
-                                style="width:${width}px;height:${height}px;">`;
-            } else {
-                html = `<span style="display:inline-block;width:${width}px;height:${height}px;background:rgba(0,0,0,0.1);border-radius:2px;flex-shrink:0;" title="No flag available"></span>`;
+                                height="${height}">`;
             }
             flagCache.set(cacheKey, html);
             return html;
         }
 
+        
         function createMatchNameWithFlags(homeTeam, visitorTeam) {
             return `${homeTeam} vs ${visitorTeam}`;
+        }
+
+        // ================================================================
+        //  MATCH CARD BUILDER (UNIFIED)
+        // ================================================================
+        function getMatchNumberDisplay(matchName, stage, group) {
+            const num = (matchName.match(/\d+/) || [])[0];
+            if (!num) return '';
+            return `#${num}`;
+        }
+
+        function buildMatchCard(matchObj, group, stage, options) {
+            const {
+                isCompleted,
+                isPast,
+                actualResult,
+                actualScore,
+                playerPicks,
+                showPicks,
+                showRadios,
+                adminMode
+            } = options;
+
+            const homeTeam = matchObj.homeTeam || '';
+            const visitorTeam = matchObj.visitorTeam || '';
+
+            // Compute title for Round of 32 only
+            let homeTitle = '';
+            let awayTitle = '';
+            if (stage === 'Knockout' && matchObj.group === 'Round of 32') {
+                if (matchObj.originalHome) homeTitle = "Group " + matchObj.originalHome;
+                if (matchObj.originalAway) awayTitle = "Group " + matchObj.originalAway;
+            }
+
+            const homeFlag = getFlagHtml(homeTeam);
+            const awayFlag = getFlagHtml(visitorTeam);
+
+            const matchNumberDisplay = getMatchNumberDisplay(matchObj.matchName, stage, group);
+
+            // Date / time / calendar link
+            let dateTimeHtml = '';
+            let calUrl = null;
+            if (matchObj.date && matchObj.time) {
+                const relativeDate = getRelativeDate(matchObj.date);
+                let display = relativeDate || (() => {
+                    const parts = matchObj.date.split('/');
+                    if (parts.length === 3) {
+                        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        const m = parseInt(parts[1]) - 1;
+                        const d = parseInt(parts[2]);
+                        return `${monthNames[m]} ${d}`;
+                    }
+                    return matchObj.date;
+                })();
+                display += ` ${matchObj.time}`;
+                calUrl = getGoogleCalendarUrl(matchObj.matchName, homeTeam, visitorTeam, matchObj.date, matchObj.time, matchObj.transmission);
+                dateTimeHtml = calUrl
+                    ? `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" title="Add to calendar">${display}</a>`
+                    : `<span style="color:#D4A017;font-weight:bold;">${display}</span>`;
+            }
+
+            // Transmission or result symbol
+            let transHtml = '';
+            if (isCompleted) {
+                const sym = getResultSymbol(actualResult);
+                let color = '#4CAF50';
+                if (actualResult === 'X') color = '#FF9800';
+                else if (actualResult === '2') color = '#f44336';
+                transHtml = `<span style="font-size: 1.2rem;color:${color};">${sym}</span>`;
+            } else if (!isPast && matchObj.transmission) {
+                const text = matchObj.transmission;
+                if (text.includes('LiveModeTV')) {
+                    transHtml = `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" title="Watch on Youtube">${text}</a>`;
+                } else {
+                    transHtml = `<span>${text}</span>`;
+                }
+            }
+
+            // Score inputs (admin) or static scores (completed) or empty
+            let homeScoreVal = '', awayScoreVal = '';
+            if (isCompleted && actualScore) {
+                const parts = actualScore.split('-');
+                if (parts.length === 2) {
+                    homeScoreVal = parts[0].trim();
+                    awayScoreVal = parts[1].trim();
+                }
+            }
+            const scoreHomeHtml = adminMode
+                ? `<input type="text" id="home-${getMatchInputId(matchObj.matchName)}" class="score-input" value="${homeScoreVal}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`
+                : `<div class="score">${homeScoreVal}</div>`;
+            const scoreAwayHtml = adminMode
+                ? `<input type="text" id="away-${getMatchInputId(matchObj.matchName)}" class="score-input" value="${awayScoreVal}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`
+                : `<div class="score">${awayScoreVal}</div>`;
+
+            // Build the grid – fixed 4 columns, 2 rows
+            const gridHtml = `
+                <div class="match-grid">
+                    <div class="team-cell">${homeFlag} <span class="team-name"${homeTitle ? ` title="${homeTitle}"` : ''}>${homeTeam}</span></div>
+                    ${scoreHomeHtml}
+                    ${scoreAwayHtml}
+                    <div class="team-cell away">${awayFlag} <span class="team-name"${awayTitle ? ` title="${awayTitle}"` : ''}>${visitorTeam}</span></div>
+                    <div class="datetime">${dateTimeHtml}</div>
+                    <div class="match-number">${matchNumberDisplay}</div>
+                    <div class="transmission">${transHtml}</div>
+                    <!-- fourth cell of row 2 intentionally left empty -->
+                </div>
+            `;
+
+            // Player picks row
+            let picksHtml = '';
+            if (showPicks && playerPicks && playerPicks.length > 0) {
+                picksHtml = '<div class="picks-row">';
+                for (let pp of playerPicks) {
+                    let symbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
+                    let cls = isCompleted ? (pp.correct ? 'pick-correct' : 'pick-wrong') : 'pick-pending';
+                    picksHtml += `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${cls}">${symbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
+                }
+                picksHtml += '</div>';
+            }
+
+            // Radio buttons
+            let radioHtml = '';
+            if (showRadios && !adminMode) {
+                if (isPast) {
+                    radioHtml = `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
+                } else {
+                    const isKnockout = stage === 'Knockout' || matchObj.group === 'Round of 32' || matchObj.group === 'Round of 16' ||
+                                        matchObj.group === 'Quarter-finals' || matchObj.group === 'Semi-finals' ||
+                                        matchObj.group === '3rd Place Final' || matchObj.group === 'Final';
+                    if (isKnockout) {
+                        radioHtml = `
+                            <div class="radio-group">
+                                <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeam}</label>
+                                <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeam}</label>
+                            </div>`;
+                    } else {
+                        radioHtml = `
+                            <div class="radio-group">
+                                <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeam}</label>
+                                <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()"> 🤝 Draw</label>
+                                <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeam}</label>
+                            </div>`;
+                    }
+                }
+            }
+
+            const pickElementsHtml = (showPicks || showRadios) && !adminMode
+                ? `<div class="pick-elements">${picksHtml}${radioHtml}</div>`
+                : '';
+
+            // Build card container
+            const cardClass = `match-card${isCompleted ? ' completed' : ''}`;
+            const cardId = `match-${stage === 'group' ? group.replace(/ /g, '_') : 'knockout'}-${matchObj.matchName.replace(/ /g, '_')}`;
+
+            return `
+                <div class="${cardClass}" id="${cardId}">
+                    <div class="match-card-row">
+                        ${gridHtml}
+                    </div>
+                    ${pickElementsHtml}
+                </div>
+            `;
         }
 
         // ================================================================
@@ -1568,7 +1676,6 @@
                         score: `${home}-${away}`
                     };
                 });
-                invalidateCache();
                 invalidateCaches(); // clear rendering caches
                 showFloatingNotification(`✅ ${scoreUpdates.length} match score(s) saved!`);
                 closeAdminMode();
@@ -1756,7 +1863,6 @@
                         result: r.result != null ? String(r.result).trim() : ""
                     };
                 });
-                invalidateCache();
                 invalidateCaches(); // clear rendering caches
                 const playerSet = new Set();
                 allPicks.forEach(p => playerSet.add(p.player));
@@ -1980,7 +2086,6 @@
                     };
                 });
                 invalidateCache();
-                invalidateCaches(); // clear rendering caches when data changes
                 groupMatches = {};
                 if (data.matches && data.matches.length > 0) {
                     data.matches.forEach(match => {
@@ -2217,6 +2322,9 @@
                 return teamPlaceholder;
             };
             knockoutMatches.forEach(match => {
+                match.originalHome = match.homeTeam;
+                match.originalAway = match.visitorTeam;
+
                 const resolvedHome = resolvePlaceholder(match.homeTeam);
                 const resolvedAway = resolvePlaceholder(match.visitorTeam);
                 if (resolvedHome !== match.homeTeam || resolvedAway !== match.visitorTeam) {
@@ -2373,7 +2481,7 @@
         }
 
         // ================================================================
-        //  LOAD MATCHES (render group)
+        //  LOAD MATCHES (render group) – UPDATED with buildMatchCard
         // ================================================================
         function loadMatches() {
             const container = document.getElementById("group-matches");
@@ -2413,18 +2521,13 @@
                 const matchesWrapper = document.createElement("div");
                 matchesWrapper.className = "match-cards-wrapper";
                 groupMatches[group].forEach((matchObj, idx) => {
-                    const matchId = matchObj.matchName;
                     const actual = actualResults[matchObj.matchName];
                     const actualResult = actual ? actual.result : null;
                     const actualScore = actual ? actual.score : null;
                     const isCompleted = actualResult !== null;
-                    let homeScore = '';
-                    let awayScore = '';
                     const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
                     const now = new Date();
                     const isPast = matchDateTime ? now >= matchDateTime : false;
-                    const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
-                    const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
                     const playerPicks = [];
                     const playerSelect = document.getElementById("playerSelect");
                     const playerName = document.getElementById("playerName");
@@ -2441,189 +2544,20 @@
                                     String(pick.pick) === String(actualResult) });
                         }
                     }
-                    const matchDiv = document.createElement("div");
-                    matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
-                    matchDiv.id = `match-${group.replace(/ /g, '_')}-${idx}`;
-                    const homeTeam = matchObj.homeTeam || '';
-                    const visitorTeam = matchObj.visitorTeam || '';
-                    const homeFlagHtml = getFlagHtml(homeTeam);
-                    const awayFlagHtml = getFlagHtml(visitorTeam);
-                    const matchName = matchObj.matchName || '';
-                    const matchNumberMatch = matchName.match(/\d+/);
-                    let matchNumber = matchNumberMatch ? matchNumberMatch[0] : '';
-                    matchNumber = matchNumber ? parseInt(matchNumber).toString() : '';
-                    let groupLetter = '';
-                    if (group) {
-                        const groupMatch = group.match(/Group\s*([A-Z])/i);
-                        if (groupMatch) {
-                            groupLetter = groupMatch[1].toUpperCase();
-                        } else if (group.length === 1) {
-                            groupLetter = group.toUpperCase();
-                        }
-                    }
-                    let gridHtml = '';
-                    if (isCompleted) {
-                        const resultSymbol = getResultSymbol(actualResult);
-                        let resultColor = '#4CAF50';
-                        if (actualResult === "X") resultColor = '#FF9800';
-                        else if (actualResult === "2") resultColor = '#f44336';
-                        let homeScore = '';
-                        let awayScore = '';
-                        if (actualScore) {
-                            const parts = actualScore.split('-');
-                            if (parts.length === 2) {
-                                homeScore = parts[0].trim();
-                                awayScore = parts[1].trim();
-                            }
-                        }
-                        const scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
-                        const scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
-                        let displayDateTime = '';
-                        if (matchObj.date && matchObj.time) {
-                            const relativeDate = getRelativeDate(matchObj.date);
-                            if (relativeDate) {
-                                displayDateTime = `${relativeDate} ${matchObj.time}`;
-                            } else {
-                                const dateParts = matchObj.date.split('/');
-                                if (dateParts.length === 3) {
-                                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-                                        'Oct', 'Nov', 'Dec'
-                                    ];
-                                    const month = parseInt(dateParts[1]) - 1;
-                                    const day = parseInt(dateParts[2]);
-                                    displayDateTime = `${monthNames[month]} ${day} ${matchObj.time}`;
-                                }
-                            }
-                        }
-                        gridHtml = `
-                <div class="match-grid">
-                  <div class="team-cell">
-                    ${homeFlagHtml}
-                    <span class="team-name">${homeTeam}</span>
-                  </div>
-                  ${scoreLeftHtml}
-                  <div class="datetime">${displayDateTime}</div>
-
-                  <div class="team-cell">
-                    ${awayFlagHtml}
-                    <span class="team-name">${visitorTeam}</span>
-                  </div>
-                  ${scoreRightHtml}
-                  <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
-                </div>
-              `;
-                    } else {
-                        let dateTimeStr = '';
-                        let calHtml = '';
-                        if (matchObj.date && matchObj.time) {
-                            const relativeDate = getRelativeDate(matchObj.date);
-                            if (relativeDate) {
-                                dateTimeStr = `${relativeDate} ${matchObj.time}`;
-                            } else {
-                                const dateParts = matchObj.date.split('/');
-                                if (dateParts.length === 3) {
-                                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-                                        'Oct', 'Nov', 'Dec'
-                                    ];
-                                    const month = parseInt(dateParts[1]) - 1;
-                                    const day = parseInt(dateParts[2]);
-                                    dateTimeStr = `${monthNames[month]} ${day} ${matchObj.time}`;
-                                }
-                            }
-                            const calUrl = getGoogleCalendarUrl(matchObj.matchName, homeTeam, visitorTeam, matchObj
-                                .date,
-                                matchObj.time, matchObj.transmission);
-                            if (calUrl) {
-                                calHtml =
-                                    `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017 ;text-decoration:none;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
-                            } else {
-                                calHtml =
-                                    `<span style="color:#D4A017 ;font-weight:bold;">${dateTimeStr}</span>`;
-                            }
-                        }
-                        let transHtml = '';
-                        if (showTransmission && matchObj.transmission) {
-                            const transText = matchObj.transmission;
-                            if (transText.includes('LiveModeTV')) {
-                                transHtml =
-                                    `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
-                            } else {
-                                transHtml =
-                                    `<span style="color:#000;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
-                            }
-                        }
-                        const scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
-                        const scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
-                        gridHtml = `
-                <div class="match-grid">
-                  <div class="team-cell">
-                    ${homeFlagHtml}
-                    <span class="team-name">${homeTeam}</span>
-                  </div>
-                  ${scoreLeftHtml}
-                  <div class="datetime">${calHtml}</div>
-
-                  <div class="team-cell">
-                    ${awayFlagHtml}
-                    <span class="team-name">${visitorTeam}</span>
-                  </div>
-                  ${scoreRightHtml}
-                  <div class="transmission">${transHtml}</div>
-                </div>
-              `;
-                    }
-                    let picksHtml = '';
-                    if (playerPicks.length > 0) {
-                        picksHtml = '<div class="picks-row">';
-                        for (let pp of playerPicks) {
-                            let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
-                            let pickClass = isCompleted ? (pp.correct ? 'pick-correct' : 'pick-wrong') :
-                                'pick-pending';
-                            picksHtml +=
-                                `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${pickClass}">${pickSymbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
-                        }
-                        picksHtml += '</div>';
-                    }
-                    let radioHtml = '';
-                    if (!isCompleted && !isPast) {
-                        // Get the actual team names (they should already be resolved)
-                        const homeTeamName = matchObj.homeTeam || 'Home';
-                        const visitorTeamName = matchObj.visitorTeam || 'Visitor';
-                        radioHtml = `
-                        <div class="radio-group">
-                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()">${homeTeamName}</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()">🤝 Draw</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()">${visitorTeamName}</label>
-                        </div>`;
-                    } else if (!isCompleted && isPast) {
-                        radioHtml =
-                            `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
-                    } else {
-                        radioHtml = `<div class="radio-group disabled"></div>`;
-                    }
-                    let pickElementsHtml = '';
-                    if (!isAdminMode) {
-                        pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
-                    } else {
-                        pickElementsHtml = `<div class="pick-elements" style="display:none;"></div>`;
-                    }
-                    const badgeHtml = `
-                <div class="match-badge">
-                  <span class="ball-emoji">⚽</span>
-                  <span class="badge-text">
-                    ${matchNumber ? `<span class="match-num">${matchNumber}</span>` : ''}
-                    ${groupLetter ? `<span class="group-letter">${groupLetter}</span>` : ''}
-                  </span>
-                </div>
-              `;
-                    matchDiv.innerHTML = `
-                <div class="match-card-row">
-                  ${badgeHtml}
-                  ${gridHtml}
-                </div>
-                ${pickElementsHtml}
-              `;
-                    matchesWrapper.appendChild(matchDiv);
+                    const showRadios = !isCompleted && !isPast && !isAdminMode;
+                    const cardHtml = buildMatchCard(matchObj, group, 'group', {
+                        isCompleted,
+                        isPast,
+                        actualResult,
+                        actualScore,
+                        playerPicks,
+                        showPicks,
+                        showRadios,
+                        adminMode: isAdminMode
+                    });
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cardHtml;
+                    matchesWrapper.appendChild(tempDiv.firstElementChild);
                 });
                 groupContent.appendChild(matchesWrapper);
                 groupDiv.appendChild(groupContent);
@@ -2635,7 +2569,7 @@
         }
 
         // ================================================================
-        //  RENDER KNOCKOUT BRACKET (cached)
+        //  RENDER KNOCKOUT BRACKET – UPDATED with buildMatchCard
         // ================================================================
         function renderKnockoutBracket() {
             const container = document.getElementById("knockout-matches");
@@ -2726,7 +2660,50 @@
                     </div>
                 `;
                 matches.forEach((m, idx) => {
-                    html += createKnockoutCard(m, colors);
+                    const actual = actualResults[m.matchName];
+                    const actualResult = actual ? actual.result : null;
+                    const actualScore = actual ? actual.score : null;
+                    const isCompleted = actualResult !== null;
+                    const matchDateTime = parseMatchDateTime(m.date, m.time);
+                    const now = new Date();
+                    const isPast = matchDateTime ? now >= matchDateTime : false;
+                    const playerPicks = [];
+                    const playerSelect = document.getElementById("playerSelect");
+                    const playerName = document.getElementById("playerName");
+                    const hasPlayer = playerSelect && playerSelect.value !== "";
+                    const hasName = playerName && playerName.value.trim() !== "";
+                    const showPicks = hasPlayer || hasName;
+                    if (showPicks && currentPlayers.length > 0) {
+                        for (let player of currentPlayers) {
+                            const pick = allPicks.find(p =>
+                                p.player === player &&
+                                String(p.match).trim() === String(m.matchName).trim()
+                            );
+                            if (pick) {
+                                playerPicks.push({
+                                    name: player,
+                                    pick: pick.pick,
+                                    correct: actualResult && String(pick.pick) === String(actualResult)
+                                });
+                            }
+                        }
+                    }
+                    const showRadios = !isCompleted && !isPast && !isAdminMode;
+                    const cardHtml = buildMatchCard(m, round, 'Knockout', {
+                        isCompleted,
+                        isPast,
+                        actualResult,
+                        actualScore,
+                        playerPicks,
+                        showPicks,
+                        showRadios,
+                        adminMode: isAdminMode
+                    });
+                    // Wrap in a container to add extra spacing if needed
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cardHtml;
+                    // For knockout columns, we may want to add a small gap after each card except maybe the last
+                    html += tempDiv.innerHTML;
                     if (colIdx === 0 && idx % 2 === 1 && idx !== matches.length - 1) {
                         html += `<div style="height: 5px;"></div>`;
                     }
@@ -2827,320 +2804,7 @@
         }
 
         // ================================================================
-        //  CREATE KNOCKOUT CARD (unchanged, but used by renderKnockoutBracket)
-        // ================================================================
-        function createKnockoutCard(matchObj, stageColors) {
-            const actual = actualResults[matchObj.matchName];
-            const actualResult = actual ? actual.result : null;
-            const actualScore = actual ? actual.score : null;
-            const isCompleted = actualResult !== null;
-
-            const matchDateTime = parseMatchDateTime(matchObj.date, matchObj.time);
-            const now = new Date();
-            const isPast = matchDateTime ? now >= matchDateTime : false;
-            const isWithinThreeHours = matchDateTime ? isWithinThreeHoursAfter(matchDateTime) : false;
-            const showTransmission = (!isPast || (isPast && isWithinThreeHours)) && matchObj.transmission;
-
-            const playerPicks = [];
-            const playerSelect = document.getElementById("playerSelect");
-            const playerName = document.getElementById("playerName");
-            const hasPlayer = playerSelect && playerSelect.value !== "";
-            const hasName = playerName && playerName.value.trim() !== "";
-            const showPicks = hasPlayer || hasName;
-            if (showPicks && currentPlayers.length > 0) {
-                for (let player of currentPlayers) {
-                    const pick = allPicks.find(p =>
-                        p.player === player &&
-                        String(p.match).trim() === String(matchObj.matchName).trim()
-                    );
-                    if (pick) {
-                        playerPicks.push({
-                            name: player,
-                            pick: pick.pick,
-                            correct: actualResult && String(pick.pick) === String(actualResult)
-                        });
-                    }
-                }
-            }
-
-            const homeTeam = matchObj.homeTeam || '';
-            const visitorTeam = matchObj.visitorTeam || '';
-            const homeFlagHtml = getFlagHtml(homeTeam);
-            const awayFlagHtml = getFlagHtml(visitorTeam);
-
-            let gridHtml = '';
-            let homeScore = '';
-            let awayScore = '';
-            const matchName = matchObj.matchName || '';
-            const matchNumberMatch = matchName.match(/\d+/);
-            let matchNumber = matchNumberMatch ? matchNumberMatch[0] : '';
-            matchNumber = matchNumber ? parseInt(matchNumber).toString() : '';
-            let groupLetter = '';
-
-            let scoreLeftHtml = '';
-            let scoreRightHtml = '';
-
-            if (actualScore) {
-                const parts = actualScore.split('-');
-                if (parts.length === 2) {
-                    homeScore = parts[0].trim();
-                    awayScore = parts[1].trim();
-                }
-            }
-
-            if (isCompleted) {
-                const resultSymbol = getResultSymbol(actualResult);
-                let resultColor = '#4CAF50';
-                if (actualResult === "X") resultColor = '#FF9800';
-                else if (actualResult === "2") resultColor = '#f44336';
-                scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
-                scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
-                let displayDateTime = '';
-                if (matchObj.date && matchObj.time) {
-                    const relativeDate = getRelativeDate(matchObj.date);
-                    if (relativeDate) {
-                        displayDateTime = `${relativeDate} ${matchObj.time}`;
-                    } else {
-                        const dateParts = matchObj.date.split('/');
-                        if (dateParts.length === 3) {
-                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
-                                'Nov',
-                                'Dec'
-                            ];
-                            const month = parseInt(dateParts[1]) - 1;
-                            const day = parseInt(dateParts[2]);
-                            displayDateTime = `${monthNames[month]} ${day} ${matchObj.time}`;
-                        }
-                    }
-                }
-                gridHtml = `
-            <div class="match-grid">
-              <div class="team-cell">
-                ${homeFlagHtml}
-                <span class="team-name">${homeTeam}</span>
-              </div>
-              ${scoreLeftHtml}
-              <div class="datetime">${displayDateTime}</div>
-
-              <div class="team-cell">
-                ${awayFlagHtml}
-                <span class="team-name">${visitorTeam}</span>
-              </div>
-              ${scoreRightHtml}
-              <div class="result-symbol" style="color:${resultColor};">${resultSymbol}</div>
-            </div>
-          `;
-            } else {
-                let dateTimeStr = '';
-                let calHtml = '';
-                if (matchObj.date && matchObj.time) {
-                    const relativeDate = getRelativeDate(matchObj.date);
-                    if (relativeDate) {
-                        dateTimeStr = `${relativeDate} ${matchObj.time}`;
-                    } else {
-                        const dateParts = matchObj.date.split('/');
-                        if (dateParts.length === 3) {
-                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
-                                'Nov',
-                                'Dec'
-                            ];
-                            const month = parseInt(dateParts[1]) - 1;
-                            const day = parseInt(dateParts[2]);
-                            dateTimeStr = `${monthNames[month]} ${day} ${matchObj.time}`;
-                        }
-                    }
-                    const calUrl = getGoogleCalendarUrl(matchObj.matchName, homeTeam, visitorTeam, matchObj.date, matchObj
-                        .time,
-                        matchObj.transmission);
-                    if (calUrl) {
-                        calHtml =
-                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
-                    } else {
-                        calHtml =
-                            `<span style="color:#D4A017;font-weight:bold;">${dateTimeStr}</span>`;
-                    }
-                }
-                let transHtml = '';
-                if (showTransmission && matchObj.transmission) {
-                    const transText = matchObj.transmission;
-                    if (transText.includes('LiveModeTV')) {
-                        transHtml =
-                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
-                    } else {
-                        transHtml =
-                            `<span style="color:#000;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
-                    }
-                }
-                scoreLeftHtml = getMatchScoreInputHtml(matchObj, homeScore, 'home');
-                scoreRightHtml = getMatchScoreInputHtml(matchObj, awayScore, 'away');
-                gridHtml = `
-            <div class="match-grid">
-              <div class="team-cell">
-                ${homeFlagHtml}
-                <span class="team-name">${homeTeam}</span>
-              </div>
-              ${scoreLeftHtml}
-              <div class="datetime">${calHtml}</div>
-
-              <div class="team-cell">
-                ${awayFlagHtml}
-                <span class="team-name">${visitorTeam}</span>
-              </div>
-              ${scoreRightHtml}
-              <div class="transmission">${transHtml}</div>
-            </div>
-          `;
-            }
-
-            let picksHtml = '';
-            if (playerPicks.length > 0) {
-                picksHtml = '<div class="picks-row">';
-                for (let pp of playerPicks) {
-                    let pickSymbol = pp.pick === "1" ? "🏠1" : (pp.pick === "X" ? "🤝X" : "✈️2");
-                    let pickClass = isCompleted ? (pp.correct ? 'pick-correct' : 'pick-wrong') : 'pick-pending';
-                    picksHtml +=
-                        `<div class="player-pick"><span class="player-name">${pp.name}</span><span class="player-pick-value ${pickClass}">${pickSymbol}</span>${pp.correct ? '<span>✓</span>' : ''}</div>`;
-                }
-                picksHtml += '</div>';
-            }
-
-            let radioHtml = '';
-            if (!isCompleted && !isPast) {
-                const isKnockout = matchObj.stage === 'Knockout' ||
-                    matchObj.group === 'Round of 32' ||
-                    matchObj.group === 'Round of 16' ||
-                    matchObj.group === 'Quarter-finals' ||
-                    matchObj.group === 'Semi-finals' ||
-                    matchObj.group === '3rd Place Final' ||
-                    matchObj.group === 'Final';
-
-                if (isKnockout) {
-                    // Get the actual team names (they should already be resolved)
-                    const homeTeamName = matchObj.homeTeam || 'Home';
-                    const visitorTeamName = matchObj.visitorTeam || 'Visitor';
-                    // Get flags for the teams
-                    const homeFlag = getFlagHtml(homeTeamName);
-                    const awayFlag = getFlagHtml(visitorTeamName);
-                    
-                    radioHtml = `
-                        <div class="radio-group">
-                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeamName}</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeamName}</label>
-                        </div>`;
-                } else {
-                    radioHtml = `
-                        <div class="radio-group">
-                            <label><input type="radio" name="${matchObj.matchName}" value="1" onchange="updateProgress()"> ${homeFlag} ${homeTeamName}</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="X" onchange="updateProgress()"> 🤝 Draw</label>
-                            <label><input type="radio" name="${matchObj.matchName}" value="2" onchange="updateProgress()"> ${awayFlag} ${visitorTeamName}</label>
-                        </div>`;
-                }
-            
-            } else if (!isCompleted && isPast) {
-                radioHtml = `<div class="radio-group disabled"><span class="deadline-note">⏰ Deadline passed</span></div>`;
-            } else {
-                radioHtml = `<div class="radio-group disabled"></div>`;
-            }
-
-            let pickElementsHtml = '';
-            if (!isAdminMode) {
-                pickElementsHtml = `<div class="pick-elements">${picksHtml}${radioHtml}</div>`;
-            } else {
-                pickElementsHtml = `<div class="pick-elements" style="display:none;"></div>`;
-            }
-
-            const badgeHtml = `
-                <div class="match-badge">
-                  <span class="ball-emoji">⚽</span>
-                  <span class="badge-text">
-                    ${groupLetter ? `<span class="group-letter">${groupLetter}</span>` : ''}
-                    ${matchNumber ? `<span class="match-num">${matchNumber}</span>` : ''}
-                  </span>
-                </div>
-              `;
-
-            let rowStyle = '';
-            if (!isCompleted && stageColors) {
-                rowStyle =
-                    ` style="background: ${stageColors.bg}; border-radius: 6px; padding: 5px 5px; border-left: 4px solid ${stageColors.header};"`;
-            }
-
-            const matchDiv = document.createElement("div");
-            matchDiv.className = `match-card ${isCompleted ? 'completed' : ''}`;
-            matchDiv.id = `match-knockout-${matchObj.matchName.replace(/ /g, '_')}`;
-
-            let tooltip = "";
-            if (matchObj.group === "Round of 32") {
-                tooltip = `${matchObj.originalHome || matchObj.homeTeam}
-            ${matchObj.originalAway || matchObj.visitorTeam}`;
-            }
-            matchDiv.title = tooltip;
-
-            matchDiv.innerHTML = `
-        <div class="match-card-row"${rowStyle}>
-          ${badgeHtml}
-          ${gridHtml}
-        </div>
-        ${pickElementsHtml}
-        `;
-
-            return matchDiv.outerHTML;
-        }
-
-        // ================================================================
-        //  SCROLL TO MATCH
-        // ================================================================
-        function scrollToMatch(groupId, matchElementId, groupName, matchIdx) {
-            let targetStage = 'group';
-            const groupElement = document.getElementById(groupId);
-            if (groupElement) {
-                let parent = groupElement.parentElement;
-                while (parent) {
-                    if (parent.classList && parent.classList.contains('matches-container')) {
-                        if (parent.id === 'group-matches') targetStage = 'group';
-                        else if (parent.id === 'knockout-matches') targetStage = 'knockout';
-                        break;
-                    }
-                    parent = parent.parentElement;
-                }
-            }
-            document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
-            const tab = document.querySelector(`.stage-tab[data-stage="${targetStage}"]`);
-            if (tab) tab.classList.add('active');
-            const container = document.getElementById(`${targetStage}-matches`);
-            if (container) container.classList.add('active');
-            setTimeout(() => {
-                const groupDiv = document.getElementById(groupId);
-                if (groupDiv) {
-                    groupDiv.style.display = 'block';
-                    const groupKey = groupId.replace('group-', '');
-                    expandedGroups[groupKey] = true;
-                    const groupBlock = groupDiv.closest('.group-block');
-                    if (groupBlock) {
-                        groupBlock.classList.add('expanded');
-                    }
-                }
-                const matchElement = document.getElementById(matchElementId);
-                if (matchElement) {
-                    matchElement.scrollIntoView({ behavior: "smooth", block: "center" });
-                    matchElement.style.transition = "background 0.3s";
-                    matchElement.style.background = "#fff3cd";
-                    setTimeout(() => {
-                        matchElement.style.background = "";
-                    }, 3000);
-                } else {
-                    const groupBlock = document.querySelector(`.group-title:contains("${groupName}")`)?.closest(
-                        '.group-block');
-                    if (groupBlock) {
-                        groupBlock.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }
-                }
-            }, 100);
-        }
-
-        // ================================================================
-        //  NEXT MATCHES
+        //  TODAY'S MATCHES – UPDATED with buildMatchCard
         // ================================================================
         function getNextMatches() {
             const now = new Date();
@@ -3158,7 +2822,8 @@
                                 match: match,
                                 displayName: match.displayMatch,
                                 time: match.time,
-                                dateTime: matchDateTime
+                                dateTime: matchDateTime,
+                                /*stage: 'group'          // group stage*/
                             });
                         }
                     }
@@ -3171,12 +2836,13 @@
                     const deadlineTime = new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000);
                     if (now < deadlineTime && !actualResults[match.matchName]?.result) {
                         upcomingMatches.push({
-                            group: match.group,
+                            group: match.group,          // round name (e.g., "Round of 32")
                             idx: idx,
                             match: match,
                             displayName: match.displayMatch,
                             time: match.time,
-                            dateTime: matchDateTime
+                            dateTime: matchDateTime,
+                            stage: 'knockout'
                         });
                     }
                 }
@@ -3188,110 +2854,70 @@
         function createNextMatchesSection() {
             const nextMatches = getNextMatches();
             if (nextMatches.length === 0) return '';
+
+            // Sort matches by dateTime (already sorted, but ensure)
+            nextMatches.sort((a, b) => a.dateTime - b.dateTime);
+
+            // Group consecutive matches that share the same stage (group name)
+            const groups = [];
+            let currentGroup = null;
+            for (let item of nextMatches) {
+                const key = item.group; // e.g., "A", "B", "Round of 32"
+                if (!currentGroup || currentGroup.key !== key) {
+                    currentGroup = { key: key, items: [] };
+                    groups.push(currentGroup);
+                }
+                currentGroup.items.push(item);
+            }
+
             let html = `
                 <div style="background: linear-gradient(135deg, #47c14d 0%, #30a738 100%); color: white; padding: 4px; border-radius: 10px; margin-bottom: 10px;">
                 <h3 style="text-align:center;margin: 0 0 4px 0; font-size: 1.4em; color: #FFD700;">⚡ Next 8 Matches</h3>
-                <div class="match-cards-wrapper">
-        `;
-            nextMatches.forEach((tm, idx) => {
-                const groupId = `group-${tm.group.replace(/ /g, '_')}`;
-                const matchElementId = `match-${tm.group.replace(/ /g, '_')}-${tm.idx}`;
-                const homeTeam = tm.match.homeTeam || '';
-                const visitorTeam = tm.match.visitorTeam || '';
-                const homeFlagHtml = getFlagHtml(homeTeam);
-                const awayFlagHtml = getFlagHtml(visitorTeam);
-                const matchName = tm.match.matchName || '';
-                const matchNumberMatch = matchName.match(/\d+/);
-                let matchNumber = matchNumberMatch ? matchNumberMatch[0] : '';
-                matchNumber = matchNumber ? parseInt(matchNumber).toString() : '';
-                let groupLetter = '';
-                if (tm.group) {
-                    const groupMatch = tm.group.match(/Group\s*([A-Z])/i);
-                    if (groupMatch) {
-                        groupLetter = groupMatch[1].toUpperCase();
-                    } else if (tm.group.length === 1) {
-                        groupLetter = tm.group.toUpperCase();
-                    }
-                }
-                let dateTimeStr = '';
-                let calHtml = '';
-                if (tm.match.date && tm.match.time) {
-                    const relativeDate = getRelativeDate(tm.match.date);
-                    if (relativeDate) {
-                        dateTimeStr = `${relativeDate} ${tm.match.time}`;
-                    } else {
-                        const dateParts = tm.match.date.split('/');
-                        if (dateParts.length === 3) {
-                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
-                                'Nov',
-                                'Dec'
-                            ];
-                            const month = parseInt(dateParts[1]) - 1;
-                            const day = parseInt(dateParts[2]);
-                            dateTimeStr = `${monthNames[month]} ${day} ${tm.match.time}`;
-                        }
-                    }
-                    const calUrl = getGoogleCalendarUrl(tm.match.matchName, homeTeam, visitorTeam, tm.match.date, tm.match
-                        .time, tm.match.transmission);
-                    if (calUrl) {
-                        calHtml =
-                            `<a href="${calUrl}" target="_blank" onclick="event.stopPropagation();" style="color:#D4A017;text-decoration:none;font-weight:bold;" title="Add to calendar">${dateTimeStr}</a>`;
-                    } else {
-                        calHtml = `<span style="color:#D4A017;font-weight:bold;">${dateTimeStr}</span>`;
-                    }
-                }
-                let transHtml = '';
-                if (tm.match.transmission) {
-                    const transText = tm.match.transmission;
-                    if (transText.includes('LiveModeTV')) {
-                        transHtml =
-                            `<a href="https://www.youtube.com/@LiveModeTV_PT" target="_blank" onclick="event.stopPropagation();" style="color:#2A63EB;text-decoration:none;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;" title="Watch on Youtube">${transText}</a>`;
-                    } else {
-                        transHtml =
-                            `<span style="color:#000;word-break:break-word;max-width: 13ch; width: fit-content;display:inline-block;text-align:center;font-weight:bold;">${transText}</span>`;
-                    }
-                }
-                const scoreLeftHtml = `<div class="score"></div>`;
-                const scoreRightHtml = `<div class="score"></div>`;
-                const gridHtml = `
-              <div class="match-grid">
-                <div class="team-cell">
-                  ${homeFlagHtml}
-                  <span class="team-name">${homeTeam}</span>
-                </div>
-                ${scoreLeftHtml}
-                <div class="datetime">${calHtml}</div>
+            `;
 
-                <div class="team-cell">
-                  ${awayFlagHtml}
-                  <span class="team-name">${visitorTeam}</span>
-                </div>
-                ${scoreRightHtml}
-                <div class="transmission">${transHtml}</div>
-              </div>
-            `;
-                const badgeHtml = `
-              <div class="match-badge">
-                <span class="ball-emoji">⚽</span>
-                <span class="badge-text">
-                  ${matchNumber ? `<span class="match-num">${matchNumber}</span>` : ''}
-                  ${groupLetter ? `<span class="group-letter">${groupLetter}</span>` : ''}
-                </span>
-              </div>
-            `;
+            for (let group of groups) {
+                const key = group.key;
+                const color = getStageColor(key);
+                // Determine display name: prefix "Group " for single-letter keys
+                const isGroup = /^[A-Z]$/.test(key);
+                const displayName = isGroup ? 'Group ' + key : key;
+
                 html += `
-              <div class="match-card" onclick="scrollToMatch('${groupId}', '${matchElementId}', '${tm.group}', ${tm.idx});" style="cursor:pointer;">
-                <div class="match-card-row">
-                  ${badgeHtml}
-                  ${gridHtml}
-                </div>
-              </div>
-            `;
-            });
-            html += `</div></div>`;
+                    <div class="today-stage-group" style=" background: transparent;">
+                        <div class="today-stage-header" style="text-align:center; font-weight:bold; background: ${color}; color: white; font-size: 1.1em; padding: 4px 8px; border-radius: 4px; display: inline-block; width: 100%; box-sizing: border-box;">
+                            ${displayName}
+                        </div>
+                        <div class="match-cards-wrapper">
+                `;
+                for (let item of group.items) {
+                    const cardHtml = buildMatchCard(item.match, item.group, item.stage, {
+                        isCompleted: false,
+                        isPast: false,
+                        actualResult: null,
+                        actualScore: null,
+                        playerPicks: [],
+                        showPicks: false,
+                        showRadios: false,
+                        adminMode: false
+                    });
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cardHtml;
+                    const cardElement = tempDiv.firstElementChild;
+                    cardElement.style.cursor = 'pointer';
+                    const groupId = `group-${item.group.replace(/ /g, '_')}`;
+                    const matchElementId = `match-${item.stage === 'group' ? item.group.replace(/ /g, '_') : 'knockout'}-${item.match.matchName.replace(/ /g, '_')}`;
+                    cardElement.onclick = function() {
+                        scrollToMatch(groupId, matchElementId, item.group, item.idx);
+                    };
+                    html += cardElement.outerHTML;
+                }
+                html += `</div></div>`;
+            }
+
+            html += `</div>`;
             return html;
         }
-
+        
         function updateTodayMatches() {
             const container = document.getElementById("today-matches-container");
             if (!container) return;
@@ -3724,6 +3350,49 @@
             });
         }
 
+        function getStageColor(groupName) {
+            // Group colours (matching the CSS)
+            const groupColors = {
+                'A': '#E53935',
+                'B': '#1E88E5',
+                'C': '#43A047',
+                'D': '#FB8C00',
+                'E': '#8E24AA',
+                'F': '#00897B',
+                'G': '#5E35B1',
+                'H': '#D81B60',
+                'I': '#E53935',
+                'J': '#FB8C00',
+                'K': '#43A047',
+                'L': '#8E24AA'
+            };
+            // Knockout round colours
+            const knockoutColors = {
+                'Round of 32': '#2196F3',
+                'Round of 16': '#9C27B0',
+                'Quarter-finals': '#FF9800',
+                'Semi-finals': '#2196F3',
+                '3rd Place Final': '#f44336',
+                'Final': '#FFD700'
+            };
+
+            // If it's a single uppercase letter (e.g., "A"), return its colour
+            if (/^[A-Z]$/.test(groupName)) {
+                return groupColors[groupName] || '#4CAF50';
+            }
+            // If it starts with "Group " (e.g., "Group A"), extract the letter
+            const match = groupName.match(/^Group\s*([A-Z])$/i);
+            if (match) {
+                const letter = match[1].toUpperCase();
+                return groupColors[letter] || '#4CAF50';
+            }
+            // Check knockout rounds
+            if (knockoutColors[groupName]) {
+                return knockoutColors[groupName];
+            }
+            // Fallback
+            return '#607D8B';
+        }
         // ================================================================
         //  INIT
         // ================================================================
