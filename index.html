@@ -294,12 +294,17 @@
         .match-card.completed .radio-group {
             display: none;
         }
-
+        .match-card.completed .match-grid {
+            grid-template-columns: minmax(80px,125px) minmax(20px, auto) 1ch minmax(20px, auto) minmax(80px,125px);
+        }
+        .match-card.completed .match-grid .match-number {
+            grid-column: 2 / 5;  /* spans columns 2 and 3 */
+        }
         .match-grid {
             flex: 1 1 auto;
             min-width: 0;
             display: grid;
-            grid-template-columns: 125px minmax(20px, auto) minmax(20px, auto) 125px;
+            grid-template-columns: minmax(80px,125px) minmax(20px, auto) minmax(20px, auto) minmax(80px,125px);
             gap: 6px 4px;
             align-items: center;
             justify-items: center;
@@ -331,6 +336,13 @@
             color: #4CAF50;
             text-align: center;
             font-size: 1.2em;
+            max-width: 3ch;
+            overflow-wrap: break-word;
+        }
+        .match-grid .match-number::first-line {
+            color: #3c3c3c;
+            font-weight: normal;
+            opacity: 1;
         }
         .match-grid .score-input {
             width: 20px;
@@ -372,6 +384,13 @@
             font-size: 0.85em;
             color: #666;
             opacity: 0.8;
+        }
+        .match-grid .score-separator {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #666;
+            text-align: center;
+            padding: 0 2px;
         }
 
         .match-cards-wrapper {
@@ -1522,11 +1541,15 @@
                 ? `<input type="text" id="away-${getMatchInputId(matchObj.matchName)}" class="score-input" value="${awayScoreVal}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`
                 : `<div class="score">${awayScoreVal}</div>`;
 
+            // Only show separator if match is completed AND has scores
+            const showSeparator = isCompleted && (homeScoreVal !== '' || awayScoreVal !== '');
+
             // Build the grid – fixed 4 columns, 2 rows
             const gridHtml = `
                 <div class="match-grid">
                     <div class="team-cell">${homeFlag} <span class="team-name"${homeTitle ? ` title="${homeTitle}"` : ''}>${homeTeam}</span></div>
                     ${scoreHomeHtml}
+                    ${showSeparator ? '<span class="score-separator">–</span>' : ''}
                     ${scoreAwayHtml}
                     <div class="team-cell away">${awayFlag} <span class="team-name"${awayTitle ? ` title="${awayTitle}"` : ''}>${visitorTeam}</span></div>
                     <div class="datetime">${dateTimeHtml}</div>
