@@ -136,7 +136,7 @@
         /* ===== MATCH CARD ===== */
         .match-card { flex: 0 0 auto; margin: 0; align-content: center; border-radius: 8px; background: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); width: 310px; transition: background 0.2s; justify-content: center; text-align: center; }
         .match-card-row { display: flex; align-items: center; gap: 6px; width: auto; }
-        .match-card.completed { background: #e8f5e9; border-left: 4px solid #FFD700; }
+        .match-card.completed { background: #e8f5e9; border-right: 4px solid #FFD700; }
         .match-card.completed .radio-group { display: none; }
         .match-card.completed .match-grid {grid-template-columns: minmax(100px, auto) minmax(10px, 1fr) 1ch minmax(10px, 1fr) minmax(100px, auto); }
         .match-card.completed .match-grid .match-number { grid-column: 2 / 5; }
@@ -301,7 +301,7 @@
     <div id="progress-container" class="hidden"></div>
 
     <div class="stage-tabs">
-        <div class="stage-tab active" data-stage="group">🏆 Group Stage</div>
+        <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
         <div class="stage-tab" data-stage="Knockout">🏆 Knockout stage</div>
     </div>
 
@@ -312,7 +312,7 @@
         </div>
     </div>
 
-    <div id="group-matches" class="matches-container active" style="margin: -5px;"></div>
+    <div id="group-matches" class="matches-container" style="margin: -5px;"></div>
     <div id="knockout-matches" class="matches-container" style="margin: -5px;"></div>
 
     <div style="margin: 5px auto; text-align: center;">
@@ -2027,27 +2027,18 @@
                         isCompleted: false, isPast: false, actualResult: null, actualScore: null,
                         playerPicks: [], showPicks: false, showRadios: false, adminMode: false
                     });
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = cardHtml;
-                    const cardElement = tempDiv.firstElementChild;
-                    cardElement.style.cursor = 'pointer';
-                    const groupId = `group-${item.group.replace(/ /g, '_')}`;
-                    const matchId = `match-${item.stage === 'group' ? item.group.replace(/ /g, '_') : 'knockout'}-${item.match.matchName.replace(/ /g, '_')}`;
+                    
                     const matchNumber = item.match.matchName.match(/\d+/)?.[0] || '';
-                    cardElement.setAttribute('data-match-id', matchId);
-                    cardElement.setAttribute('data-group-id', groupId);
-                    cardElement.setAttribute('data-stage', item.stage);
-                    cardElement.setAttribute('data-match-number', matchNumber);
-                    // Click handler directly on the card
-                    cardElement.onclick = function(e) {
-                        e.stopPropagation();
-                        const stage = this.dataset.stage || 'group';
-                        const groupId = this.dataset.groupId || '';
-                        const matchNumber = this.dataset.matchNumber || '';
-                        const matchId = this.dataset.matchId || '';
-                        scrollToMatch(groupId, matchId, stage, matchNumber);
-                    };
-                    html += cardElement.outerHTML;
+                    const groupId = `group-${item.group.replace(/ /g, '_')}`;
+                    const stage = item.stage === 'knockout' ? 'knockout' : 'group';
+                    
+                    // Add the onclick directly in the HTML
+                    const onclickAttr = `onclick="event.stopPropagation(); scrollToMatch('${groupId}', '', '${stage}', '${matchNumber}')"`;
+                    
+                    // Insert the onclick attribute into the card div
+                    const cardWithClick = cardHtml.replace('<div class="match-card', `<div class="match-card" data-match-number="${matchNumber}" ${onclickAttr} style="cursor:pointer;"`);
+                    
+                    html += cardWithClick;
                 }
 
                 html += `</div></div>`;
@@ -2276,7 +2267,6 @@
         // ================================================================
 
         function scrollToMatch(groupId, matchElementId, stage, matchNumber) {
-            // Use the match number to find the card
             const targetStage = stage === 'knockout' ? 'Knockout' : 'group';
             const containerId = stage === 'knockout' ? 'knockout-matches' : 'group-matches';
 
@@ -2298,7 +2288,7 @@
 
             populateCountryDropdown(targetStage);
 
-            // If knockout, re-render
+            // For knockout, ensure it's rendered
             if (stage === 'knockout' && knockoutMatches.length > 0) {
                 cachedKnockoutHTML = null;
                 cachedKnockoutVersion = 0;
@@ -2322,9 +2312,14 @@
                 return;
             }
 
+            // Define findAndScroll inside scrollToMatch so it has access to containerId, targetStage, matchNumber
+            
             function findAndScroll(attempt) {
+                console.log(`Search attempt ${attempt} for match #${matchNumber} in container ${containerId}`);
+                
                 const activeContainer = document.getElementById(containerId);
                 if (!activeContainer) {
+                    console.log(`Container ${containerId} not found`);
                     if (attempt < 15) {
                         setTimeout(() => findAndScroll(attempt + 1), 200 * (attempt + 1));
                         return false;
@@ -2333,31 +2328,64 @@
                     return false;
                 }
 
+                // Find match by match number - unique across all matches
                 const cards = activeContainer.querySelectorAll('.match-card');
+                console.log(`Found ${cards.length} cards in container`);
                 let matchEl = null;
+                
                 for (let card of cards) {
-                    if (card.id && card.id.includes(matchNumber)) {
+                    // Check data attribute first (most reliable)
+                    if (card.dataset && card.dataset.matchNumber && card.dataset.matchNumber === matchNumber) {
+                        console.log(`Found match by data attribute: ${card.dataset.matchNumber}`);
+                        matchEl = card;
+                        break;
+                    }
+                    
+                    // Check if the card's text content contains the match number
+                    const matchNumberEl = card.querySelector('.match-number');
+                    if (matchNumberEl && matchNumberEl.textContent.includes(matchNumber)) {
+                        console.log(`Found match by .match-number element: ${matchNumberEl.textContent}`); 
+                        matchEl = card;
+                        break;
+                    }
+                    
+                    // Fallback: check if any text contains "Match X" or "#X"
+                    if (card.textContent.includes(`Match ${matchNumber}`) || 
+                        card.textContent.includes(`#${matchNumber}`)) {
+                        console.log(`Found match by text content`);
                         matchEl = card;
                         break;
                     }
                 }
+                console.log(`Match found: ${!!matchEl}`);
 
                 if (matchEl) {
                     // Remove previous highlights
                     document.querySelectorAll('.match-card').forEach(c => {
                         c.style.outline = '';
+                        c.style.boxShadow = '';
                         c.style.background = '';
-                        c.removeAttribute('data-highlight-timeout');
+                        const timeoutId = c.getAttribute('data-highlight-timeout');
+                        if (timeoutId) {
+                            clearTimeout(parseInt(timeoutId));
+                            c.removeAttribute('data-highlight-timeout');
+                        }
                     });
-                    matchEl.style.outline = '3px solid gold';
+                    
+                    // Highlight the match
+                    matchEl.style.outline = '4px solid #FFD700';
+                    matchEl.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.5)';
                     matchEl.style.background = '#fff8dc';
                     matchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
                     const timeoutId = setTimeout(() => {
                         matchEl.style.outline = '';
+                        matchEl.style.boxShadow = '';
                         matchEl.style.background = '';
                         matchEl.removeAttribute('data-highlight-timeout');
                     }, 5000);
-                    matchEl.setAttribute('data-highlight-timeout', timeoutId);
+                    matchEl.setAttribute('data-highlight-timeout', timeoutId.toString());                  
+                    
                     return true;
                 }
 
@@ -2369,8 +2397,9 @@
                 showFloatingNotification(`Match #${matchNumber} not found in ${targetStage} stage`, true);
                 return false;
             }
-
-            setTimeout(() => findAndScroll(0), 500);
+            
+            // Give time for DOM to update
+            setTimeout(() => findAndScroll(0), 400);
         }
 
         // ================================================================
