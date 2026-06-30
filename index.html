@@ -329,20 +329,32 @@
         }
         .match-grid .team-cell .team-name {
             width: fit-content;
-            word-break: break-word;
         }
         .match-grid .score {
             font-weight: bold;
             color: #4CAF50;
             text-align: center;
-            font-size: 1.2em;
-            max-width: 3ch;
+            font-size: 1.5em;
+            max-width: 2ch;
             overflow-wrap: break-word;
         }
-        .match-grid .match-number::first-line {
+        .match-card .score[data-length]::first-line {
             color: #3c3c3c;
             font-weight: normal;
             opacity: 1;
+            font-size: 0.8em;
+            max-width: 2ch;
+            overflow-wrap: break-word;            
+            word-break:break-word;            
+        }
+        .match-grid .score-separator {
+            font-weight: bold;
+            font-size: 1em;
+            color: #666;
+            text-align: center;
+            padding: 0 0px;
+            max-width: 1.5ch;
+            overflow-wrap: break-word;
         }
         .match-grid .score-input {
             width: 20px;
@@ -384,13 +396,6 @@
             font-size: 0.85em;
             color: #666;
             opacity: 0.8;
-        }
-        .match-grid .score-separator {
-            font-weight: bold;
-            font-size: 1.2em;
-            color: #666;
-            text-align: center;
-            padding: 0 2px;
         }
 
         .match-cards-wrapper {
@@ -1534,22 +1539,32 @@
                     awayScoreVal = parts[1].trim();
                 }
             }
+            let dataLengthAttr = '';
+            if (homeScoreVal && homeScoreVal.length >= 3) {
+                dataLengthAttr = `data-length="${homeScoreVal.length}"`;
+            }
             const scoreHomeHtml = adminMode
-                ? `<input type="text" id="home-${getMatchInputId(matchObj.matchName)}" class="score-input" value="${homeScoreVal}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`
-                : `<div class="score">${homeScoreVal}</div>`;
+                ? `<input type="text" id="home-${getMatchInputId(matchObj.matchName)}" class="score-input" value="${homeScoreVal}" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`
+                : `<div class="score" ${dataLengthAttr}>${homeScoreVal}</div>`;
             const scoreAwayHtml = adminMode
-                ? `<input type="text" id="away-${getMatchInputId(matchObj.matchName)}" class="score-input" value="${awayScoreVal}" maxlength="2" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`
-                : `<div class="score">${awayScoreVal}</div>`;
+                ? `<input type="text" id="away-${getMatchInputId(matchObj.matchName)}" class="score-input" value="${awayScoreVal}" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,2)" onkeydown="if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.preventDefault();" style="width:20px;padding:4px 2px;font-size:0.95em;border-radius:6px;border:1px solid #ccc;text-align:center;">`
+                : `<div class="score" ${dataLengthAttr}>${awayScoreVal}</div>`;
 
             // Only show separator if match is completed AND has scores
             const showSeparator = isCompleted && (homeScoreVal !== '' || awayScoreVal !== '');
+
+            // Build the grid – fixed 4 columns, 2 rows
+            let separator = '–';
+            if (showSeparator && homeScoreVal && homeScoreVal.length > 2) {
+                separator = '––';  
+            }
 
             // Build the grid – fixed 4 columns, 2 rows
             const gridHtml = `
                 <div class="match-grid">
                     <div class="team-cell">${homeFlag} <span class="team-name"${homeTitle ? ` title="${homeTitle}"` : ''}>${homeTeam}</span></div>
                     ${scoreHomeHtml}
-                    ${showSeparator ? '<span class="score-separator">–</span>' : ''}
+                    ${showSeparator ? `<span class="score-separator">${separator}</span>` : ''}
                     ${scoreAwayHtml}
                     <div class="team-cell away">${awayFlag} <span class="team-name"${awayTitle ? ` title="${awayTitle}"` : ''}>${visitorTeam}</span></div>
                     <div class="datetime">${dateTimeHtml}</div>
