@@ -134,13 +134,13 @@
         .group-standings tr:hover td { background: #f5f5f5; }
 
         /* ===== MATCH CARD ===== */
-        .match-card { flex: 0 0 auto; margin: 0; align-content: center; padding: 4px; border-radius: 8px; background: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); max-width: 310px; transition: background 0.2s; justify-content: center; text-align: center; }
+        .match-card { flex: 0 0 auto; margin: 0; align-content: center; border-radius: 8px; background: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); width: 310px; transition: background 0.2s; justify-content: center; text-align: center; }
         .match-card-row { display: flex; align-items: center; gap: 6px; width: auto; }
         .match-card.completed { background: #e8f5e9; border-left: 4px solid #FFD700; }
         .match-card.completed .radio-group { display: none; }
-        .match-card.completed .match-grid { grid-template-columns: minmax(80px,125px) minmax(20px, auto) 1ch minmax(20px, auto) minmax(80px,125px); }
+        .match-card.completed .match-grid {grid-template-columns: minmax(100px, auto) minmax(10px, 1fr) 1ch minmax(10px, 1fr) minmax(100px, auto); }
         .match-card.completed .match-grid .match-number { grid-column: 2 / 5; }
-        .match-grid { flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: minmax(80px,125px) minmax(20px, auto) minmax(20px, auto) minmax(80px,125px); gap: 6px 4px; align-items: center; justify-items: center; width: 100%; box-sizing: border-box; align-content: center; text-align: center; justify-content: center; padding: 4px; }
+        .match-grid { flex: 1 1 auto; min-width: 0; display: grid;     grid-template-columns: minmax(100px, 125px) minmax(10px, 1fr) minmax(10px, 1fr) minmax(100px, 125px); gap: 6px 4px; align-items: center; justify-items: center; width: 100%; box-sizing: border-box; align-content: center; text-align: center; justify-content: center; padding: 4px; }
         .match-grid .team-cell { display: flex; align-items: center; font-weight: bold; color: #333; line-height: 1.2; max-width: 14ch; }
         .match-grid .team-cell.away { justify-content: flex-end; }
         .match-grid .team-cell .team-name { width: fit-content; }
@@ -155,7 +155,6 @@
 
         .match-cards-wrapper { align-content: flex-start; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-height: 220px; overflow-y: auto; padding: 4px 8px 8px 8px; scrollbar-gutter: stable; scrollbar-width: thin; }
         .group-block .match-cards-wrapper { max-height: none; overflow-y: visible; }
-        .match-name { font-weight: bold; font-size: 1em; display: inline-flex; align-items: center; gap: 5px; }
         .picks-row { display: flex; flex-wrap: wrap; margin-top: 6px; border-top: 1px dashed #ddd; }
         .player-pick { display: inline-flex; align-items: center; gap: 2px; background: #f0f0f0; border-radius: 16px; font-size: 0.95em; white-space: nowrap; padding: 2px 6px; }
         .player-name { font-weight: bold; color: #333; font-size: 0.95em; }
@@ -302,7 +301,7 @@
     <div id="progress-container" class="hidden"></div>
 
     <div class="stage-tabs">
-        <div class="stage-tab" data-stage="group">🏆 Group Stage</div>
+        <div class="stage-tab active" data-stage="group">🏆 Group Stage</div>
         <div class="stage-tab" data-stage="Knockout">🏆 Knockout stage</div>
     </div>
 
@@ -313,7 +312,7 @@
         </div>
     </div>
 
-    <div id="group-matches" class="matches-container" style="margin: -5px;"></div>
+    <div id="group-matches" class="matches-container active" style="margin: -5px;"></div>
     <div id="knockout-matches" class="matches-container" style="margin: -5px;"></div>
 
     <div style="margin: 5px auto; text-align: center;">
@@ -384,29 +383,13 @@
         //  ADMIN FUNCTIONS
         // ================================================================
 
-        /** Close admin mode and reload */
-        async function closeAdminMode() {
+        function closeAdminMode() {
             isAdminMode = false;
             updateAdminToolbar();
-            while (isLoading) await new Promise(resolve => setTimeout(resolve, 100));
-            await loadMatchesOnly();
-            const player = document.getElementById("playerSelect").value.trim() || document.getElementById("playerName").value.trim();
-            if (player) {
-                setTimeout(() => {
-                    document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
-                    const userPicks = allPicks.filter(p => p.player === player);
-                    userPicks.forEach(pick => {
-                        const radio = document.querySelector(`input[name="${pick.match}"][value="${pick.pick}"]`);
-                        if (radio) radio.checked = true;
-                    });
-                    updatePlayerControlsVisibility();
-                }, 100);
-            } else {
-                updatePlayerControlsVisibility();
-            }
+            // Reload without blocking
+            loadMatchesOnly();
         }
 
-        /** Save all scores from admin inputs */
         async function saveAllScores() {
             const scoreUpdates = [];
             const allMatches = [];
@@ -479,7 +462,6 @@
             }
         }
 
-        /** Show admin login prompt */
         function showAdminLogin() {
             const password = prompt("Enter admin password to edit scores:");
             if (password === ADMIN_PASSWORD) {
@@ -492,7 +474,6 @@
             }
         }
 
-        /** Update admin toolbar visibility */
         function updateAdminToolbar() {
             const toolbar = document.getElementById('admin-toolbar');
             const loginBtn = document.getElementById('adminLoginBtn');
@@ -517,7 +498,6 @@
         //  CACHE FUNCTIONS
         // ================================================================
 
-        /** Invalidate all caches */
         function invalidateCaches() {
             cacheVersion++;
             cachedRankingHTML = null;
@@ -527,7 +507,6 @@
             cachedThirdPlace = null;
         }
 
-        /** Get cached group standings or calculate */
         function getGroupStandings(group) {
             if (cachedStandings[group]) return cachedStandings[group];
             const standings = calculateGroupStandings(group, groupMatches[group]);
@@ -535,7 +514,6 @@
             return standings;
         }
 
-        /** Get cached third place teams or calculate */
         function getBestThirdPlaceTeamsCached() {
             if (cachedThirdPlace) return cachedThirdPlace;
             cachedThirdPlace = getBestThirdPlaceTeams();
@@ -546,7 +524,6 @@
         //  DATE HELPERS
         // ================================================================
 
-        /** Get relative date string (Today, Tomorrow, Yesterday) */
         function getRelativeDate(dateStr) {
             if (!dateStr) return null;
             const dateParts = dateStr.split('/');
@@ -565,7 +542,6 @@
             return null;
         }
 
-        /** Get result symbol for display */
         function getResultSymbol(result) {
             if (result === "1") return "🏠1";
             if (result === "X") return "🤝X";
@@ -573,7 +549,6 @@
             return "?";
         }
 
-        /** Get stage color for display */
         function getStageColor(groupName) {
             const groupColors = {
                 'A': '#E53935', 'B': '#1E88E5', 'C': '#43A047', 'D': '#FB8C00',
@@ -592,7 +567,6 @@
             return '#607D8B';
         }
 
-        /** Parse match date/time */
         function parseMatchDateTime(dateStr, timeStr) {
             if (!dateStr || !timeStr) return null;
             let year, month, day, hour, minute;
@@ -621,7 +595,6 @@
         //  FLAG HELPERS
         // ================================================================
 
-        /** Get flag code for a team */
         function getFlagCode(teamName) {
             const flagMap = {
                 'Mexico': 'mx', 'South Africa': 'za', 'South Korea': 'kr', 'Czechia': 'cz',
@@ -644,7 +617,6 @@
             return null;
         }
 
-        /** Get flag HTML for a team */
         function getFlagHtml(teamName, width = 20, height = 15) {
             const cacheKey = `${teamName}|${width}|${height}`;
             if (flagCache.has(cacheKey)) return flagCache.get(cacheKey);
@@ -657,7 +629,6 @@
             return html;
         }
 
-        /** Preload all flags */
         function preloadAllFlags() {
             const teamNames = new Set();
             for (let group in groupMatches) {
@@ -687,7 +658,6 @@
         //  GOOGLE CALENDAR
         // ================================================================
 
-        /** Generate Google Calendar URL */
         function getGoogleCalendarUrl(matchName, homeTeam, visitorTeam, dateStr, timeStr, transmission) {
             const dateParts = dateStr.split('/');
             if (dateParts.length !== 3) return null;
@@ -714,20 +684,10 @@
         //  HELPER FUNCTIONS
         // ================================================================
 
-        /** Get clean match input ID */
         function getMatchInputId(matchName) {
             return matchName.replace(/[^a-zA-Z0-9]/g, '_');
         }
 
-        /** Check if match is within 3 hours after */
-        function isWithinThreeHoursAfter(matchDateTime) {
-            if (!matchDateTime) return false;
-            const now = new Date();
-            const threeHoursAfter = new Date(matchDateTime.getTime() + 3 * 60 * 60 * 1000);
-            return now.getTime() <= threeHoursAfter.getTime();
-        }
-
-        /** Update player controls visibility based on selection */
         function updatePlayerControlsVisibility() {
             if (isAdminMode) {
                 const saveBtn = document.getElementById("savePicksBtn");
@@ -760,7 +720,6 @@
             }
         }
 
-        /** Hide player selection if visible */
         function hidePlayerSelectionIfVisible() {
             const playerSelection = document.getElementById("player-selection");
             if (playerSelection && playerSelection.classList.contains("visible")) {
@@ -768,7 +727,6 @@
             }
         }
 
-        /** Update toggle button text */
         function updateToggleButtonText() {
             const playerSelection = document.getElementById("player-selection");
             const toggleBtn = document.getElementById("togglePlayerBtn");
@@ -784,7 +742,6 @@
         //  KNOCKOUT ALIGNMENT
         // ================================================================
 
-        /** Schedule knockout column alignment */
         function scheduleKnockoutAlignment(container) {
             if (_alignRAF) { cancelAnimationFrame(_alignRAF); _alignRAF = null; }
             if (_alignPending) return;
@@ -799,7 +756,6 @@
             });
         }
 
-        /** Align knockout columns */
         function alignKnockoutColumns(container) {
             const columns = container.querySelectorAll('.knockout-col');
             if (!columns || columns.length < 2) return;
@@ -854,7 +810,6 @@
             }
         }
 
-        /** Setup knockout scrollbar */
         function setupKnockoutScrollbar(container) {
             const scrollable = container.querySelector('.scrollable-container');
             const topBar = document.getElementById('knockout-scrollbar');
@@ -896,7 +851,6 @@
         //  LEADERBOARD
         // ================================================================
 
-        /** Update leaderboard visibility */
         function updateLeaderboardVisibility() {
             const leaderboard = document.getElementById("leaderboard");
             const selectedFromDropdown = document.getElementById("playerSelect").value;
@@ -912,7 +866,6 @@
             }
         }
 
-        /** Update leaderboard */
         function updateLeaderboard() {
             const playerScores = [];
             const leaderboardList = document.getElementById("leaderboard-list");
@@ -992,7 +945,6 @@
         //  LOADING & NOTIFICATIONS
         // ================================================================
 
-        /** Show floating notification */
         function showFloatingNotification(message, isError = false) {
             const notification = document.getElementById('floatingNotification');
             if (!notification) return;
@@ -1014,7 +966,6 @@
             }, 3000);
         }
 
-        /** Show loading overlay */
         function showLoading(message = "Loading matches...") {
             const overlay = document.getElementById("loadingOverlay");
             const textElement = overlay.querySelector(".loading-spinner p");
@@ -1023,7 +974,6 @@
             overlay.style.display = "flex";
         }
 
-        /** Hide loading overlay */
         function hideLoading() {
             const overlay = document.getElementById("loadingOverlay");
             overlay.classList.remove("active");
@@ -1034,13 +984,11 @@
         //  MATCH CARD BUILDER
         // ================================================================
 
-        /** Get match number display */
         function getMatchNumberDisplay(matchName) {
             const num = (matchName.match(/\d+/) || [])[0];
             return num ? `#${num}` : '';
         }
 
-        /** Build a match card HTML */
         function buildMatchCard(matchObj, group, stage, options) {
             const { isCompleted, isPast, actualResult, actualScore, playerPicks, showPicks, showRadios, adminMode } = options;
             const homeTeam = matchObj.homeTeam || '';
@@ -1049,7 +997,6 @@
             const awayFlag = getFlagHtml(visitorTeam);
             const matchNumberDisplay = getMatchNumberDisplay(matchObj.matchName);
 
-            // Date/time
             let dateTimeHtml = '';
             let calUrl = null;
             if (matchObj.date && matchObj.time) {
@@ -1069,7 +1016,6 @@
                     : `<span style="color:#D4A017;font-weight:bold;">${display}</span>`;
             }
 
-            // Transmission or result
             let transHtml = '';
             if (isCompleted) {
                 const sym = getResultSymbol(actualResult);
@@ -1086,7 +1032,6 @@
                 }
             }
 
-            // Scores
             let homeScoreVal = '', awayScoreVal = '';
             if (isCompleted && actualScore) {
                 const parts = actualScore.split('-');
@@ -1107,7 +1052,6 @@
             let separator = '–';
             if (showSeparator && homeScoreVal && homeScoreVal.length > 2) separator = '––';
 
-            // Build grid
             const gridHtml = `
                 <div class="match-grid">
                     <div class="team-cell">${homeFlag} <span class="team-name">${homeTeam}</span></div>
@@ -1121,7 +1065,6 @@
                 </div>
             `;
 
-            // Player picks
             let picksHtml = '';
             if (showPicks && playerPicks && playerPicks.length > 0) {
                 picksHtml = '<div class="picks-row">';
@@ -1133,7 +1076,6 @@
                 picksHtml += '</div>';
             }
 
-            // Radio buttons
             let radioHtml = '';
             if (showRadios && !adminMode) {
                 if (isPast) {
@@ -1176,7 +1118,6 @@
         //  PLAYER FUNCTIONS
         // ================================================================
 
-        /** Update player dropdown */
         function updatePlayerDropdown() {
             const select = document.getElementById("playerSelect");
             const currentValue = select.value;
@@ -1190,7 +1131,6 @@
             });
         }
 
-        /** Handle player name edit */
         async function onPlayerNameEdit() {
             const select = document.getElementById("playerSelect");
             const playerName = document.getElementById("playerName");
@@ -1205,7 +1145,6 @@
             updateToggleButtonText();
         }
 
-        /** Handle player selection */
         async function selectPlayer() {
             const playerName = document.getElementById("playerSelect").value;
             if (playerName) {
@@ -1220,14 +1159,12 @@
             updateToggleButtonText();
         }
 
-        /** Clear all picks */
         function clearAllPicks() {
             document.querySelectorAll('.radio-group input[type="radio"]').forEach(r => r.checked = false);
             updateProgress();
             updatePlayerControlsVisibility();
         }
 
-        /** Load picks for a player */
         async function loadMyPicks(playerName = null) {
             if (isLoading) return;
             isLoading = true;
@@ -1275,7 +1212,6 @@
             }
         }
 
-        /** Save picks */
         async function savePicks() {
             if (isAdminMode) {
                 showFloatingNotification("Cannot save picks in admin mode!", true);
@@ -1350,7 +1286,6 @@
         //  PROGRESS
         // ================================================================
 
-        /** Update progress bar */
         function updateProgress() {
             let total = 0, saved = 0;
             const now = new Date();
@@ -1389,7 +1324,6 @@
         //  RANKING
         // ================================================================
 
-        /** Calculate group standings */
         function calculateGroupStandings(groupName, matchesArray) {
             const standings = {};
             matchesArray.forEach(match => {
@@ -1444,7 +1378,6 @@
             });
         }
 
-        /** Create standings table HTML */
         function createStandingsTable(standings) {
             if (standings.length === 0) return '';
             let html = `
@@ -1470,7 +1403,6 @@
             return html;
         }
 
-        /** Get best third place teams */
         function getBestThirdPlaceTeams() {
             const thirdPlaceTeams = [];
             for (let group in groupMatches) {
@@ -1500,7 +1432,6 @@
             return { ranked: thirdPlaceTeams, advancedGroups: advanced, advancedTeams: thirdPlaceTeams.filter(t => t.advanced).map(t => t.team) };
         }
 
-        /** Render third place ranking */
         function renderThirdPlaceRanking() {
             const container = document.getElementById('group-matches');
             if (!container) return;
@@ -1590,7 +1521,6 @@
             cachedRankingVersion = cacheVersion;
         }
 
-        /** Toggle ranking expansion */
         function toggleRanking() {
             expandedRanking = !expandedRanking;
             const wrapper = document.getElementById('thirdPlaceRankingWrapper');
@@ -1612,7 +1542,6 @@
         //  KNOCKOUT RESOLVE
         // ================================================================
 
-        /** Resolve knockout teams from group standings */
         function resolveKnockoutTeams() {
             const groupStandings = {};
             Object.keys(groupMatches).forEach(group => {
@@ -1732,7 +1661,6 @@
         //  LOAD MATCHES
         // ================================================================
 
-        /** Load matches from server */
         async function loadMatchesOnly() {
             if (isLoading) return;
             isLoading = true;
@@ -1822,12 +1750,10 @@
             }
         }
 
-        /** Load all data (alias) */
         async function loadAllData() {
             await loadMatchesOnly();
         }
 
-        /** Load and render group matches */
         function loadMatches() {
             const container = document.getElementById("group-matches");
             if (!container) return;
@@ -1907,7 +1833,6 @@
         //  RENDER KNOCKOUT
         // ================================================================
 
-        /** Render knockout bracket */
         function renderKnockoutBracket() {
             const container = document.getElementById("knockout-matches");
             if (!container) return;
@@ -2038,7 +1963,6 @@
         //  TODAY'S MATCHES
         // ================================================================
 
-        /** Get next 8 matches */
         function getNextMatches() {
             const now = new Date();
             const upcomingMatches = [];
@@ -2066,7 +1990,6 @@
             return upcomingMatches.slice(0, 8);
         }
 
-        /** Create next matches section */
         function createNextMatchesSection() {
             const nextMatches = getNextMatches();
             if (nextMatches.length === 0) return '';
@@ -2109,11 +2032,21 @@
                     const cardElement = tempDiv.firstElementChild;
                     cardElement.style.cursor = 'pointer';
                     const groupId = `group-${item.group.replace(/ /g, '_')}`;
-                    const matchElementId = `match-${item.stage === 'group' ? item.group.replace(/ /g, '_') : 'knockout'}-${item.match.matchName.replace(/ /g, '_')}`;
-                    cardElement.setAttribute('data-match-id', matchElementId);
+                    const matchId = `match-${item.stage === 'group' ? item.group.replace(/ /g, '_') : 'knockout'}-${item.match.matchName.replace(/ /g, '_')}`;
+                    const matchNumber = item.match.matchName.match(/\d+/)?.[0] || '';
+                    cardElement.setAttribute('data-match-id', matchId);
                     cardElement.setAttribute('data-group-id', groupId);
-                    cardElement.setAttribute('data-round', item.group);
-                    cardElement.style.cursor = 'pointer';
+                    cardElement.setAttribute('data-stage', item.stage);
+                    cardElement.setAttribute('data-match-number', matchNumber);
+                    // Click handler directly on the card
+                    cardElement.onclick = function(e) {
+                        e.stopPropagation();
+                        const stage = this.dataset.stage || 'group';
+                        const groupId = this.dataset.groupId || '';
+                        const matchNumber = this.dataset.matchNumber || '';
+                        const matchId = this.dataset.matchId || '';
+                        scrollToMatch(groupId, matchId, stage, matchNumber);
+                    };
                     html += cardElement.outerHTML;
                 }
 
@@ -2124,7 +2057,6 @@
             return html;
         }
 
-        /** Update today's matches */
         function updateTodayMatches() {
             const container = document.getElementById("today-matches-container");
             if (!container) return;
@@ -2142,7 +2074,6 @@
         //  COUNTRY DROPDOWN
         // ================================================================
 
-        /** Populate country dropdown */
         function populateCountryDropdown(stage = 'group') {
             const list = document.getElementById("dropdownList");
             if (!list) return;
@@ -2192,7 +2123,6 @@
             }
         }
 
-        /** Select a country and scroll to its matches */
         function selectCountry(country) {
             if (!country) return;
             document.getElementById("dropdownSelected").textContent = country;
@@ -2207,34 +2137,6 @@
             const activeTab = document.querySelector('.stage-tab.active');
             const currentStage = activeTab ? activeTab.dataset.stage : 'group';
             let found = false;
-
-            function highlightMatchInContainer(containerId, matchNumber) {
-                const container = document.getElementById(containerId);
-                if (!container) return false;
-                const cards = container.querySelectorAll('.match-card');
-                let matchEl = null;
-                for (let card of cards) {
-                    if (card.id && card.id.includes(matchNumber)) { matchEl = card; break; }
-                }
-                if (matchEl) {
-                    document.querySelectorAll('.match-card').forEach(c => {
-                        c.style.outline = '';
-                        c.style.background = '';
-                        c.removeAttribute('data-highlight-timeout');
-                    });
-                    matchEl.style.outline = "3px solid gold";
-                    matchEl.style.background = "#fff8dc";
-                    matchEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                    const timeoutId = setTimeout(() => {
-                        matchEl.style.outline = '';
-                        matchEl.style.background = '';
-                        matchEl.removeAttribute('data-highlight-timeout');
-                    }, 5000);
-                    matchEl.setAttribute('data-highlight-timeout', timeoutId);
-                    return true;
-                }
-                return false;
-            }
 
             if (currentStage === 'group') {
                 let targetGroup = null;
@@ -2273,7 +2175,10 @@
                         }
                     }
                     const matchNumber = targetMatch.matchName.match(/\d+/)?.[0];
-                    if (matchNumber) highlightMatchInContainer('group-matches', matchNumber);
+                    if (matchNumber) {
+                        const matchId = `match-${targetGroup.replace(/ /g, '_')}-${targetMatch.matchName.replace(/ /g, '_')}`;
+                        scrollToMatch(`group-${groupKey}`, matchId, 'group', matchNumber);
+                    }
                 }
             } else {
                 let targetKnockoutMatch = null;
@@ -2292,7 +2197,8 @@
                             container.classList.add('active');
                             container.style.display = '';
                         }
-                        setTimeout(() => highlightMatchInContainer('knockout-matches', matchNumber), 300);
+                        const matchId = `match-knockout-${targetKnockoutMatch.matchName.replace(/ /g, '_')}`;
+                        setTimeout(() => scrollToMatch('', matchId, 'knockout', matchNumber), 300);
                     }
                 }
             }
@@ -2306,7 +2212,6 @@
         //  TOGGLE FUNCTIONS
         // ================================================================
 
-        /** Toggle group expansion */
         function toggleGroup(id) {
             const el = document.getElementById(`group-${id}`);
             if (el) {
@@ -2321,7 +2226,6 @@
             }
         }
 
-        /** Toggle player selection */
         function togglePlayerSelection() {
             const playerSelection = document.getElementById("player-selection");
             const toggleBtn = document.getElementById("togglePlayerBtn");
@@ -2344,7 +2248,6 @@
         //  SHARE
         // ================================================================
 
-        /** Share app link */
         async function shareApp() {
             try {
                 if (navigator.share) {
@@ -2369,15 +2272,15 @@
         }
 
         // ================================================================
-        //  SCROLL TO MATCH
+        //  SCROLL TO MATCH (FIXED)
         // ================================================================
 
-        /** Scroll to a specific match */
-        function scrollToMatch(groupId, matchElementId, roundName, matchIdx) {
-            const isKnockout = matchElementId.includes('knockout');
-            const targetStage = isKnockout ? 'Knockout' : 'group';
-            const containerId = isKnockout ? 'knockout-matches' : 'group-matches';
+        function scrollToMatch(groupId, matchElementId, stage, matchNumber) {
+            // Use the match number to find the card
+            const targetStage = stage === 'knockout' ? 'Knockout' : 'group';
+            const containerId = stage === 'knockout' ? 'knockout-matches' : 'group-matches';
 
+            // Activate correct tab
             document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
 
@@ -2395,13 +2298,15 @@
 
             populateCountryDropdown(targetStage);
 
-            if (isKnockout && knockoutMatches.length > 0) {
+            // If knockout, re-render
+            if (stage === 'knockout' && knockoutMatches.length > 0) {
                 cachedKnockoutHTML = null;
                 cachedKnockoutVersion = 0;
                 renderKnockoutBracket();
             }
 
-            if (!isKnockout) {
+            // For group stage, expand the group
+            if (stage === 'group' && groupId) {
                 const groupDiv = document.getElementById(groupId);
                 if (groupDiv) {
                     groupDiv.style.display = 'block';
@@ -2412,7 +2317,6 @@
                 }
             }
 
-            const matchNumber = matchElementId.match(/\d+/)?.[0];
             if (!matchNumber) {
                 showFloatingNotification('Invalid match number', true);
                 return;
@@ -2432,10 +2336,14 @@
                 const cards = activeContainer.querySelectorAll('.match-card');
                 let matchEl = null;
                 for (let card of cards) {
-                    if (card.id && card.id.includes(matchNumber)) { matchEl = card; break; }
+                    if (card.id && card.id.includes(matchNumber)) {
+                        matchEl = card;
+                        break;
+                    }
                 }
 
                 if (matchEl) {
+                    // Remove previous highlights
                     document.querySelectorAll('.match-card').forEach(c => {
                         c.style.outline = '';
                         c.style.background = '';
@@ -2469,7 +2377,6 @@
         //  TAB INITIALIZATION
         // ================================================================
 
-        /** Initialize tabs */
         function initTabs() {
             document.querySelectorAll('.stage-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -2547,12 +2454,6 @@
                     if (!e.target.closest(".custom-dropdown")) list.style.display = "none";
                 });
             }
-            const styleTag = document.createElement('style');
-            styleTag.textContent = `
-                .progress-fill.big-enough .progress-text { color: #000; }
-                .progress-fill:not(.big-enough) .progress-text { color: #333; left: 50%; transform: translateX(-50%); padding-left: 10px; font-weight: bold; }
-            `;
-            document.head.appendChild(styleTag);
         });
 
         // ================================================================
