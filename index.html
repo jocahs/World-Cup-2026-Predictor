@@ -40,7 +40,7 @@
         .stage-tabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 0px;
+            margin-bottom: 5px;
             flex-wrap: wrap;
             justify-content: center;
             max-width: 100%;
@@ -2906,9 +2906,11 @@
                     cardElement.style.cursor = 'pointer';
                     const groupId = `group-${item.group.replace(/ /g, '_')}`;
                     const matchElementId = `match-${item.stage === 'group' ? item.group.replace(/ /g, '_') : 'knockout'}-${item.match.matchName.replace(/ /g, '_')}`;
-                    cardElement.onclick = function() {
-                        scrollToMatch(groupId, matchElementId, item.group, item.idx);
-                    };
+                    cardElement.setAttribute('data-match-id', matchElementId);
+                    cardElement.setAttribute('data-group-id', groupId);
+                    cardElement.setAttribute('data-round', item.group);
+                    cardElement.setAttribute('data-idx', item.idx);
+                    cardElement.style.cursor = 'pointer';
                     html += cardElement.outerHTML;
                 }
                 html += `</div></div>`;
@@ -2929,6 +2931,18 @@
                 container.style.display = "none";
                 container.innerHTML = "";
             }
+            // Delegated click handler for Today's matches (attached once)
+            document.getElementById('today-matches-container').addEventListener('click', function(e) {
+                const card = e.target.closest('.match-card');
+                if (!card) return;
+                const matchElementId = card.dataset.matchId;
+                const groupId = card.dataset.groupId;
+                const roundName = card.dataset.round;
+                const idx = card.dataset.idx;
+                if (matchElementId) {
+                    scrollToMatch(groupId, matchElementId, roundName, idx);
+                }
+            });
         }
 
         // ===== DEBOUNCED RESIZE =====
@@ -3128,26 +3142,62 @@
                 if (text === country) item.classList.add('selected');
             });
             document.getElementById("dropdownList").style.display = "none";
+
             const activeTab = document.querySelector('.stage-tab.active');
             const currentStage = activeTab ? activeTab.dataset.stage : 'group';
             let found = false;
+
+            // Helper: highlight a match card inside a specific container
+            function highlightMatchInContainer(containerId, matchNumber) {
+                const container = document.getElementById(containerId);
+                if (!container) return false;
+                const cards = container.querySelectorAll('.match-card');
+                let matchEl = null;
+                for (let card of cards) {
+                    if (card.id && card.id.includes(matchNumber)) {
+                        matchEl = card;
+                        break;
+                    }
+                }
+                if (matchEl) {
+                    // Remove previous highlights globally
+                    document.querySelectorAll('.match-card').forEach(c => {
+                        c.style.outline = '';
+                        c.style.background = '';
+                        c.removeAttribute('data-highlight-timeout');
+                    });
+                    matchEl.style.outline = "3px solid gold";
+                    matchEl.style.background = "#fff8dc";
+                    matchEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                    const timeoutId = setTimeout(() => {
+                        matchEl.style.outline = '';
+                        matchEl.style.background = '';
+                        matchEl.removeAttribute('data-highlight-timeout');
+                    }, 5000);
+                    matchEl.setAttribute('data-highlight-timeout', timeoutId);
+                    return true;
+                }
+                return false;
+            }
+
             if (currentStage === 'group') {
                 let targetGroup = null;
-                let targetMatchIdx = null;
+                let targetMatch = null;
                 for (let group in groupMatches) {
                     for (let idx = 0; idx < groupMatches[group].length; idx++) {
                         const m = groupMatches[group][idx];
                         if (m.homeTeam === country || m.visitorTeam === country) {
                             targetGroup = group;
-                            targetMatchIdx = idx;
+                            targetMatch = m;
                             found = true;
                             break;
                         }
                     }
                     if (found) break;
                 }
-                if (found) {
+                if (found && targetMatch) {
                     const groupKey = targetGroup.replace(/ /g, '_');
+                    // Expand the group
                     Object.keys(groupMatches).forEach(group => {
                         const key = group.replace(/ /g, '_');
                         const el = document.getElementById('group-' + key);
@@ -3168,24 +3218,15 @@
                             groupBlock.scrollIntoView({ behavior: "smooth", block: "center" });
                         }
                     }
-                    document.querySelectorAll('.match-card').forEach(card => {
-                        card.style.outline = '';
-                        card.style.background = '';
-                        card.removeAttribute('data-highlight-timeout');
-                    });
-                    const matchEl = document.getElementById('match-' + groupKey + '-' + targetMatchIdx);
-                    if (matchEl) {
-                        matchEl.style.outline = "3px solid gold";
-                        matchEl.style.background = "#fff8dc";
-                        const timeoutId = setTimeout(() => {
-                            matchEl.style.outline = '';
-                            matchEl.style.background = '';
-                            matchEl.removeAttribute('data-highlight-timeout');
-                        }, 5000);
-                        matchEl.setAttribute('data-highlight-timeout', timeoutId);
+                    // Extract match number from the match name (e.g., "Match 072" -> "072")
+                    const matchNumber = targetMatch.matchName.match(/\d+/)?.[0];
+                    if (matchNumber) {
+                        // Search inside the group container
+                        const containerId = 'group-matches';
+                        highlightMatchInContainer(containerId, matchNumber);
                     }
                 }
-            } else {
+            } else { // knockout
                 let targetKnockoutMatch = null;
                 for (let idx = 0; idx < knockoutMatches.length; idx++) {
                     const m = knockoutMatches[idx];
@@ -3196,28 +3237,23 @@
                     }
                 }
                 if (found && targetKnockoutMatch) {
-                    setTimeout(() => {
-                        const matchId = `match-knockout-${targetKnockoutMatch.matchName.replace(/ /g, '_')}`;
-                        const matchEl = document.getElementById(matchId);
-                        if (matchEl) {
-                            document.querySelectorAll('.match-card').forEach(card => {
-                                card.style.outline = '';
-                                card.style.background = '';
-                                card.removeAttribute('data-highlight-timeout');
-                            });
-                            matchEl.style.outline = "3px solid gold";
-                            matchEl.style.background = "#fff8dc";
-                            matchEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                            const timeoutId = setTimeout(() => {
-                                matchEl.style.outline = '';
-                                matchEl.style.background = '';
-                                matchEl.removeAttribute('data-highlight-timeout');
-                            }, 5000);
-                            matchEl.setAttribute('data-highlight-timeout', timeoutId);
+                    // Extract match number
+                    const matchNumber = targetKnockoutMatch.matchName.match(/\d+/)?.[0];
+                    if (matchNumber) {
+                        // Ensure knockout container is active (just in case)
+                        const container = document.getElementById('knockout-matches');
+                        if (container) {
+                            container.classList.add('active');
+                            container.style.display = '';
                         }
-                    }, 500);
+                        // Wait a bit for rendering, then highlight
+                        setTimeout(() => {
+                            highlightMatchInContainer('knockout-matches', matchNumber);
+                        }, 300);
+                    }
                 }
             }
+
             if (!found) {
                 showFloatingNotification(`⚠️ "${country}" is not in the ${currentStage} stage!`, true);
             }
@@ -3393,6 +3429,125 @@
             // Fallback
             return '#607D8B';
         }
+        
+        function scrollToMatch(groupId, matchElementId, roundName, matchIdx) {
+            console.log('🟢 scrollToMatch called', { groupId, matchElementId, roundName, matchIdx });
+
+            const isKnockout = matchElementId.includes('knockout');
+            const targetStage = isKnockout ? 'Knockout' : 'group';
+            const containerId = isKnockout ? 'knockout-matches' : 'group-matches';
+
+            // 1. Activate correct tab and container
+            document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.matches-container').forEach(c => c.classList.remove('active'));
+
+            const tab = document.querySelector(`.stage-tab[data-stage="${targetStage}"]`);
+            if (tab) tab.classList.add('active');
+
+            // 👇 Show the country selector container
+            const cs = document.getElementById('country-selector-container');
+            if (cs) cs.style.display = 'block';
+
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.classList.add('active');
+                container.style.display = 'flex';
+            }
+
+            // 2. Update country dropdown
+            populateCountryDropdown(targetStage);
+
+            // 3. If knockout, force a fresh render (always rebuild)
+            if (isKnockout && knockoutMatches.length > 0) {
+                console.log('🔄 Forcing knockout render');
+                cachedKnockoutHTML = null;
+                cachedKnockoutVersion = 0;
+                renderKnockoutBracket();
+            }
+
+            // 4. For group stage, expand the group block
+            if (!isKnockout) {
+                const groupDiv = document.getElementById(groupId);
+                if (groupDiv) {
+                    groupDiv.style.display = 'block';
+                    const groupKey = groupId.replace('group-', '');
+                    expandedGroups[groupKey] = true;
+                    const groupBlock = groupDiv.closest('.group-block');
+                    if (groupBlock) groupBlock.classList.add('expanded');
+                }
+            }
+
+            // 5. Extract match number
+            const matchNumber = matchElementId.match(/\d+/)?.[0];
+            if (!matchNumber) {
+                showFloatingNotification('Invalid match number', true);
+                return;
+            }
+            console.log('🔢 Match number:', matchNumber);
+
+            // 6. Retry with increasing delays – search ONLY inside the active container
+            function findAndScroll(attempt) {
+                const activeContainer = document.getElementById(containerId);
+                if (!activeContainer) {
+                    console.warn('Container not found:', containerId);
+                    if (attempt < 15) {
+                        setTimeout(() => findAndScroll(attempt + 1), 200 * (attempt + 1));
+                        return false;
+                    }
+                    showFloatingNotification(`Container ${containerId} not found`, true);
+                    return false;
+                }
+
+                const cards = activeContainer.querySelectorAll('.match-card');
+                console.log(`📇 Found ${cards.length} match cards in ${containerId}`);
+
+                let matchEl = null;
+                for (let card of cards) {
+                    if (card.id && card.id.includes(matchNumber)) {
+                        matchEl = card;
+                        console.log('🎯 Found card by number:', card.id);
+                        break;
+                    }
+                }
+
+                if (matchEl) {
+                    // Remove previous highlights globally
+                    document.querySelectorAll('.match-card').forEach(c => {
+                        c.style.outline = '';
+                        c.style.background = '';
+                        c.removeAttribute('data-highlight-timeout');
+                    });
+
+                    matchEl.style.outline = '3px solid gold';
+                    matchEl.style.background = '#fff8dc';
+                    matchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    const timeoutId = setTimeout(() => {
+                        matchEl.style.outline = '';
+                        matchEl.style.background = '';
+                        matchEl.removeAttribute('data-highlight-timeout');
+                    }, 5000);
+                    matchEl.setAttribute('data-highlight-timeout', timeoutId);
+
+                    console.log('✅ Success! Scrolled to match:', matchEl.id);
+                    return true;
+                }
+
+                if (attempt < 15) {
+                    const delay = 200 * (attempt + 1);
+                    console.log(`⏳ Retry in ${delay}ms (attempt ${attempt + 1})`);
+                    setTimeout(() => findAndScroll(attempt + 1), delay);
+                    return false;
+                }
+
+                console.error('❌ Failed to find match after 15 attempts');
+                showFloatingNotification(`Match #${matchNumber} not found in ${targetStage} stage`, true);
+                return false;
+            }
+
+            setTimeout(() => findAndScroll(0), 500);
+        }
+        
         // ================================================================
         //  INIT
         // ================================================================
